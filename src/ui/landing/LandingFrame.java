@@ -18,11 +18,10 @@ public class LandingFrame extends JFrame {
 
         // --- Frame Setup ---
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(2100, 1080);
+        setSize(400, 400);
         setLocationRelativeTo(null); // C
         // enter the window
         setResizable(false);
-
         // --- UI Components ---
         JLabel welcomeLabel = new JLabel("Welcome to the University Management System");
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
