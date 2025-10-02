@@ -15,6 +15,9 @@ public class Main {
                 // The application now starts with the landing page.
                 LandingFrame landingFrame = new LandingFrame();
                 landingFrame.setVisible(true);
+
+
+
             }
         });
     }
