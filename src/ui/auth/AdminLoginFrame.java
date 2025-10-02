@@ -2,50 +2,38 @@ package ui.auth;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
 import ui.landing.LandingFrame;
 
-/**
- * The initial login window for the application.
- * This class builds the UI for the login screen. The backend logic will be
- * connected later.
- */
-public class StudentLoginFrame extends JFrame {
+
+public class AdminLoginFrame extends JFrame {
+
 
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
     private JButton BackButton;
 
-    public StudentLoginFrame() {
-        // --- 1. Frame Setup ---
-        // This ensures the application exits when the window is closed.
+    public AdminLoginFrame() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(2100, 1080);
-        // This centers the window on the screen.
         setLocationRelativeTo(null);
         setResizable(false);
-
-//        USING LOGO FOR FRAME
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
-
-
         initComponents();
         layoutComponents();
+
     }
 
-    /**
-     * Initializes all the UI components (labels, fields, buttons).
-     */
     private void initComponents() {
         usernameField = new JTextField(20);
         passwordField = new JPasswordField(20);
         loginButton = new JButton("Login");
         BackButton = new JButton("Back");
 
-        // Add a listener to the login button to handle clicks.
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -56,12 +44,13 @@ public class StudentLoginFrame extends JFrame {
         BackButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                LandingFrame frame = new LandingFrame();
-                frame.setVisible(true);
+                LandingFrame landingFrame = new LandingFrame();
+                landingFrame.setVisible(true);
                 dispose();
             }
         });
     }
+
 
     /**
      * Sets the layout manager and adds all components to the frame.

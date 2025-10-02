@@ -1,5 +1,8 @@
 package ui.landing;
 
+import ui.auth.AdminLoginFrame;
+import ui.auth.FacultyLoginFrame;
+import ui.auth.ParentLoginFrame;
 import ui.auth.StudentLoginFrame;
 
 import javax.swing.*;
@@ -18,47 +21,115 @@ public class LandingFrame extends JFrame {
 
         // --- Frame Setup ---
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 400);
+        setSize(2160, 1080);
         setLocationRelativeTo(null); // C
         // enter the window
         setResizable(false);
         // --- UI Components ---
         JLabel welcomeLabel = new JLabel("Welcome to the University Management System");
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        welcomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        welcomeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel infoLabel = new JLabel("Click the button below to proceed to the login portal.");
         infoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        infoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        infoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton proceedButton = new JButton("Proceed to Login");
-        proceedButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        // --- Layout ---
-        // Use a BorderLayout for overall structure and a JPanel with GridBagLayout for centering
-        setLayout(new BorderLayout());
-        JPanel centerPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridwidth = GridBagConstraints.REMAINDER;
-        gbc.insets = new Insets(10, 10, 10, 10);
+        JButton StudentButton = new JButton("Student Login");
+        StudentButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        centerPanel.add(welcomeLabel, gbc);
-        centerPanel.add(infoLabel, gbc);
-        centerPanel.add(proceedButton, gbc);
+        JButton FacultyButton = new JButton("Faculty Login");
+        FacultyButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        JButton AdminButton = new JButton("Admin Login");
+        AdminButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        JButton ParentButton = new JButton("Parent Login");
+        ParentButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        Dimension buttonSize = new Dimension(160, 44);
+        StudentButton.setPreferredSize(buttonSize);
+        FacultyButton.setPreferredSize(buttonSize);
+        AdminButton.setPreferredSize(buttonSize);
+        ParentButton.setPreferredSize(buttonSize);
+        StudentButton.setMaximumSize(buttonSize);
+        FacultyButton.setMaximumSize(buttonSize);
+        AdminButton.setMaximumSize(buttonSize);
+        ParentButton.setMaximumSize(buttonSize);
+
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // vertical glue before content to push it to vertical center
+        centerPanel.add(Box.createVerticalGlue());
+
+        centerPanel.add(welcomeLabel);
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 12)));
+        centerPanel.add(infoLabel);
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 24)));
+
+        // --- Button row: use FlowLayout to ensure proper horizontal centering ---
+        JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 0)); // gap = 16 px
+        rowPanel.setOpaque(false); // let centerPanel background show through if needed
+
+        rowPanel.add(StudentButton);
+        rowPanel.add(FacultyButton);
+        rowPanel.add(AdminButton);
+        rowPanel.add(ParentButton);
+
+        // Important: center the rowPanel inside the centerPanel
+        rowPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        centerPanel.add(rowPanel);
+
+        // vertical glue after content to complete centering
+        centerPanel.add(Box.createVerticalGlue());
 
         add(centerPanel, BorderLayout.CENTER);
 
         // --- Action Listener ---
-        proceedButton.addActionListener(new ActionListener() {
+        StudentButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Open the LoginFrame
                 StudentLoginFrame studentLoginFrame = new StudentLoginFrame();
                 studentLoginFrame.setVisible(true);
-
-                // Close this landing frame
                 dispose();
             }
+        });
+
+        FacultyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                FacultyLoginFrame facultyLoginForm = new FacultyLoginFrame();
+                facultyLoginForm.setVisible(true);
+                dispose();
+            }
+        });
+
+        AdminButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AdminLoginFrame adminLoginFrame = new AdminLoginFrame();
+                adminLoginFrame.setVisible(true);
+                dispose();
+            }
+        });
+
+        ParentButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ParentLoginFrame parentLoginFrame = new ParentLoginFrame();
+                parentLoginFrame.setVisible(true);
+                dispose();
+            }
+        });
+    }
+
+    // quick main to test the frame
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            LandingFrame lf = new LandingFrame();
+            lf.setVisible(true);
         });
     }
 }

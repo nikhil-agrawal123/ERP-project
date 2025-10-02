@@ -24,6 +24,8 @@ public class Main {
                 landingFrame.setIconImage(image.getImage());
             }
         });
+        Connector connector = new Connector();
+        connector.connector();
     }
 }
 
