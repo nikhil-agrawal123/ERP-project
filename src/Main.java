@@ -18,6 +18,8 @@ public class Main {
                 LandingFrame landingFrame = new LandingFrame();
 
                 landingFrame.setVisible(true);
+
+//                IIITD LOGO USAGE
                 ImageIcon image = new ImageIcon(Main.class.getResource("/logo.jpg"));
                 landingFrame.setIconImage(image.getImage());
             }
