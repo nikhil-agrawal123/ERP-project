@@ -29,6 +29,11 @@ public class LoginFrame extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
 
+
+//        USING LOGO FOR FRAME
+        ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
+        setIconImage(image.getImage());
+
         initComponents();
 
         layoutComponents();
