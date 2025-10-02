@@ -11,20 +11,20 @@ import ui.landing.LandingFrame;
  * This class builds the UI for the login screen. The backend logic will be
  * connected later.
  */
-public class LoginFrame extends JFrame {
+public class StudentLoginFrame extends JFrame {
 
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
     private JButton BackButton;
 
-    public LoginFrame() {
+    public StudentLoginFrame() {
         super("University ERP - Login");
 
         // --- 1. Frame Setup ---
         // This ensures the application exits when the window is closed.
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 250);
+        setSize(2100, 1080);
         // This centers the window on the screen.
         setLocationRelativeTo(null);
         setResizable(false);

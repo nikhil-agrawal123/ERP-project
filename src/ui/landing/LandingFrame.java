@@ -1,6 +1,6 @@
 package ui.landing;
 
-import ui.auth.LoginFrame;
+import ui.auth.StudentLoginFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -54,8 +54,8 @@ public class LandingFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Open the LoginFrame
-                LoginFrame loginFrame = new LoginFrame();
-                loginFrame.setVisible(true);
+                StudentLoginFrame studentLoginFrame = new StudentLoginFrame();
+                studentLoginFrame.setVisible(true);
 
                 // Close this landing frame
                 dispose();

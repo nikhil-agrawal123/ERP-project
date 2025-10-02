@@ -1,3 +1,4 @@
+import databaseConfig.Connector;
 import ui.landing.LandingFrame;
 import javax.swing.SwingUtilities;
 
@@ -7,8 +8,7 @@ import javax.swing.SwingUtilities;
 public class Main {
 
     public static void main(String[] args) {
-        // Swing applications should be run on the Event Dispatch Thread (EDT)
-        // for thread safety. SwingUtilities.invokeLater ensures this.
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -17,6 +17,9 @@ public class Main {
                 landingFrame.setVisible(true);
             }
         });
+
+        Connector connector = new Connector();
+        connector.connector();
     }
 }
 
