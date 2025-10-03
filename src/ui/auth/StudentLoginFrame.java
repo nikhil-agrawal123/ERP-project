@@ -1,14 +1,15 @@
 package ui.auth;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.time.*;
-import java.sql.*;
-import databaseConfig.Connector;
+import java.lang.classfile.Superclass;
+
 import ui.landing.LandingFrame;
-import dependancy.org.mindrot.jbcrypt.BCrypt;
 
 /**
  * The initial login window for the application.
@@ -24,9 +25,8 @@ public class StudentLoginFrame extends JFrame {
     Color backgroundColor = new Color(45, 45, 45);
     Color buttonColor = new Color(57, 174, 168);
     Color textColor = Color.WHITE;
+    Color borderColor = new Color(150, 150, 150);
     private Color textFieldBgColor = new Color(60, 60, 60);
-
-    private int numAttempts = 3;
 
     public StudentLoginFrame() {
         super("Student Login");
@@ -72,11 +72,7 @@ public class StudentLoginFrame extends JFrame {
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(numAttempts > 0){
-                    handleLoginAttempt();
-                }else{
-                    handelWait();
-                }
+                handleLoginAttempt();
             }
         });
 
@@ -163,71 +159,20 @@ public class StudentLoginFrame extends JFrame {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
-        if (username.isEmpty() || password.isEmpty()) {
+        // Display the captured input in a dialog box.
+        // This is a placeholder for the real authentication logic.
+        String testUserName = "nikhil";
+        String testPassword = "nikhil";
+        if(password.equals(testPassword) &&  username.equals(testUserName)) {
+            String message = "Login attempt with:\nUsername: " + username + "\nPassword: " + password;
             JOptionPane.showMessageDialog(this,
-                    "Username and password cannot be empty.",
-                    "Login Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String sql = "SELECT studentPass FROM studentAuth WHERE studentId = ?";
-        Connector dbConnector = new Connector();
-
-        try (Connection conn = dbConnector.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            if (conn == null) {
-                JOptionPane.showMessageDialog(this,
-                        "Failed to connect to the database.",
-                        "Database Error",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            pstmt.setString(1, username);
-
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                String storedHash = rs.getString("studentPass");
-
-                if (BCrypt.checkpw(password, storedHash)) {
-                    // Password matches the hash
-                    JOptionPane.showMessageDialog(this,
-                            "Login Successful!",
-                            "Success",
-                            JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "Incorrect username or password.",
-                            "Login Failed",
-                            JOptionPane.ERROR_MESSAGE);
-                    numAttempts -= 1;
-                }
-            } else {
-                // No user was found with that username
-                JOptionPane.showMessageDialog(this,
-                        "Incorrect username or password.",
-                        "Login Failed",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+                    message,
+                    "Login Information",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }else {
+            String message = "Incorrect username or password";
             JOptionPane.showMessageDialog(this,
-                    "An error occurred with the database.",
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
+                    message, "login information", JOptionPane.INFORMATION_MESSAGE);
         }
-    }
-
-    private void handelWait() {
-        JOptionPane.showMessageDialog(
-                this,
-                "Attempts exhausted please try after 30 seconds",
-                "Auth error",
-                JOptionPane.ERROR_MESSAGE
-        );
     }
 }
