@@ -1,15 +1,13 @@
 package ui.auth;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
+import java.sql.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.lang.classfile.Superclass;
-
+import dependancy.org.mindrot.jbcrypt.BCrypt;
 import ui.landing.LandingFrame;
+import databaseConfig.Connector;
 
 /**
  * The initial login window for the application.
@@ -159,20 +157,68 @@ public class StudentLoginFrame extends JFrame {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
-        // Display the captured input in a dialog box.
-        // This is a placeholder for the real authentication logic.
-        String testUserName = "nikhil";
-        String testPassword = "nikhil";
-        if(password.equals(testPassword) &&  username.equals(testUserName)) {
-            String message = "Login attempt with:\nUsername: " + username + "\nPassword: " + password;
+        if (username.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    message,
-                    "Login Information",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }else {
-            String message = "Incorrect username or password";
+                    "Username and password cannot be empty.",
+                    "Login Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // 1. MODIFIED SQL: Select the password hash for the given username.
+        String sql = "SELECT studentPass FROM studentAuth WHERE studentId = ?";
+        Connector dbConnector = new Connector();
+
+        try (Connection conn = dbConnector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            if (conn == null) {
+                JOptionPane.showMessageDialog(this,
+                        "Failed to connect to the database.",
+                        "Database Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Set only the username parameter for the query
+            pstmt.setString(1, username);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            // 2. Check if a user with that username was found
+            if (rs.next()) {
+                // A user was found, now retrieve their stored password hash
+                String storedHash = rs.getString("studentPass");
+
+                // 3. Use BCrypt.checkpw() to verify the password
+                if (BCrypt.checkpw(password, storedHash)) {
+                    // Password matches the hash
+                    JOptionPane.showMessageDialog(this,
+                            "Login Successful!",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    // TODO: Navigate to the next part of your application
+                } else {
+                    // Password does NOT match the hash
+                    JOptionPane.showMessageDialog(this,
+                            "Incorrect username or password.",
+                            "Login Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                // No user was found with that username
+                JOptionPane.showMessageDialog(this,
+                        "Incorrect username or password.",
+                        "Login Failed",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                    message, "login information", JOptionPane.INFORMATION_MESSAGE);
+                    "An error occurred with the database.",
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 }
