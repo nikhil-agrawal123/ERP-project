@@ -4,12 +4,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.sql.*;
+import dependancy.org.mindrot.jbcrypt.BCrypt;
+import databaseConfig.Connector;
 
+import ui.dashboard.StudentDashboard;
 import ui.landing.LandingFrame;
 
-
 public class FacultyLoginFrame extends JFrame {
-
+    private int numTry = 3;
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -18,7 +21,6 @@ public class FacultyLoginFrame extends JFrame {
     Color backgroundColor = new Color(45, 45, 45);
     Color buttonColor = new Color(57, 174, 168);
     Color textColor = Color.WHITE;
-    Color borderColor = new Color(150, 150, 150);
     private Color textFieldBgColor = new Color(60, 60, 60);
 
     public FacultyLoginFrame() {
@@ -62,7 +64,11 @@ public class FacultyLoginFrame extends JFrame {
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                handleLoginAttempt();
+                if(numTry > 0){
+                    handleLoginAttempt();
+                }else{
+                    handleLock();
+                }
             }
         });
 
@@ -150,20 +156,69 @@ public class FacultyLoginFrame extends JFrame {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
-        // Display the captured input in a dialog box.
-        // This is a placeholder for the real authentication logic.
-        String testUserName = "nikhil";
-        String testPassword = "nikhil";
-        if(password.equals(testPassword) &&  username.equals(testUserName)) {
-            String message = "Login attempt with:\nUsername: " + username + "\nPassword: " + password;
+        String sql = "SELECT facultyPass FROM facultyauth WHERE facultyId = ?";
+        Connector dbConnector = new Connector();
+        boolean loginSuccessful = false; // Flag to track success
+
+        try (Connection conn = dbConnector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+
+            // Check if a user was found AND if the password matches
+            if (rs.next()) {
+                String storedHash = rs.getString("facultyPass");
+                if (BCrypt.checkpw(password, storedHash)) {
+                    loginSuccessful = true;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                    message,
-                    "Login Information",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }else {
-            String message = "Incorrect username or password";
-            JOptionPane.showMessageDialog(this,
-                    message, "login information", JOptionPane.INFORMATION_MESSAGE);
+                    "An error occurred with the database.",
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return; // Exit on database error
         }
+
+        // --- Handle the login result AFTER the database connection is closed ---
+        if (loginSuccessful) {
+            // Navigate to the next frame on success
+            // Example: new FacultyDashboard(username).setVisible(true);
+            dispose();
+        } else {
+            numTry--;
+            JOptionPane.showMessageDialog(this,
+                    "Incorrect username or password. " + numTry + " attempts remaining.",
+                    "Login Failed",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void handleLock() {
+        loginButton.setEnabled(false);
+        usernameField.setEnabled(false);
+        passwordField.setEnabled(false);
+
+        JOptionPane.showMessageDialog(this,
+                "Too many failed attempts. Account locked for 30 seconds.",
+                "Auth Error",
+                JOptionPane.ERROR_MESSAGE);
+
+        Timer lockoutTimer = new Timer(30000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e ) {
+                numTry = 3;
+                loginButton.setEnabled(true);
+                usernameField.setEnabled(true);
+                passwordField.setEnabled(true);
+                setTitle("Faculty Login");
+            }
+        });
+
+        lockoutTimer.setRepeats(false);
+        lockoutTimer.start();
     }
 }

@@ -8,6 +8,8 @@ import java.awt.event.ActionListener;
 import dependancy.org.mindrot.jbcrypt.BCrypt;
 import ui.landing.LandingFrame;
 import databaseConfig.Connector;
+import ui.dashboard.StudentDashboard;
+import java.time.*;
 
 /**
  * The initial login window for the application.
@@ -26,6 +28,8 @@ public class StudentLoginFrame extends JFrame {
     Color borderColor = new Color(150, 150, 150);
     private Color textFieldBgColor = new Color(60, 60, 60);
 
+    private int numTry = 3;
+
     public StudentLoginFrame() {
         super("Student Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -36,7 +40,6 @@ public class StudentLoginFrame extends JFrame {
         getContentPane().setBackground(backgroundColor);
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
-
 
         initComponents();
         layoutComponents();
@@ -70,7 +73,11 @@ public class StudentLoginFrame extends JFrame {
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                handleLoginAttempt();
+                if(numTry > 0){
+                    handleLoginAttempt();
+                }else {
+                    handleLock();
+                }
             }
         });
 
@@ -165,48 +172,33 @@ public class StudentLoginFrame extends JFrame {
             return;
         }
 
-        // 1. MODIFIED SQL: Select the password hash for the given username.
         String sql = "SELECT studentPass FROM studentAuth WHERE studentId = ?";
         Connector dbConnector = new Connector();
 
         try (Connection conn = dbConnector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            if (conn == null) {
-                JOptionPane.showMessageDialog(this,
-                        "Failed to connect to the database.",
-                        "Database Error",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Set only the username parameter for the query
             pstmt.setString(1, username);
 
             ResultSet rs = pstmt.executeQuery();
 
             // 2. Check if a user with that username was found
             if (rs.next()) {
-                // A user was found, now retrieve their stored password hash
                 String storedHash = rs.getString("studentPass");
 
-                // 3. Use BCrypt.checkpw() to verify the password
                 if (BCrypt.checkpw(password, storedHash)) {
-                    // Password matches the hash
-                    JOptionPane.showMessageDialog(this,
-                            "Login Successful!",
-                            "Success",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    // TODO: Navigate to the next part of your application
+                    StudentDashboard dashboard = new StudentDashboard(username);
+                    dashboard.setVisible(true);
+                    dispose();
                 } else {
                     // Password does NOT match the hash
                     JOptionPane.showMessageDialog(this,
                             "Incorrect username or password.",
                             "Login Failed",
                             JOptionPane.ERROR_MESSAGE);
+                    numTry -= 1;
                 }
             } else {
-                // No user was found with that username
                 JOptionPane.showMessageDialog(this,
                         "Incorrect username or password.",
                         "Login Failed",
@@ -220,5 +212,29 @@ public class StudentLoginFrame extends JFrame {
                     "Database Error",
                     JOptionPane.ERROR_MESSAGE);
         }
+    }
+    public void handleLock() {
+        loginButton.setEnabled(false);
+        usernameField.setEnabled(false);
+        passwordField.setEnabled(false);
+
+        JOptionPane.showMessageDialog(this,
+                "Too many failed attempts. Account locked for 30 seconds.",
+                "Auth Error",
+                JOptionPane.ERROR_MESSAGE);
+
+        Timer lockoutTimer = new Timer(30000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e ) {
+                numTry = 3;
+                loginButton.setEnabled(true);
+                usernameField.setEnabled(true);
+                passwordField.setEnabled(true);
+                setTitle("Student Login");
+            }
+        });
+
+        lockoutTimer.setRepeats(false);
+        lockoutTimer.start();
     }
 }
