@@ -8,8 +8,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.classfile.Superclass;
-
+import ui.dashboard.StudentDashboard;
 import ui.landing.LandingFrame;
+
 
 /**
  * The initial login window for the application.
@@ -159,20 +160,19 @@ public class StudentLoginFrame extends JFrame {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
-        // Display the captured input in a dialog box.
         // This is a placeholder for the real authentication logic.
-        String testUserName = "nikhil";
-        String testPassword = "nikhil";
-        if(password.equals(testPassword) &&  username.equals(testUserName)) {
-            String message = "Login attempt with:\nUsername: " + username + "\nPassword: " + password;
-            JOptionPane.showMessageDialog(this,
-                    message,
-                    "Login Information",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }else {
+        String testUserName = "a";
+        String testPassword = "a";
+
+        if (username.equals(testUserName) && password.equals(testPassword)) {
+            StudentDashboard dashboard = new StudentDashboard(username);
+            dashboard.setVisible(true);
+            dispose();
+            // ------------------------------------
+        } else {
             String message = "Incorrect username or password";
             JOptionPane.showMessageDialog(this,
-                    message, "login information", JOptionPane.INFORMATION_MESSAGE);
+                    message, "Login Failed", JOptionPane.ERROR_MESSAGE); // Changed to ERROR_MESSAGE for better UX
         }
     }
 }
