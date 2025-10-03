@@ -166,7 +166,6 @@ public class FacultyLoginFrame extends JFrame {
             pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
 
-            // Check if a user was found AND if the password matches
             if (rs.next()) {
                 String storedHash = rs.getString("facultyPass");
                 if (BCrypt.checkpw(password, storedHash)) {
@@ -183,10 +182,7 @@ public class FacultyLoginFrame extends JFrame {
             return; // Exit on database error
         }
 
-        // --- Handle the login result AFTER the database connection is closed ---
         if (loginSuccessful) {
-            // Navigate to the next frame on success
-            // Example: new FacultyDashboard(username).setVisible(true);
             dispose();
         } else {
             numTry--;
