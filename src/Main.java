@@ -25,7 +25,7 @@ public class Main {
             }
         });
         Connector connector = new Connector();
-        connector.connector();
+        connector.connect();
     }
 }
 
