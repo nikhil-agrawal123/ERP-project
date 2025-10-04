@@ -77,12 +77,15 @@ public class StudentDashboard extends JFrame {
         JButton homeButton = createMenuButton("Dashboard Home");
         JButton gradesButton = createMenuButton("My Grades");
         JButton coursesButton = createMenuButton("My Courses");
+        JButton receiptButton = createMenuButton("Fee Receipts");
         JButton logoutButton = createMenuButton("Logout");
 
         // --- Add Action Listeners to buttons ---
         homeButton.addActionListener(e -> cardLayout.show(mainContentPanel, "HOME"));
         gradesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "GRADES"));
         coursesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "COURSES"));
+        receiptButton.addActionListener(e -> cardLayout.show(mainContentPanel, "RECEIPTS"));
+
         // Add logout logic here (e.g., open login frame and dispose this one)
         logoutButton.addActionListener(e -> {
             // Placeholder for logout
@@ -98,6 +101,8 @@ public class StudentDashboard extends JFrame {
         panel.add(gradesButton);
         panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
         panel.add(coursesButton);
+        panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
+        panel.add(receiptButton);
 
         // Pushes the logout button to the bottom
         panel.add(Box.createVerticalGlue());
@@ -115,11 +120,39 @@ public class StudentDashboard extends JFrame {
         homePanel.setBackground(mainPanelColor);
         homePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40)); // Add padding
 
+        // --- Create a new panel just for the title labels ---
+        JPanel titlePanel = new JPanel();
+// Use BoxLayout to stack the labels vertically
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setBackground(mainPanelColor); // Match the background
+
         // Welcome label at the top
         JLabel welcomeLabel = new JLabel("Welcome, " + username + "!");
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
         welcomeLabel.setForeground(textColor);
-        homePanel.add(welcomeLabel, BorderLayout.NORTH);
+        welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Suggestion: Use a slightly smaller font for the details
+        JLabel nameLabel = new JLabel("Student name: " + username);
+        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Changed font
+        nameLabel.setForeground(textColor);
+        nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel rollLabel = new JLabel("Student Roll no.: 12345"); // Example roll no.
+        rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Changed font
+        rollLabel.setForeground(textColor);
+        rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // --- Add labels to the new title panel ---
+        titlePanel.add(welcomeLabel);
+        titlePanel.add(Box.createRigidArea(new Dimension(0, 10))); // Add a small vertical space
+        titlePanel.add(nameLabel);
+        titlePanel.add(rollLabel);
+
+
+        homePanel.add(titlePanel, BorderLayout.NORTH);
+
+
 
         // Panel to hold the stats boxes in the center
         JPanel statsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 20));
@@ -156,11 +189,19 @@ public class StudentDashboard extends JFrame {
             setForeground(textColor);
         }});
 
+        JPanel receiptPanel = new JPanel();
+        receiptPanel.setBackground(mainPanelColor);
+        receiptPanel.add(new JLabel("Your Courses Will Be Displayed Here") {{
+            setFont(new Font("Segoe UI", Font.PLAIN, 24));
+            setForeground(textColor);
+        }});
+
         // --- Add the panels to the CardLayout container ---
         // The String is a unique key to identify each card
         mainContentPanel.add(homePanel, "HOME");
         mainContentPanel.add(gradesPanel, "GRADES");
         mainContentPanel.add(coursesPanel, "COURSES");
+        mainContentPanel.add(receiptPanel, "RECEIPTS");
     }
 
 
