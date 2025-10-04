@@ -20,3 +20,9 @@ values ("nikhil","nikhil"),
 update auth.facultyauth
 set facultyPass = "$2a$10$Kc/0I11BVSsNDxsuYAsJDekSvfAze0t7auWjff5OF6oC/anfVdVje"
 where id = 1;
+
+insert into parentauth(studentId, parentPass)
+values
+    ( "nikhil", "$2a$10$Kc/0I11BVSsNDxsuYAsJDekSvfAze0t7auWjff5OF6oC/anfVdVje"),
+    ("gaurav","gaurav"),
+    ("aditri" , "aditri");
