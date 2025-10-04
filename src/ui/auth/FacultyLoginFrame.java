@@ -8,6 +8,8 @@ import java.sql.*;
 import dependancy.org.mindrot.jbcrypt.BCrypt;
 import databaseConfig.Connector;
 
+import ui.dashboard.FacultyDashboard;
+import ui.dashboard.StudentDashboard;
 import ui.landing.LandingFrame;
 
 public class FacultyLoginFrame extends JFrame {
@@ -155,21 +157,45 @@ public class FacultyLoginFrame extends JFrame {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
-        String sql = "SELECT facultyPass FROM facultyauth WHERE facultyId = ?";
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Username and password cannot be empty.",
+                    "Login Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String sql = "SELECT studentPass FROM studentAuth WHERE studentId = ?";
         Connector dbConnector = new Connector();
-        boolean loginSuccessful = false; // Flag to track success
 
         try (Connection conn = dbConnector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, username);
+
             ResultSet rs = pstmt.executeQuery();
 
+            // 2. Check if a user with that username was found
             if (rs.next()) {
-                String storedHash = rs.getString("facultyPass");
+                String storedHash = rs.getString("studentPass");
+
                 if (BCrypt.checkpw(password, storedHash)) {
-                    loginSuccessful = true;
+                    FacultyDashboard dashboard = new FacultyDashboard(username);
+                    dashboard.setVisible(true);
+                    dispose();
+                } else {
+                    // Password does NOT match the hash
+                    JOptionPane.showMessageDialog(this,
+                            "Incorrect username or password.",
+                            "Login Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                    numTry -= 1;
                 }
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Incorrect username or password.",
+                        "Login Failed",
+                        JOptionPane.ERROR_MESSAGE);
             }
 
         } catch (SQLException e) {
@@ -178,20 +204,8 @@ public class FacultyLoginFrame extends JFrame {
                     "An error occurred with the database.",
                     "Database Error",
                     JOptionPane.ERROR_MESSAGE);
-            return; // Exit on database error
-        }
-
-        if (loginSuccessful) {
-            dispose();
-        } else {
-            numTry--;
-            JOptionPane.showMessageDialog(this,
-                    "Incorrect username or password. " + numTry + " attempts remaining.",
-                    "Login Failed",
-                    JOptionPane.ERROR_MESSAGE);
         }
     }
-
     public void handleLock() {
         loginButton.setEnabled(false);
         usernameField.setEnabled(false);
@@ -209,7 +223,7 @@ public class FacultyLoginFrame extends JFrame {
                 loginButton.setEnabled(true);
                 usernameField.setEnabled(true);
                 passwordField.setEnabled(true);
-                setTitle("Faculty Login");
+                setTitle("Student Login");
             }
         });
 
