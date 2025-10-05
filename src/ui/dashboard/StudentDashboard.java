@@ -1,10 +1,9 @@
-// File: ui/dashboard/StudentDashboard.java
-
 package ui.dashboard;
 
 import ui.landing.LandingFrame;
 import javax.swing.*;
-import javax.swing.border.Border;
+import java.sql.*;
+import databaseConfig.Connector;
 import java.awt.*;
 
 /**
@@ -19,6 +18,10 @@ public class StudentDashboard extends JFrame {
     private Color mainPanelColor = new Color(50, 50, 50);
     private Color buttonColor = new Color(57, 174, 168);
     private Color textColor = Color.WHITE;
+
+    private double cg = 0;
+    private int credits = 0;
+    private int rollNumber = 0;
 
     // --- Main Layout Components ---
     private JPanel mainContentPanel;
@@ -116,14 +119,31 @@ public class StudentDashboard extends JFrame {
      * Creates the different "pages" (panels) and adds them to the main content panel.
      */
     private void createContentCards(String username) {
-        // --- 1. Home Panel ---
+        Connector connector = new Connector();
+        String sql = "SELECT currentCGPA,currentCredits,studentRollNumber FROM users.student WHERE studentName = ?";
+        try (Connection connection = connector.connect()){
+            PreparedStatement pstmt = connection.prepareStatement(sql);
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+
+            if(rs.next()){
+                Double currentCGPA = rs.getDouble("currentCGPA");
+                int currentCredits = rs.getInt("currentCredits");
+                int rollNu = rs.getInt("studentRollNumber");
+                cg = currentCGPA;
+                credits = currentCredits;
+                rollNumber = rollNu;
+            }
+
+        }catch (SQLException e){
+            System.out.println(e);
+        }
+
         JPanel homePanel = new JPanel(new BorderLayout(20, 20));
         homePanel.setBackground(mainPanelColor);
         homePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40)); // Add padding
 
-        // --- Create a new panel just for the title labels ---
         JPanel titlePanel = new JPanel();
-// Use BoxLayout to stack the labels vertically
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
         titlePanel.setBackground(mainPanelColor); // Match the background
 
@@ -139,7 +159,7 @@ public class StudentDashboard extends JFrame {
         nameLabel.setForeground(textColor);
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel rollLabel = new JLabel("Student Roll no.: 12345"); // Example roll no.
+        JLabel rollLabel = new JLabel("Student Roll no.: " + rollNumber); // Example roll no.
         rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Changed font
         rollLabel.setForeground(textColor);
         rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -150,18 +170,15 @@ public class StudentDashboard extends JFrame {
         titlePanel.add(nameLabel);
         titlePanel.add(rollLabel);
 
-
         homePanel.add(titlePanel, BorderLayout.NORTH);
-
-
 
         // Panel to hold the stats boxes in the center
         JPanel statsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 20));
         statsPanel.setBackground(mainPanelColor);
 
         // Create the two stat boxes using the helper method
-        JPanel cgpaBox = createStatBox("Current CGPA", "8.75");
-        JPanel creditsBox = createStatBox("Credits Earned", "120");
+        JPanel cgpaBox = createStatBox("Current CGPA", ""+cg);
+        JPanel creditsBox = createStatBox("Credits Earned", ""+credits);
 
         // Add boxes to the stats panel
         statsPanel.add(cgpaBox);

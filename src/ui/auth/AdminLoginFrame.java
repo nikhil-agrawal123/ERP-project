@@ -4,7 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.sql.*;
+import databaseConfig.Connector;
+import dependancy.org.mindrot.jbcrypt.BCrypt;
 
+import ui.dashboard.FacultyDashboard;
 import ui.landing.LandingFrame;
 
 
@@ -15,6 +19,7 @@ public class AdminLoginFrame extends JFrame {
     private JPasswordField passwordField;
     private JButton loginButton;
     private JButton BackButton;
+    private int numTry = 3;
     Color backgroundColor = new Color(45, 45, 45);
     Color buttonColor = new Color(57, 174, 168);
     Color textColor = Color.WHITE;
@@ -61,7 +66,11 @@ public class AdminLoginFrame extends JFrame {
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                handleLoginAttempt();
+                if(numTry > 0){
+                    handleLoginAttempt();
+                }else{
+                    handleLock();
+                }
             }
         });
 
@@ -148,20 +157,78 @@ public class AdminLoginFrame extends JFrame {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
-        // Display the captured input in a dialog box.
-        // This is a placeholder for the real authentication logic.
-        String testUserName = "nikhil";
-        String testPassword = "nikhil";
-        if(password.equals(testPassword) &&  username.equals(testUserName)) {
-            String message = "Login attempt with:\nUsername: " + username + "\nPassword: " + password;
+        if (username.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    message,
-                    "Login Information",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }else {
-            String message = "Incorrect username or password";
-            JOptionPane.showMessageDialog(this,
-                    message, "login information", JOptionPane.INFORMATION_MESSAGE);
+                    "Username and password cannot be empty.",
+                    "Login Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
+
+        String sql = "SELECT adminPass FROM adminAuth WHERE adminId = ?";
+        Connector dbConnector = new Connector();
+
+        try (Connection conn = dbConnector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            // 2. Check if a user with that username was found
+            if (rs.next()) {
+                String storedHash = rs.getString("adminPass");
+
+                if (BCrypt.checkpw(password, storedHash)) {
+                    FacultyDashboard dashboard = new FacultyDashboard(username);
+                    dashboard.setVisible(true);
+                    dispose();
+                } else {
+                    // Password does NOT match the hash
+                    JOptionPane.showMessageDialog(this,
+                            "Incorrect username or password.",
+                            "Login Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                    numTry -= 1;
+                }
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Incorrect username or password.",
+                        "Login Failed",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "An error occurred with the database.",
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void handleLock() {
+        loginButton.setEnabled(false);
+        usernameField.setEnabled(false);
+        passwordField.setEnabled(false);
+
+        JOptionPane.showMessageDialog(this,
+                "Too many failed attempts. Account locked for 30 seconds.",
+                "Auth Error",
+                JOptionPane.ERROR_MESSAGE);
+
+        Timer lockoutTimer = new Timer(30000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e ) {
+                numTry = 3;
+                loginButton.setEnabled(true);
+                usernameField.setEnabled(true);
+                passwordField.setEnabled(true);
+                setTitle("Student Login");
+            }
+        });
+
+        lockoutTimer.setRepeats(false);
+        lockoutTimer.start();
     }
 }

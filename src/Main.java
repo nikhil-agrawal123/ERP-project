@@ -3,6 +3,7 @@ import ui.landing.LandingFrame;
 
 import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
+import dependancy.org.mindrot.jbcrypt.BCrypt;
 
 /**
  * The main entry point for the University ERP application.
