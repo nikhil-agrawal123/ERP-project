@@ -84,7 +84,6 @@ public class FacultyLoginFrame extends JFrame {
 
     }
 
-
     /**
      * Sets the layout manager and adds all components to the frame.
      */

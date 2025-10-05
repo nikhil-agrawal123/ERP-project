@@ -24,3 +24,4 @@ create table parentAuth(
     studentId varchar(50) not null,
     parentPass text not null
 );
+alter table adminauth drop column adminName;
