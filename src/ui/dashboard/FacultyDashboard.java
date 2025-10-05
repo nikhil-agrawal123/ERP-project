@@ -3,7 +3,7 @@
 package ui.dashboard;
 
 import javax.swing.*;
-import javax.swing.border.Border;
+import ui.landing.LandingFrame;
 import java.awt.*;
 
 /**
@@ -87,11 +87,11 @@ public class FacultyDashboard extends JFrame {
         coursesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Scores"));
         receiptButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Stats"));
         TAButton.addActionListener(e -> cardLayout.show(mainContentPanel, "TA"));
-        // Add logout logic here (e.g., open login frame and dispose this one)
         logoutButton.addActionListener(e -> {
-            // Placeholder for logout
-            JOptionPane.showMessageDialog(this, "Logout functionality to be added.");
-            // Example: new LoginFrame().setVisible(true); dispose();
+            JOptionPane.showMessageDialog(this, "Logout successful");
+            LandingFrame landingFrame = new LandingFrame();
+            landingFrame.setVisible(true);
+            dispose();
         });
 
 
@@ -134,7 +134,6 @@ public class FacultyDashboard extends JFrame {
 // Align labels to the left for a cleaner look
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-// Suggestion: Use a slightly smaller font for the details
         JLabel nameLabel = new JLabel("Faculty name: " + username);
         nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Changed font
         nameLabel.setForeground(textColor);
@@ -145,8 +144,6 @@ public class FacultyDashboard extends JFrame {
         rollLabel.setForeground(textColor);
         rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-
-// --- Add labels to the new title panel ---
         titlePanel.add(welcomeLabel);
         titlePanel.add(Box.createRigidArea(new Dimension(0, 10))); // Add a small vertical space
         titlePanel.add(nameLabel);

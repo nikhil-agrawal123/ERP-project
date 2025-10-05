@@ -9,7 +9,6 @@ import dependancy.org.mindrot.jbcrypt.BCrypt;
 import databaseConfig.Connector;
 
 import ui.dashboard.FacultyDashboard;
-import ui.dashboard.StudentDashboard;
 import ui.landing.LandingFrame;
 
 public class FacultyLoginFrame extends JFrame {
@@ -81,6 +80,8 @@ public class FacultyLoginFrame extends JFrame {
                 dispose();
             }
         });
+
+
     }
 
 

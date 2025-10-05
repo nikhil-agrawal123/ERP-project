@@ -2,6 +2,7 @@
 
 package ui.dashboard;
 
+import ui.landing.LandingFrame;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
@@ -86,11 +87,11 @@ public class StudentDashboard extends JFrame {
         coursesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "COURSES"));
         receiptButton.addActionListener(e -> cardLayout.show(mainContentPanel, "RECEIPTS"));
 
-        // Add logout logic here (e.g., open login frame and dispose this one)
         logoutButton.addActionListener(e -> {
-            // Placeholder for logout
-            JOptionPane.showMessageDialog(this, "Logout functionality to be added.");
-            // Example: new LoginFrame().setVisible(true); dispose();
+            JOptionPane.showMessageDialog(this, "Logout Successful");
+            LandingFrame landingFrame = new LandingFrame();
+            landingFrame.setVisible(true);
+            dispose();
         });
 
 
