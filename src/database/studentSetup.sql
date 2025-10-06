@@ -12,11 +12,17 @@ create table Student(
     currentCredits int not null,
     feeHistory json
 );
+
+
+
 alter table student
     add column studentId int not null;
 
 alter table student
     add column studentEmail varchar(100) not null;
+
+alter table student
+    add column numberCourses int not null ;
 
 alter table Users.student MODIFY COLUMN studentId VARCHAR(100);
 
