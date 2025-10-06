@@ -3,6 +3,8 @@ package ui.dashboard;
 import org.json.JSONObject;
 import ui.landing.LandingFrame;
 import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
 import databaseConfig.Connector;
 import java.awt.*;
@@ -270,7 +272,7 @@ public class StudentDashboard extends JFrame {
     private JPanel createStatBox(String title, String value) {
         JPanel boxPanel = new JPanel(new BorderLayout());
         boxPanel.setBackground(sideMenuColor); // Use a contrasting background
-        boxPanel.setPreferredSize(new Dimension(200, 200));
+        boxPanel.setPreferredSize(new Dimension(250, 200));
         boxPanel.setMaximumSize(boxPanel.getPreferredSize());
         // Combine a colored line border with internal padding
         boxPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -286,7 +288,7 @@ public class StudentDashboard extends JFrame {
 
         // Value label for the center of the box
         JLabel valueLabel = new JLabel(value, SwingConstants.CENTER);
-        valueLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 52));
+        valueLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 56));
         valueLabel.setForeground(textColor);
         boxPanel.add(valueLabel, BorderLayout.CENTER);
 
@@ -298,51 +300,42 @@ public class StudentDashboard extends JFrame {
 
 // ... inside your StudentDashboard class
 
+// Replace the entire createCoursesPanel method in your StudentDashboard class with this one.
+
     private JPanel createCoursesPanel(int studentRollNumber) {
         JPanel coursesPanel = new JPanel();
         coursesPanel.setLayout(new BoxLayout(coursesPanel, BoxLayout.Y_AXIS));
-        coursesPanel.setBackground(sideMenuColor); // Match the style of stat boxes
-        coursesPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(buttonColor, 2, true),
-                BorderFactory.createEmptyBorder(20, 25, 20, 25) // A bit more horizontal padding
-        ));
+        coursesPanel.setBackground(mainPanelColor);
+
+        // MODIFIED: The outer line border has been removed. We only keep the inner padding.
+        coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
 
         // --- Panel Title ---
         JLabel titleLabel = new JLabel("Registered Courses", SwingConstants.LEFT);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         titleLabel.setForeground(textColor);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0)); // Bottom margin
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         coursesPanel.add(titleLabel);
 
-        // --- Database Fetching (CORRECTED LOGIC) ---
-        // The SQL now selects the JSON column from the student table
+        // --- Database Fetching Logic (remains the same) ---
         String sql = "SELECT registerCourses FROM users.student WHERE studentRollNumber = ?";
         List<String> courseNames = new ArrayList<>();
-
+        // Database connection and data fetching code remains here...
         try (Connection conn = new Connector().connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, studentRollNumber);
             ResultSet rs = pstmt.executeQuery();
 
-            // ✅ Use 'if' since we expect only one student record
             if (rs.next()) {
-                // 1. Get the entire JSON data as a String
                 String jsonString = rs.getString("registerCourses");
-
-                // 2. Check if the JSON string is not null or empty
                 if (jsonString != null && !jsonString.trim().isEmpty() && !jsonString.equals("{}")) {
-                    // 3. Parse the string into a JSONObject
                     JSONObject registeredCourses = new JSONObject(jsonString);
-
-                    // 4. Iterate through the keys of the main JSON object (e.g., "1", "2")
                     Iterator<String> keys = registeredCourses.keys();
-                    while(keys.hasNext()) {
+                    while (keys.hasNext()) {
                         String key = keys.next();
-                        // Get the inner course object
                         JSONObject courseObject = registeredCourses.getJSONObject(key);
-                        // Extract the course name
                         String courseName = courseObject.getString("course_name");
                         courseNames.add(courseName);
                     }
@@ -350,7 +343,6 @@ public class StudentDashboard extends JFrame {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            // Optionally, add a label to show an error has occurred
             JLabel errorLabel = new JLabel("Error loading courses.");
             errorLabel.setFont(new Font("Segoe UI", Font.ITALIC, 16));
             errorLabel.setForeground(Color.RED);
@@ -359,7 +351,7 @@ public class StudentDashboard extends JFrame {
             return coursesPanel;
         }
 
-        // --- Display Courses ---
+        // --- Display Courses using a Dropdown Menu ---
         if (courseNames.isEmpty()) {
             JLabel noCoursesLabel = new JLabel("No courses registered for this semester.");
             noCoursesLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -367,43 +359,140 @@ public class StudentDashboard extends JFrame {
             noCoursesLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             coursesPanel.add(noCoursesLabel);
         } else {
-            for (String courseName : courseNames) {
-                JLabel courseLabel = new JLabel("• " + courseName); // Use a bullet point for list effect
-                courseLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-                courseLabel.setForeground(textColor);
-                courseLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-                courseLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0)); // Spacing between items
-                coursesPanel.add(courseLabel);
-            }
+            JPanel selectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            selectionPanel.setBackground(mainPanelColor);
+            selectionPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            // MODIFIED: Add the placeholder message as the first item in our list.
+            courseNames.add(0, "Select a course...");
+
+            String[] courseArray = courseNames.toArray(new String[0]);
+            JComboBox<String> courseDropdown = new JComboBox<>(courseArray);
+
+            courseDropdown.setUI(new CustomComboBoxUI());
+            courseDropdown.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+
+            courseDropdown.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            courseDropdown.setBackground(bgColor);
+            courseDropdown.setForeground(textColor);
+            courseDropdown.setPreferredSize(new Dimension(350, 35));
+
+// UPDATED LINE: Replace the old border with the new custom RoundedBorder.
+// The parameters are: color, thickness, and corner radius.
+            // Use a slightly lighter gray for a subtle border contrast
+            courseDropdown.setBorder(new RoundedBorder(sideMenuColor, 1, 15));
+
+            // MODIFIED: Update the action listener to ignore the placeholder message.
+            courseDropdown.addActionListener(e -> {
+                // Only show the message if the selected item is not the first one (the placeholder).
+                if (courseDropdown.getSelectedIndex() > 0) {
+                    String selectedCourse = (String) courseDropdown.getSelectedItem();
+                    JOptionPane.showMessageDialog(
+                            coursesPanel,
+                            "You selected: " + selectedCourse,
+                            "Course Selection",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+                }
+            });
+
+            selectionPanel.add(courseDropdown); // We don't need a separate label
+            coursesPanel.add(selectionPanel);
         }
 
-        coursesPanel.add(Box.createVerticalGlue()); // Pushes content to the top
+        coursesPanel.add(Box.createVerticalGlue());
         return coursesPanel;
     }
-    // This helper method styles our course buttons to look like links
-    private void styleCourseButton(JButton button) {
-        button.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        button.setForeground(textColor);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Make the button look like a label
-        button.setBorderPainted(false);
-        button.setContentAreaFilled(false);
-        button.setFocusPainted(false);
-        button.setOpaque(false);
-        button.setHorizontalAlignment(SwingConstants.LEFT); // Align text to the left
-        button.setAlignmentX(Component.LEFT_ALIGNMENT);
+    class RoundedBorder implements Border {
+        private int radius;
+        private Color color;
+        private int strokeWidth;
 
-        // Add a hover effect
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setForeground(buttonColor); // Change color on hover
-            }
+        public RoundedBorder(Color color, int strokeWidth, int radius) {
+            this.radius = radius;
+            this.color = color;
+            this.strokeWidth = strokeWidth;
+        }
 
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setForeground(textColor); // Change back
-            }
-        });
+        public Insets getBorderInsets(Component c) {
+            // Create some padding inside the border
+            return new Insets(this.radius / 2, this.radius / 2, this.radius / 2, this.radius / 2);
+        }
+
+        public boolean isBorderOpaque() {
+            return true;
+        }
+
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2 = (Graphics2D) g;
+            // Turn on anti-aliasing for smooth corners
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(color);
+            g2.setStroke(new BasicStroke(strokeWidth));
+            // Draw the rounded rectangle. The -1 and -strokeWidth adjustments prevent clipping.
+            g2.draw(new RoundRectangle2D.Double(x, y, width - 1, height - 1, radius, radius));
+        }
+    }
+
+    // Add these two new classes inside your StudentDashboard class.
+
+    /**
+     * A custom UI delegate for the JComboBox that uses our custom arrow button.
+     */
+    // Replace your existing CustomComboBoxUI class with this one.
+
+    private class CustomComboBoxUI extends javax.swing.plaf.basic.BasicComboBoxUI {
+        @Override
+        protected JButton createArrowButton() {
+            return new RoundedArrowButton();
+        }
+
+        // NEW METHOD: This prevents the default UI from painting the white
+        // rectangular background behind the selected item.
+        @Override
+        public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
+            // Do nothing, so the background remains clean.
+        }
+    }
+
+    /**
+     * A custom JButton that paints a rounded background and a white arrow.
+     */
+    private class RoundedArrowButton extends JButton {
+        public RoundedArrowButton() {
+            super();
+            // Remove all default styling to allow for custom painting.
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            // Enable anti-aliasing for smooth curves and lines
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            // --- Paint the curved button background ---
+            // Use a slightly lighter gray to match the border
+            g2.setColor(sideMenuColor);
+            // Fill a rounded rectangle for the button's shape.
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+
+            // --- Paint the white arrow ---
+            g2.setColor(Color.WHITE);
+            g2.setStroke(new BasicStroke(2)); // Make the arrow a bit thicker
+            // Calculate position to center the arrow
+            int x = (getWidth() - 10) / 2;
+            int y = (getHeight() - 6) / 2;
+            // Draw the two lines that form the arrow
+            g2.drawLine(x, y, x + 5, y + 5);
+            g2.drawLine(x + 10, y, x + 5, y + 5);
+
+            g2.dispose();
+        }
     }
 
 }
