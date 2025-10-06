@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import databaseConfig.Connector;
 import dependancy.org.mindrot.jbcrypt.BCrypt;
 import ui.dashboard.ParentDashboard;
-import ui.dashboard.StudentDashboard;
 import ui.landing.LandingFrame;
 
 

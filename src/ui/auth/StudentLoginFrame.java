@@ -22,6 +22,7 @@ public class StudentLoginFrame extends JFrame {
     private JPasswordField passwordField;
     private JButton loginButton;
     private JButton BackButton;
+    private JButton ForgetButton;
     Color backgroundColor = new Color(45, 45, 45);
     Color buttonColor = new Color(57, 174, 168);
     Color textColor = Color.WHITE;
@@ -61,7 +62,8 @@ public class StudentLoginFrame extends JFrame {
         }
         loginButton = new JButton("Login");
         BackButton = new JButton("Back");
-        JButton[] buttons = {loginButton, BackButton};
+        ForgetButton = new JButton("Forget");
+        JButton[] buttons = {loginButton, BackButton, ForgetButton};
         for (JButton button : buttons) {
             button.setBackground(buttonColor);
             button.setForeground(textColor);
@@ -86,6 +88,15 @@ public class StudentLoginFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 LandingFrame frame = new LandingFrame();
                 frame.setVisible(true);
+                dispose();
+            }
+        });
+
+        ForgetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ForgetPassword newPassword = new ForgetPassword();
+                newPassword.setVisible(true);
                 dispose();
             }
         });
@@ -154,6 +165,10 @@ public class StudentLoginFrame extends JFrame {
         gbc.gridy = 4;
         gbc.gridwidth = 1;
         add(BackButton, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        add(ForgetButton, gbc);
     }
 
     /**
@@ -213,6 +228,7 @@ public class StudentLoginFrame extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
         }
     }
+
     public void handleLock() {
         loginButton.setEnabled(false);
         usernameField.setEnabled(false);
