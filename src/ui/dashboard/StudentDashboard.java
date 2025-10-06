@@ -295,22 +295,28 @@ public class StudentDashboard extends JFrame {
 
 // No new imports needed for this method specifically
 
+
+// ... inside your StudentDashboard class
+
     private JPanel createCoursesPanel(int studentRollNumber) {
         JPanel coursesPanel = new JPanel();
         coursesPanel.setLayout(new BoxLayout(coursesPanel, BoxLayout.Y_AXIS));
-        coursesPanel.setBackground(sideMenuColor);
+        coursesPanel.setBackground(sideMenuColor); // Match the style of stat boxes
         coursesPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(buttonColor, 2, true),
-                BorderFactory.createEmptyBorder(20, 25, 20, 25)
+                BorderFactory.createEmptyBorder(20, 25, 20, 25) // A bit more horizontal padding
         ));
 
+        // --- Panel Title ---
         JLabel titleLabel = new JLabel("Registered Courses", SwingConstants.LEFT);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         titleLabel.setForeground(textColor);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0)); // Bottom margin
         coursesPanel.add(titleLabel);
 
+        // --- Database Fetching (CORRECTED LOGIC) ---
+        // The SQL now selects the JSON column from the student table
         String sql = "SELECT registerCourses FROM users.student WHERE studentRollNumber = ?";
         List<String> courseNames = new ArrayList<>();
 
@@ -320,23 +326,40 @@ public class StudentDashboard extends JFrame {
             pstmt.setInt(1, studentRollNumber);
             ResultSet rs = pstmt.executeQuery();
 
+            // ✅ Use 'if' since we expect only one student record
             if (rs.next()) {
+                // 1. Get the entire JSON data as a String
                 String jsonString = rs.getString("registerCourses");
+
+                // 2. Check if the JSON string is not null or empty
                 if (jsonString != null && !jsonString.trim().isEmpty() && !jsonString.equals("{}")) {
+                    // 3. Parse the string into a JSONObject
                     JSONObject registeredCourses = new JSONObject(jsonString);
+
+                    // 4. Iterate through the keys of the main JSON object (e.g., "1", "2")
                     Iterator<String> keys = registeredCourses.keys();
-                    while (keys.hasNext()) {
+                    while(keys.hasNext()) {
                         String key = keys.next();
+                        // Get the inner course object
                         JSONObject courseObject = registeredCourses.getJSONObject(key);
-                        courseNames.add(courseObject.getString("course_name"));
+                        // Extract the course name
+                        String courseName = courseObject.getString("course_name");
+                        courseNames.add(courseName);
                     }
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            // ... error handling code remains the same
+            // Optionally, add a label to show an error has occurred
+            JLabel errorLabel = new JLabel("Error loading courses.");
+            errorLabel.setFont(new Font("Segoe UI", Font.ITALIC, 16));
+            errorLabel.setForeground(Color.RED);
+            errorLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            coursesPanel.add(errorLabel);
+            return coursesPanel;
         }
 
+        // --- Display Courses ---
         if (courseNames.isEmpty()) {
             JLabel noCoursesLabel = new JLabel("No courses registered for this semester.");
             noCoursesLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -345,22 +368,16 @@ public class StudentDashboard extends JFrame {
             coursesPanel.add(noCoursesLabel);
         } else {
             for (String courseName : courseNames) {
-                // ✅ CHANGED FROM JLABEL TO JBUTTON
-                JButton courseButton = new JButton("• " + courseName);
-                styleCourseButton(courseButton); // Apply custom styling
-
-                // ✅ ADD ACTION LISTENER TO HANDLE CLICKS
-                courseButton.addActionListener(e -> {
-                    // This will create and switch to the new panel
-                    showCourseDetailPanel(courseName);
-                });
-
-                coursesPanel.add(courseButton);
-                coursesPanel.add(Box.createRigidArea(new Dimension(0, 5))); // A little space between buttons
+                JLabel courseLabel = new JLabel("• " + courseName); // Use a bullet point for list effect
+                courseLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                courseLabel.setForeground(textColor);
+                courseLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                courseLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0)); // Spacing between items
+                coursesPanel.add(courseLabel);
             }
         }
 
-        coursesPanel.add(Box.createVerticalGlue());
+        coursesPanel.add(Box.createVerticalGlue()); // Pushes content to the top
         return coursesPanel;
     }
     // This helper method styles our course buttons to look like links
@@ -387,59 +404,6 @@ public class StudentDashboard extends JFrame {
                 button.setForeground(textColor); // Change back
             }
         });
-    }
-
-    // This method creates the new panel for a specific course
-    private JPanel createCourseDetailPanel(String courseName) {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(mainPanelColor);
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
-
-        // --- Top section with Title and Back Button ---
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setOpaque(false); // Make it transparent
-
-        // Back button to return to the dashboard
-        JButton backButton = new JButton("← Back to Dashboard");
-        backButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        backButton.setForeground(textColor);
-        styleCourseButton(backButton); // Use the same styling for consistency
-        backButton.addActionListener(e -> cardLayout.show(mainContentPanel, "HOME"));
-        topPanel.add(backButton, BorderLayout.WEST);
-
-        // Course Title
-        JLabel titleLabel = new JLabel(courseName, SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        titleLabel.setForeground(textColor);
-        topPanel.add(titleLabel, BorderLayout.NORTH);
-
-        panel.add(topPanel, BorderLayout.NORTH);
-
-        // --- Main Content Area ---
-        // You can add database queries here to fetch and display more details
-        JTextArea courseDetailsArea = new JTextArea("Details for " + courseName + " would go here.\n\n" +
-                "You could display information like:\n" +
-                "- Instructor Name\n" +
-                "- Course Code\n" +
-                "- Credits\n");
-        courseDetailsArea.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        courseDetailsArea.setForeground(textColor);
-        courseDetailsArea.setBackground(sideMenuColor); // Use a slightly different color
-        courseDetailsArea.setEditable(false);
-        courseDetailsArea.setLineWrap(true);
-        courseDetailsArea.setWrapStyleWord(true);
-        courseDetailsArea.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        panel.add(new JScrollPane(courseDetailsArea), BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    // This method handles adding the new panel and switching the view
-    private void showCourseDetailPanel(String courseName) {
-        String panelId = "COURSE_" + courseName; // Create a unique ID for the panel
-        JPanel coursePanel = createCourseDetailPanel(courseName);
-        mainContentPanel.add(coursePanel, panelId);
-        cardLayout.show(mainContentPanel, panelId);
     }
 
 }
