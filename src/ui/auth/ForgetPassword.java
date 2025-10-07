@@ -3,8 +3,11 @@ package ui.auth;
 import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
+
+import databaseConfig.Connector;
 import dependancy.org.mindrot.jbcrypt.BCrypt;
 import ui.landing.LandingFrame;
+import java.util.Random;
 
 public class ForgetPassword extends JFrame{
     private JTextField userEmail;
@@ -29,6 +32,58 @@ public class ForgetPassword extends JFrame{
         layoutComponents();
     }
 
+    private void updateDatabase(String newHash) {
+        String getUserIdSQL = "SELECT studentId FROM users.student WHERE studentEmail = ?";
+        String updatePassSQL = "UPDATE auth.studentAuth SET studentPass = ? WHERE studentId = ?";
+
+        Connector dbConnector = new Connector();
+
+        try (Connection conn = dbConnector.connect()) {
+            // Prepare and execute the query to find the user
+            PreparedStatement preparedStatement = conn.prepareStatement(getUserIdSQL);
+            preparedStatement.setString(1, userEmail.getText());
+            ResultSet rs = preparedStatement.executeQuery();
+
+            // FIX: Check if a result was found AND move the cursor to the first row.
+            if (rs.next()) {
+                // Now that the cursor is on a valid row, we can get the studentId.
+                String studentId = rs.getString("studentId");
+                System.out.println("Found student ID: " + studentId);
+
+                // Proceed with the update
+                PreparedStatement ps = conn.prepareStatement(updatePassSQL);
+                ps.setString(1, newHash);
+                ps.setString(2, studentId);
+
+                int rowsAffected = ps.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    System.out.println("Password reset successful");
+                } else {
+                    System.out.println("Update failed, no rows were changed.");
+                }
+
+            } else {
+                // Handle the case where the email was not found in the database.
+                System.out.println("No user found with the email: " + userEmail.getText());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String passwordGen(){
+        StringBuilder password = new StringBuilder();
+        String alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        Random rand = new Random();
+        for(int i = 0; i < 5; i++){
+            int index = rand.nextInt(alphanumeric.length());
+            password.append(alphanumeric.charAt(index));
+        }
+        return password.toString();
+    }
+
     private void initComponents(){
         userEmail = new JTextField(20);
         userEmail.setBackground(textFieldBgColor);
@@ -51,8 +106,10 @@ public class ForgetPassword extends JFrame{
 
         submitButton.addActionListener(actionEvent -> {
             String email = userEmail.getText();
-            String password = BCrypt.hashpw("Temporary for now", BCrypt.gensalt());
-            System.out.println(password);
+            String temp = passwordGen();
+            String password = BCrypt.hashpw(passwordGen(), BCrypt.gensalt());
+            System.out.println("new pass:" + temp);
+            updateDatabase(password);
             if(email.isEmpty() || password.isEmpty()){
                 JOptionPane.showMessageDialog(null, "Please fill the field");
             }
