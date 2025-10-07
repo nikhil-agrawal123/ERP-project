@@ -292,6 +292,12 @@ public class StudentDashboard extends JFrame {
         valueLabel.setForeground(textColor);
         boxPanel.add(valueLabel, BorderLayout.CENTER);
 
+
+
+
+
+
+
         return boxPanel;
     }
 
