@@ -75,9 +75,9 @@ public class ForgetPassword extends JFrame{
 
     private String passwordGen(){
         StringBuilder password = new StringBuilder();
-        String alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        String alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&";
         Random rand = new Random();
-        for(int i = 0; i < 5; i++){
+        for(int i = 0; i < 7; i++){
             int index = rand.nextInt(alphanumeric.length());
             password.append(alphanumeric.charAt(index));
         }
