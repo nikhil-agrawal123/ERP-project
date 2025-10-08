@@ -107,7 +107,7 @@ public class ForgetPassword extends JFrame{
         submitButton.addActionListener(actionEvent -> {
             String email = userEmail.getText();
             String temp = passwordGen();
-            String password = BCrypt.hashpw(passwordGen(), BCrypt.gensalt());
+            String password = BCrypt.hashpw(temp, BCrypt.gensalt());
             System.out.println("new pass:" + temp);
             updateDatabase(password);
             if(email.isEmpty() || password.isEmpty()){
