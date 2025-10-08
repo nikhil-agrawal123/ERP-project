@@ -17,6 +17,7 @@ public class ForgetPassword extends JFrame{
     Color buttonColor = new Color(57, 174, 168);
     Color textColor = Color.WHITE;
     private Color textFieldBgColor = new Color(60, 60, 60);
+    private boolean success = true;
 
     public ForgetPassword(){
         super("Forget Password");
@@ -39,18 +40,14 @@ public class ForgetPassword extends JFrame{
         Connector dbConnector = new Connector();
 
         try (Connection conn = dbConnector.connect()) {
-            // Prepare and execute the query to find the user
             PreparedStatement preparedStatement = conn.prepareStatement(getUserIdSQL);
             preparedStatement.setString(1, userEmail.getText());
             ResultSet rs = preparedStatement.executeQuery();
 
-            // FIX: Check if a result was found AND move the cursor to the first row.
             if (rs.next()) {
-                // Now that the cursor is on a valid row, we can get the studentId.
                 String studentId = rs.getString("studentId");
                 System.out.println("Found student ID: " + studentId);
 
-                // Proceed with the update
                 PreparedStatement ps = conn.prepareStatement(updatePassSQL);
                 ps.setString(1, newHash);
                 ps.setString(2, studentId);
@@ -58,8 +55,36 @@ public class ForgetPassword extends JFrame{
                 int rowsAffected = ps.executeUpdate();
 
                 if (rowsAffected > 0) {
+                    JFrame frame = new JFrame();
+                    frame.setSize(300,200);
+                    frame.setLocationRelativeTo(null);
+
+                    Object[] option = {"Proceed to login"};
+                    int choice = JOptionPane.showOptionDialog(
+                            frame,
+                            "Password updated Succesfully",
+                            "Success",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE,
+                            null,
+                            option,
+                            option[0]
+                    );
+
+                    if(choice == 0){
+                        LandingFrame landingFrame = new LandingFrame();
+                        landingFrame.setVisible(true);
+                        dispose();
+                    }else{
+                        LandingFrame landingFrame = new LandingFrame();
+                        landingFrame.setVisible(true);
+                        dispose();
+                    }
+                    frame.dispose();
+
                     System.out.println("Password reset successful");
                 } else {
+                    success = false;
                     System.out.println("Update failed, no rows were changed.");
                 }
 
@@ -106,12 +131,16 @@ public class ForgetPassword extends JFrame{
 
         submitButton.addActionListener(actionEvent -> {
             String email = userEmail.getText();
-            String temp = passwordGen();
-            String password = BCrypt.hashpw(temp, BCrypt.gensalt());
-            System.out.println("new pass:" + temp);
-            updateDatabase(password);
-            if(email.isEmpty() || password.isEmpty()){
+            if(email.isEmpty()){
                 JOptionPane.showMessageDialog(null, "Please fill the field");
+            }else{
+                String temp = passwordGen();
+                String password = BCrypt.hashpw(temp, BCrypt.gensalt());
+                System.out.println("new pass:" + temp);
+                updateDatabase(password);
+                if(!success){
+                    JOptionPane.showMessageDialog(null, "Password reset failed enter a valid EmailId");
+                }
             }
         });
 

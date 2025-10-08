@@ -383,14 +383,9 @@ public class StudentDashboard extends JFrame {
             courseDropdown.setForeground(textColor);
             courseDropdown.setPreferredSize(new Dimension(350, 35));
 
-// UPDATED LINE: Replace the old border with the new custom RoundedBorder.
-// The parameters are: color, thickness, and corner radius.
-            // Use a slightly lighter gray for a subtle border contrast
             courseDropdown.setBorder(new RoundedBorder(sideMenuColor, 1, 15));
 
-            // MODIFIED: Update the action listener to ignore the placeholder message.
             courseDropdown.addActionListener(e -> {
-                // Only show the message if the selected item is not the first one (the placeholder).
                 if (courseDropdown.getSelectedIndex() > 0) {
                     String selectedCourse = (String) courseDropdown.getSelectedItem();
                     JOptionPane.showMessageDialog(
@@ -422,7 +417,6 @@ public class StudentDashboard extends JFrame {
         }
 
         public Insets getBorderInsets(Component c) {
-            // Create some padding inside the border
             return new Insets(this.radius / 2, this.radius / 2, this.radius / 2, this.radius / 2);
         }
 
@@ -432,21 +426,17 @@ public class StudentDashboard extends JFrame {
 
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
             Graphics2D g2 = (Graphics2D) g;
-            // Turn on anti-aliasing for smooth corners
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setColor(color);
             g2.setStroke(new BasicStroke(strokeWidth));
-            // Draw the rounded rectangle. The -1 and -strokeWidth adjustments prevent clipping.
             g2.draw(new RoundRectangle2D.Double(x, y, width - 1, height - 1, radius, radius));
         }
     }
 
-    // Add these two new classes inside your StudentDashboard class.
 
     /**
      * A custom UI delegate for the JComboBox that uses our custom arrow button.
      */
-    // Replace your existing CustomComboBoxUI class with this one.
 
     private class CustomComboBoxUI extends javax.swing.plaf.basic.BasicComboBoxUI {
         @Override
@@ -454,11 +444,8 @@ public class StudentDashboard extends JFrame {
             return new RoundedArrowButton();
         }
 
-        // NEW METHOD: This prevents the default UI from painting the white
-        // rectangular background behind the selected item.
         @Override
         public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
-            // Do nothing, so the background remains clean.
         }
     }
 
@@ -478,19 +465,13 @@ public class StudentDashboard extends JFrame {
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g.create();
-            // Enable anti-aliasing for smooth curves and lines
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            // --- Paint the curved button background ---
-            // Use a slightly lighter gray to match the border
             g2.setColor(sideMenuColor);
-            // Fill a rounded rectangle for the button's shape.
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
 
-            // --- Paint the white arrow ---
             g2.setColor(Color.WHITE);
             g2.setStroke(new BasicStroke(2)); // Make the arrow a bit thicker
-            // Calculate position to center the arrow
             int x = (getWidth() - 10) / 2;
             int y = (getHeight() - 6) / 2;
             // Draw the two lines that form the arrow
