@@ -201,19 +201,34 @@ public class StudentDashboard extends JFrame {
         JPanel statsContainer = new JPanel(new BorderLayout());
         statsContainer.setBackground(mainPanelColor);
         statsContainer.add(statsPanel, BorderLayout.NORTH);
-        // --- END OF MODIFIED SECTION ---
 
-        JPanel coursesListPanel = createCoursesPanel(rollNumber);
 
-        // Add the new container (which holds the stats panel) to the grid
         centerContentPanel.add(statsContainer);
-        centerContentPanel.add(coursesListPanel);
+        JPanel rightSideContainer = new JPanel();
+        rightSideContainer.setLayout(new BoxLayout(rightSideContainer, BoxLayout.Y_AXIS));
+        rightSideContainer.setBackground(mainPanelColor);
+
+        // Create the individual panels
+        JPanel coursesListPanel = createCoursesPanel();
+        JPanel appointmentsPanel = createAppointmentsPanel(); // The new panel
+
+        // Add the panels to the right-side container
+        rightSideContainer.add(coursesListPanel);
+        rightSideContainer.add(Box.createRigidArea(new Dimension(0, 20))); // Spacer for separation
+        rightSideContainer.add(appointmentsPanel);
+        rightSideContainer.add(Box.createVerticalGlue()); // Pushes panels to the top
+
+        // Add the right-side container to the main grid layout
+        centerContentPanel.add(rightSideContainer);
 
         homePanel.add(centerContentPanel, BorderLayout.CENTER);
 // --- 2. Grades Panel ---
-// MODIFIED SECTION
-        JPanel gradesPanel = new JPanel(new BorderLayout(10, 10)); // Use BorderLayout
-        gradesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Add padding
+
+
+
+
+        JPanel gradesPanel = new JPanel(new BorderLayout(10, 10));
+        gradesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         gradesPanel.setBackground(mainPanelColor);
 
 // Add a title label to the top
@@ -223,13 +238,47 @@ public class StudentDashboard extends JFrame {
         gradesPanel.add(gradesTitle, BorderLayout.NORTH);
 
 
+
+
+
+
+
         // --- 3. Courses Panel ---
-        JPanel coursesPanel = new JPanel();
+        JPanel coursesPanel = new JPanel(new BorderLayout()); // Use BorderLayout
         coursesPanel.setBackground(mainPanelColor);
-        coursesPanel.add(new JLabel("Your Courses Will Be Displayed Here") {{
-            setFont(new Font("Segoe UI", Font.PLAIN, 24));
-            setForeground(textColor);
-        }});
+        coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+// Add a main title for the page
+        JLabel pageTitle = new JLabel("My Registered Courses");
+        pageTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        pageTitle.setForeground(textColor);
+        pageTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0)); // Bottom margin
+        coursesPanel.add(pageTitle, BorderLayout.NORTH);
+
+// Panel to hold the stack of course cards
+        JPanel cardStackPanel = new JPanel();
+        cardStackPanel.setLayout(new BoxLayout(cardStackPanel, BoxLayout.Y_AXIS));
+        cardStackPanel.setBackground(mainPanelColor);
+
+// --- Add your course cards here ---
+        cardStackPanel.add(createCourseCard("CSE121", "Discrete Mathematics"));
+        cardStackPanel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
+        cardStackPanel.add(createCourseCard("CSE201", "Advanced Programming"));
+        cardStackPanel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
+        cardStackPanel.add(createCourseCard("CSE231", "Operating Systems"));
+// Add more cards as needed...
+
+// Crucial: Add the card stack to a Scroll Pane
+        JScrollPane scrollPane = new JScrollPane(cardStackPanel);
+        scrollPane.setBorder(null); // Remove the default border of the scroll pane
+        scrollPane.getViewport().setBackground(mainPanelColor);
+// Adjust scroll speed
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        coursesPanel.add(scrollPane, BorderLayout.CENTER);
+
+// ... then add this coursesPanel to your main CardLayout
+// mainContentPanel.add(coursesPanel, "COURSES");
 
         JPanel receiptPanel = new JPanel();
         receiptPanel.setBackground(mainPanelColor);
@@ -295,11 +344,10 @@ public class StudentDashboard extends JFrame {
         return boxPanel;
     }
 
-    private JPanel createCoursesPanel(int studentRollNumber) {
+    private JPanel createCoursesPanel() {
         JPanel coursesPanel = new JPanel();
         coursesPanel.setLayout(new BoxLayout(coursesPanel, BoxLayout.Y_AXIS));
         coursesPanel.setBackground(mainPanelColor);
-
         coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
 
         // --- Panel Title ---
@@ -310,40 +358,14 @@ public class StudentDashboard extends JFrame {
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         coursesPanel.add(titleLabel);
 
-        // --- Database Fetching Logic (remains the same) ---
-        String sql = "SELECT registerCourses FROM users.student WHERE studentRollNumber = ?";
+        // --- Hardcoded course data ---
         List<String> courseNames = new ArrayList<>();
-        // Database connection and data fetching code remains here...
-        try (Connection conn = new Connector().connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        courseNames.add("CS101 - Intro to Programming");
+        courseNames.add("MA203 - Linear Algebra");
+        courseNames.add("PHY105 - Classical Mechanics");
+        courseNames.add("EE201 - Digital Circuits");
 
-            pstmt.setInt(1, studentRollNumber);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                String jsonString = rs.getString("registerCourses");
-                if (jsonString != null && !jsonString.trim().isEmpty() && !jsonString.equals("{}")) {
-                    JSONObject registeredCourses = new JSONObject(jsonString);
-                    Iterator<String> keys = registeredCourses.keys();
-                    while (keys.hasNext()) {
-                        String key = keys.next();
-                        JSONObject courseObject = registeredCourses.getJSONObject(key);
-                        String courseName = courseObject.getString("course_name");
-                        courseNames.add(courseName);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JLabel errorLabel = new JLabel("Error loading courses.");
-            errorLabel.setFont(new Font("Segoe UI", Font.ITALIC, 16));
-            errorLabel.setForeground(Color.RED);
-            errorLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            coursesPanel.add(errorLabel);
-            return coursesPanel;
-        }
-
-        // --- Display Courses using a Dropdown Menu ---
+        // --- Display Courses as a Bulleted List ---
         if (courseNames.isEmpty()) {
             JLabel noCoursesLabel = new JLabel("No courses registered for this semester.");
             noCoursesLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -351,121 +373,144 @@ public class StudentDashboard extends JFrame {
             noCoursesLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             coursesPanel.add(noCoursesLabel);
         } else {
-            JPanel selectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-            selectionPanel.setBackground(mainPanelColor);
-            selectionPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-            // MODIFIED: Add the placeholder message as the first item in our list.
-            courseNames.add(0, "Select a course...");
-
-            String[] courseArray = courseNames.toArray(new String[0]);
-            JComboBox<String> courseDropdown = new JComboBox<>(courseArray);
-
-            courseDropdown.setUI(new CustomComboBoxUI());
-            courseDropdown.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-
-            courseDropdown.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-            courseDropdown.setBackground(bgColor);
-            courseDropdown.setForeground(textColor);
-            courseDropdown.setPreferredSize(new Dimension(350, 35));
-
-            courseDropdown.setBorder(new RoundedBorder(sideMenuColor, 1, 15));
-
-            courseDropdown.addActionListener(e -> {
-                if (courseDropdown.getSelectedIndex() > 0) {
-                    String selectedCourse = (String) courseDropdown.getSelectedItem();
-                    JOptionPane.showMessageDialog(
-                            coursesPanel,
-                            "You selected: " + selectedCourse,
-                            "Course Selection",
-                            JOptionPane.INFORMATION_MESSAGE
-                    );
-                }
-            });
-
-            selectionPanel.add(courseDropdown); // We don't need a separate label
-            coursesPanel.add(selectionPanel);
+            // Loop through the list and create a JLabel for each course
+            for (String courseName : courseNames) {
+                JLabel courseLabel = new JLabel("\u2022 " + courseName); // \u2022 is the bullet character
+                courseLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                courseLabel.setForeground(textColor);
+                courseLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                courseLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0)); // Add spacing below each item
+                coursesPanel.add(courseLabel);
+            }
         }
 
         coursesPanel.add(Box.createVerticalGlue());
         return coursesPanel;
     }
 
-    class RoundedBorder implements Border {
-        private int radius;
-        private Color color;
-        private int strokeWidth;
 
-        public RoundedBorder(Color color, int strokeWidth, int radius) {
-            this.radius = radius;
-            this.color = color;
-            this.strokeWidth = strokeWidth;
+
+    private JPanel createAppointmentsPanel() {
+        JPanel appointmentsPanel = new JPanel();
+        appointmentsPanel.setLayout(new BoxLayout(appointmentsPanel, BoxLayout.Y_AXIS));
+        appointmentsPanel.setBackground(mainPanelColor);
+        appointmentsPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
+
+        JLabel titleLabel = new JLabel("Faculty Appointments", SwingConstants.LEFT);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(textColor);
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        appointmentsPanel.add(titleLabel);
+
+        // --- Hardcoded appointment data ---
+        List<String> appointmentDetails = new ArrayList<>();
+        appointmentDetails.add("Dr. Alan Turing - 2025-10-20 at 11:00 AM");
+        appointmentDetails.add("Prof. Ada Lovelace - 2025-10-22 at 02:30 PM");
+        appointmentDetails.add("Dr. Grace Hopper - 2025-10-25 at 09:00 AM");
+
+        if (appointmentDetails.isEmpty()) {
+            JLabel noAppointmentsLabel = new JLabel("No appointments scheduled.");
+            noAppointmentsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            noAppointmentsLabel.setForeground(textColor);
+            noAppointmentsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            appointmentsPanel.add(noAppointmentsLabel);
+        } else {
+            // Loop through the list and create a JLabel for each appointment
+            for (String appointment : appointmentDetails) {
+                JLabel appointmentLabel = new JLabel("\u2022 " + appointment);
+                appointmentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                appointmentLabel.setForeground(textColor);
+                appointmentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                appointmentLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0)); // Add spacing
+                appointmentsPanel.add(appointmentLabel);
+            }
         }
 
-        public Insets getBorderInsets(Component c) {
-            return new Insets(this.radius / 2, this.radius / 2, this.radius / 2, this.radius / 2);
-        }
-
-        public boolean isBorderOpaque() {
-            return true;
-        }
-
-        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-            Graphics2D g2 = (Graphics2D) g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(color);
-            g2.setStroke(new BasicStroke(strokeWidth));
-            g2.draw(new RoundRectangle2D.Double(x, y, width - 1, height - 1, radius, radius));
-        }
+        appointmentsPanel.add(Box.createVerticalGlue());
+        return appointmentsPanel;
     }
+    private JPanel createCourseCard(String code, String name) {
+        // --- Main Card Panel ---
+        JPanel cardPanel = new JPanel(new BorderLayout(10, 10));
+        cardPanel.setBackground(new Color(65, 65, 65)); // A slightly lighter gray for the card
+        cardPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(80, 80, 80)), // Outline
+                BorderFactory.createEmptyBorder(15, 20, 15, 20)      // Inner padding
+        ));
+        // Set a max height to prevent cards from stretching vertically
+        cardPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
 
+
+        // --- 1. Top Section: Course Code and Name ---
+        JLabel titleLabel = new JLabel("Code - " + code + "   •   Course - " + name);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        titleLabel.setForeground(buttonColor); // Using your theme color for highlight
+        cardPanel.add(titleLabel, BorderLayout.NORTH);
+
+
+        // --- 2. Center Section: Details (Class Type, Credits, etc.) ---
+        JPanel detailsPanel = new JPanel(new GridLayout(1, 3, 20, 0)); // 1 row, 3 columns
+        detailsPanel.setOpaque(false); // Make it transparent to show card background
+
+        // Helper to create a detail column
+        JPanel classTypePanel = createDetailColumn("Class Type", "Lecture");
+        JPanel creditsPanel = createDetailColumn("Credits", "4");
+        JPanel regTypePanel = createDetailColumn("Registration Type", "Mandatory (Core)");
+
+        detailsPanel.add(classTypePanel);
+        detailsPanel.add(creditsPanel);
+        detailsPanel.add(regTypePanel);
+        cardPanel.add(detailsPanel, BorderLayout.CENTER);
+
+
+        // --- 3. Bottom Section: Action Buttons ---
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        buttonsPanel.setOpaque(false);
+
+        buttonsPanel.add(createStyledButton("Time Table"));
+        buttonsPanel.add(createStyledButton("Attendance"));
+        buttonsPanel.add(createStyledButton("Assignment"));
+        buttonsPanel.add(createStyledButton("Lesson Plan"));
+        buttonsPanel.add(createStyledButton("Course Feedback"));
+        cardPanel.add(buttonsPanel, BorderLayout.SOUTH);
+
+        return cardPanel;
+    }
 
     /**
-     * A custom UI delegate for the JComboBox that uses our custom arrow button.
+     * Helper to create a vertical column for a single detail item.
      */
+    private JPanel createDetailColumn(String title, String value) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setOpaque(false);
 
-    private class CustomComboBoxUI extends javax.swing.plaf.basic.BasicComboBoxUI {
-        @Override
-        protected JButton createArrowButton() {
-            return new RoundedArrowButton();
-        }
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        titleLabel.setForeground(Color.LIGHT_GRAY);
 
-        @Override
-        public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
-        }
+        JLabel valueLabel = new JLabel(value);
+        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        valueLabel.setForeground(textColor);
+
+        panel.add(titleLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 5)));
+        panel.add(valueLabel);
+
+        return panel;
     }
 
-    /**
-     * A custom JButton that paints a rounded background and a white arrow.
-     */
-    private class RoundedArrowButton extends JButton {
-        public RoundedArrowButton() {
-            super();
-            // Remove all default styling to allow for custom painting.
-            setContentAreaFilled(false);
-            setBorderPainted(false);
-            setFocusPainted(false);
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            g2.setColor(sideMenuColor);
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-
-            g2.setColor(Color.WHITE);
-            g2.setStroke(new BasicStroke(2)); // Make the arrow a bit thicker
-            int x = (getWidth() - 10) / 2;
-            int y = (getHeight() - 6) / 2;
-            // Draw the two lines that form the arrow
-            g2.drawLine(x, y, x + 5, y + 5);
-            g2.drawLine(x + 10, y, x + 5, y + 5);
-
-            g2.dispose();
-        }
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        button.setForeground(textColor);
+        button.setBackground(new Color(80, 80, 80));
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        return button;
     }
+
 
 }
