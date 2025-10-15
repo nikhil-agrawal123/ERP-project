@@ -292,28 +292,14 @@ public class StudentDashboard extends JFrame {
         valueLabel.setForeground(textColor);
         boxPanel.add(valueLabel, BorderLayout.CENTER);
 
-
-
-
-
-
-
         return boxPanel;
     }
-
-// No new imports needed for this method specifically
-
-
-// ... inside your StudentDashboard class
-
-// Replace the entire createCoursesPanel method in your StudentDashboard class with this one.
 
     private JPanel createCoursesPanel(int studentRollNumber) {
         JPanel coursesPanel = new JPanel();
         coursesPanel.setLayout(new BoxLayout(coursesPanel, BoxLayout.Y_AXIS));
         coursesPanel.setBackground(mainPanelColor);
 
-        // MODIFIED: The outer line border has been removed. We only keep the inner padding.
         coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
 
         // --- Panel Title ---

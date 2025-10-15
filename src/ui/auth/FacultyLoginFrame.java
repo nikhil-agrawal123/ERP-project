@@ -18,6 +18,7 @@ public class FacultyLoginFrame extends JFrame {
     private JPasswordField passwordField;
     private JButton loginButton;
     private JButton BackButton;
+    private JButton ForgetButton;
     Color backgroundColor = new Color(45, 45, 45);
     Color buttonColor = new Color(57, 174, 168);
     Color textColor = Color.WHITE;
@@ -51,7 +52,8 @@ public class FacultyLoginFrame extends JFrame {
 
         loginButton = new JButton("Login");
         BackButton = new JButton("Back");
-        JButton[] buttons = {loginButton, BackButton};
+        ForgetButton = new JButton("Forget Password");
+        JButton[] buttons = {loginButton, BackButton,  ForgetButton};
         for (JButton button : buttons) {
             button.setBackground(buttonColor);
             button.setForeground(textColor);
@@ -59,7 +61,6 @@ public class FacultyLoginFrame extends JFrame {
             button.setFocusPainted(false);
             button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Padding
         }
-
 
         loginButton.addActionListener(new ActionListener() {
             @Override
@@ -81,7 +82,14 @@ public class FacultyLoginFrame extends JFrame {
             }
         });
 
-
+        ForgetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ForgetPassword pane = new ForgetPassword("faculty");
+                pane.setVisible(true);
+                dispose();
+            }
+        });
     }
 
     /**
@@ -147,6 +155,11 @@ public class FacultyLoginFrame extends JFrame {
         gbc.gridy = 4;
         gbc.gridwidth = 1;
         add(BackButton, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        add(ForgetButton, gbc);
+
     }
 
     /**
