@@ -40,16 +40,16 @@ public class ForgetPassword extends JFrame{
         String updatePassSQL = "";
 
         if(userType.equals("parent")){
-            getUserIdSQL = "SELECT studentId FROM users.student WHERE studentEmail = ?";
+            getUserIdSQL = "SELECT user_id FROM users.students WHERE student_email = ?";
             updatePassSQL = "UPDATE auth.parentPass SET parentPass = ? WHERE studentId = ?";
         } else if(userType.equals("faculty")){
-            getUserIdSQL = "SELECT facultyID FROM users.faculty WHERE facultyEmail = ?";
+            getUserIdSQL = "SELECT user_id FROM users.instructors WHERE faculty_email = ?";
             updatePassSQL = "UPDATE auth.facultyPass SET facultyPass = ? WHERE facultyId = ?";
         }else if(userType.equals("admin")){
             getUserIdSQL = "SELECT adminID FROM users.admin WHERE adminEmail = ?";
             updatePassSQL = "UPDATE auth.adminPass SET adminPass = ? WHERE adminId = ?";
         }else{
-            getUserIdSQL = "SELECT studentId FROM users.student WHERE studentEmail = ?";
+            getUserIdSQL = "SELECT user_id FROM users.students WHERE student_email = ?";
             updatePassSQL = "UPDATE auth.studentAuth SET studentPass = ? WHERE studentId = ?";
         }
 
@@ -61,7 +61,7 @@ public class ForgetPassword extends JFrame{
             try{
                 ResultSet rs = preparedStatement.executeQuery();
                 if (rs.next()) {
-                    String studentId = rs.getString("studentId");
+                    String studentId = rs.getString("user_id");
                     System.out.println("Found student ID: " + studentId);
 
                     PreparedStatement ps = conn.prepareStatement(updatePassSQL);
