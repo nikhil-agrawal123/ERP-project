@@ -1,7 +1,7 @@
-insert into studentauth(id, studentId, studentPass)
+insert into auth.studentauth(id, studentId, studentPass)
 values (1,"nikhil", "nikhil");
 
-insert into studentauth
+insert into auth.studentauth
 values
        (2,"gaurav","gaurav"),
        (3,"aditri", "aditri");
@@ -16,7 +16,7 @@ update auth.studentauth
 set studentPass = "$2a$10$9QdGmKb4mI4UqSgRB2Eqpud6Ix/eawbo7Oc8WiAcKr/R92A3qXtXW"
 where id = 2;
 
-insert into facultyauth(facultyId, facultyPass)
+insert into auth.facultyauth(facultyId, facultyPass)
 values ("nikhil","nikhil"),
        ("gaurav", "gaurav"),
        ("aditri", "aditri");
@@ -25,13 +25,17 @@ update auth.facultyauth
 set facultyPass = "$2a$10$Kc/0I11BVSsNDxsuYAsJDekSvfAze0t7auWjff5OF6oC/anfVdVje"
 where id = 1;
 
-insert into parentauth(studentId, parentPass)
+update auth.facultyauth
+set facultyPass = "$2a$10$9QdGmKb4mI4UqSgRB2Eqpud6Ix/eawbo7Oc8WiAcKr/R92A3qXtXW"
+where id = 2;
+
+insert into auth.parentauth(studentId, parentPass)
 values
     ( "nikhil", "$2a$10$Kc/0I11BVSsNDxsuYAsJDekSvfAze0t7auWjff5OF6oC/anfVdVje"),
     ("gaurav","gaurav"),
     ("aditri" , "aditri");
 
-insert  into adminauth(adminId, adminName, adminPass)
+insert  into auth.adminauth(adminId, adminName, adminPass)
 values
     ( "nikhil","nikhil", "$2a$10$Kc/0I11BVSsNDxsuYAsJDekSvfAze0t7auWjff5OF6oC/anfVdVje");
 
