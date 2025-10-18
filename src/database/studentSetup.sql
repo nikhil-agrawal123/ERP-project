@@ -161,3 +161,8 @@ alter table grades add column credits int not null
 update grades
 set grades.credits = 4
 where student_roll_no = '2024380' and course_code ='CS101';
+
+alter table courses add column course_type varchar(50);
+update courses
+set course_type = "mandatory"
+where course_code = "CS101";

@@ -173,7 +173,6 @@ public class StudentLoginFrame extends JFrame {
 
     /**
      * This method is called when the login button is clicked.
-     * For now, it's a placeholder to show the UI is interactive.
      */
     private void handleLoginAttempt() {
         String username = usernameField.getText();
@@ -187,22 +186,28 @@ public class StudentLoginFrame extends JFrame {
             return;
         }
 
-        String sql = "SELECT studentPass FROM studentAuth WHERE studentId = ?";
+        String sql = "SELECT sa.studentPass, s.student_roll_no " +
+                "FROM auth.studentAuth sa " +
+                "JOIN users.students s ON sa.studentId = s.user_id " +
+                "WHERE sa.studentId = ?";
+
         Connector dbConnector = new Connector();
 
         try (Connection conn = dbConnector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, username);
-
             ResultSet rs = pstmt.executeQuery();
 
-            // 2. Check if a user with that username was found
+            // Check if a user with that username was found
             if (rs.next()) {
+                // Read both columns from the single result set
                 String storedHash = rs.getString("studentPass");
+                String storedRollNumber = rs.getString("student_roll_no");
 
                 if (BCrypt.checkpw(password, storedHash)) {
-                    StudentDashboard dashboard = new StudentDashboard(username);
+                    // Login successful, open the dashboard
+                    StudentDashboard dashboard = new StudentDashboard(storedRollNumber, username);
                     dashboard.setVisible(true);
                     dispose();
                 } else {
@@ -214,6 +219,7 @@ public class StudentLoginFrame extends JFrame {
                     numTry -= 1;
                 }
             } else {
+                // No user found with that username
                 JOptionPane.showMessageDialog(this,
                         "Incorrect username or password.",
                         "Login Failed",

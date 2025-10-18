@@ -27,14 +27,14 @@ public class StudentDashboard extends JFrame {
 
     private double cg = 0;
     private int credits = 0;
-    private int rollNumber = 0;
+    private String rollNumber;
 
     // --- Main Layout Components ---
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
 
 
-    public StudentDashboard(String username) {
+    public StudentDashboard(String rollNum,String username) {
         super("Student Dashboard - " + username);
 
         // --- Basic Frame Setup ---
@@ -49,6 +49,7 @@ public class StudentDashboard extends JFrame {
         // Use BorderLayout for the main frame
         setLayout(new BorderLayout());
 
+        this.rollNumber = rollNum;
         // --- Create and add the side menu and main content panels ---
         JPanel sideMenuPanel = createSideMenuPanel();
         add(sideMenuPanel, BorderLayout.WEST);
@@ -57,8 +58,10 @@ public class StudentDashboard extends JFrame {
         cardLayout = new CardLayout();
         mainContentPanel = new JPanel(cardLayout);
         mainContentPanel.setBackground(mainPanelColor);
-        createContentCards(username); // Helper to create the different pages
+        // This method can now safely use the correct rollNumber.
+        createContentCards(this.rollNumber, username);
         add(mainContentPanel, BorderLayout.CENTER);
+
 
         // Show the initial "home" card
         cardLayout.show(mainContentPanel, "HOME");
@@ -125,25 +128,38 @@ public class StudentDashboard extends JFrame {
     /**
      * Creates the different "pages" (panels) and adds them to the main content panel.
      */
-    private void createContentCards(String username) {
+    private void createContentCards(String rollNum, String username) {
         Connector connector = new Connector();
-        String sql = "SELECT currentCGPA,currentCredits,studentRollNumber FROM users.student WHERE studentName = ?";
+        String sql = "SELECT g.score, c.credits " +
+                "FROM users.grades g " +
+                "JOIN users.courses c ON g.course_code = c.course_code " +
+                "WHERE g.student_roll_no = ?";
+
         try (Connection connection = connector.connect()) {
             PreparedStatement pstmt = connection.prepareStatement(sql);
-            pstmt.setString(1, username);
+            pstmt.setString(1, rollNum);
             ResultSet rs = pstmt.executeQuery();
 
-            if (rs.next()) {
-                Double currentCGPA = rs.getDouble("currentCGPA");
-                int currentCredits = rs.getInt("currentCredits");
-                int rollNu = rs.getInt("studentRollNumber");
-                cg = currentCGPA;
-                credits = currentCredits;
-                rollNumber = rollNu;
+            double totalGradePoints = 0;
+            int totalCredits = 0;
+
+            while (rs.next()) {
+                double score = rs.getDouble("score");
+                int courseCredits = rs.getInt("credits");
+                // Assuming score is out of 100, convert to a 10-point scale for CGPA
+                totalGradePoints += (score / 10.0) * courseCredits;
+                totalCredits += courseCredits;
             }
 
+            this.credits = totalCredits;
+            this.cg = (totalCredits > 0) ? totalGradePoints / totalCredits : 0.0;
+            this.cg = Math.round(this.cg * 100.0) / 100.0;
+
+
         } catch (SQLException e) {
-            System.out.println(e);
+            System.out.println(e.getMessage());
+            // Optionally show an error message to the user
+            JOptionPane.showMessageDialog(this, "Could not fetch student data.", "Database Error", JOptionPane.ERROR_MESSAGE);
         }
 
         JPanel homePanel = new JPanel(new BorderLayout(20, 20));
@@ -160,13 +176,12 @@ public class StudentDashboard extends JFrame {
         welcomeLabel.setForeground(textColor);
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Suggestion: Use a slightly smaller font for the details
         JLabel nameLabel = new JLabel("Student name: " + username);
         nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Changed font
         nameLabel.setForeground(textColor);
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel rollLabel = new JLabel("Student Roll no.: " + rollNumber); // Example roll no.
+        JLabel rollLabel = new JLabel("Student Roll no.: " + this.rollNumber);
         rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Changed font
         rollLabel.setForeground(textColor);
         rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -188,8 +203,8 @@ public class StudentDashboard extends JFrame {
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.X_AXIS));
         statsPanel.setBackground(mainPanelColor);
 
-        JPanel cgpaBox = createStatBox("Current CGPA", "" + cg);
-        JPanel creditsBox = createStatBox("Credits Earned", "" + credits);
+        JPanel cgpaBox = createStatBox("Current CGPA", "" + this.cg);
+        JPanel creditsBox = createStatBox("Credits Earned", "" + this.credits);
 
         statsPanel.add(Box.createHorizontalGlue());
         statsPanel.add(cgpaBox);
@@ -222,63 +237,46 @@ public class StudentDashboard extends JFrame {
         centerContentPanel.add(rightSideContainer);
 
         homePanel.add(centerContentPanel, BorderLayout.CENTER);
-// --- 2. Grades Panel ---
-
-
-
-
+        // --- 2. Grades Panel ---
         JPanel gradesPanel = new JPanel(new BorderLayout(10, 10));
         gradesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         gradesPanel.setBackground(mainPanelColor);
 
-// Add a title label to the top
+        // Add a title label to the top
         JLabel gradesTitle = new JLabel("Your Academic Grades");
         gradesTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         gradesTitle.setForeground(textColor);
         gradesPanel.add(gradesTitle, BorderLayout.NORTH);
-
-
-
-
-
-
 
         // --- 3. Courses Panel ---
         JPanel coursesPanel = new JPanel(new BorderLayout()); // Use BorderLayout
         coursesPanel.setBackground(mainPanelColor);
         coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-// Add a main title for the page
+        // Add a main title for the page
         JLabel pageTitle = new JLabel("My Registered Courses");
         pageTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         pageTitle.setForeground(textColor);
         pageTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0)); // Bottom margin
         coursesPanel.add(pageTitle, BorderLayout.NORTH);
 
-// Panel to hold the stack of course cards
+        // Panel to hold the stack of course cards
         JPanel cardStackPanel = new JPanel();
         cardStackPanel.setLayout(new BoxLayout(cardStackPanel, BoxLayout.Y_AXIS));
         cardStackPanel.setBackground(mainPanelColor);
 
-// --- Add your course cards here ---
         cardStackPanel.add(createCourseCard("CSE121", "Discrete Mathematics"));
         cardStackPanel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
         cardStackPanel.add(createCourseCard("CSE201", "Advanced Programming"));
         cardStackPanel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
         cardStackPanel.add(createCourseCard("CSE231", "Operating Systems"));
-// Add more cards as needed...
 
-// Crucial: Add the card stack to a Scroll Pane
         JScrollPane scrollPane = new JScrollPane(cardStackPanel);
         scrollPane.setBorder(null); // Remove the default border of the scroll pane
         scrollPane.getViewport().setBackground(mainPanelColor);
-// Adjust scroll speed
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         coursesPanel.add(scrollPane, BorderLayout.CENTER);
-
-// ... then add this coursesPanel to your main CardLayout
-// mainContentPanel.add(coursesPanel, "COURSES");
 
         JPanel receiptPanel = new JPanel();
         receiptPanel.setBackground(mainPanelColor);
@@ -287,8 +285,6 @@ public class StudentDashboard extends JFrame {
             setForeground(textColor);
         }});
 
-        // --- Add the panels to the CardLayout container ---
-        // The String is a unique key to identify each card
         mainContentPanel.add(homePanel, "HOME");
         mainContentPanel.add(gradesPanel, "GRADES");
         mainContentPanel.add(coursesPanel, "COURSES");
