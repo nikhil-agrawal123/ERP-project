@@ -29,7 +29,6 @@ public class CourseManagementFrame extends JFrame {
         super("Course Management");
 
         // --- Basic Frame Setup ---
-        // DISPOSE_ON_CLOSE only closes this window, not the whole app
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(1024, 768);
         setLocationRelativeTo(null); // Center on screen
@@ -43,10 +42,8 @@ public class CourseManagementFrame extends JFrame {
 
         createCoursePages(); // Helper to create the list and detail pages
 
-        // Add the main panel to the frame
         add(mainContentPanel);
 
-        // Show the initial "course list" card
         cardLayout.show(mainContentPanel, "COURSE_LIST");
     }
 
@@ -74,11 +71,10 @@ public class CourseManagementFrame extends JFrame {
         courses.add(new Course("Operating Systems", "CS302", 88, 3, "CSE"));
         courses.add(new Course("Database Management", "CS305", 110, 3, "IT"));
 
-        // Create clickable labels for each course and their corresponding detail panels
         for (Course course : courses) {
             JLabel courseLink = new JLabel(course.getName() + " (" + course.getCode() + ")");
             courseLink.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-            courseLink.setForeground(buttonColor);
+            courseLink.setForeground(linkColor);
             courseLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
             courseLink.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -100,12 +96,10 @@ public class CourseManagementFrame extends JFrame {
             courseListPanel.add(courseLink);
             courseListPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
-            // Create a detail panel for this course and add it to the CardLayout
             JPanel detailPanel = createCourseDetailPanel(course);
             mainContentPanel.add(detailPanel, "DETAIL_" + course.getCode());
         }
 
-        // Add the fully populated list panel to the main card layout
         mainContentPanel.add(courseListPanel, "COURSE_LIST");
     }
 
@@ -117,48 +111,85 @@ public class CourseManagementFrame extends JFrame {
         panel.setBackground(mainPanelColor);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
-        // --- NEW: Header Panel to hold both the back button and the title ---
+        // --- Header Panel ---
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(mainPanelColor);
 
-        // --- Back Button (Now at top left) ---
         JButton backButton = createMenuButton("← Back");
-        backButton.setBorderPainted(false); // No border for a cleaner look
+        backButton.setBorderPainted(false);
         backButton.addActionListener(e -> cardLayout.show(mainContentPanel, "COURSE_LIST"));
-
-        // Add button to the left of the header
         headerPanel.add(backButton, BorderLayout.WEST);
 
-        // --- Title Label ---
         JLabel titleLabel = new JLabel("Details for " + course.getName());
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
         titleLabel.setForeground(textColor);
-        titleLabel.setHorizontalAlignment(SwingConstants.CENTER); // Center the title
-
-        // Add title to the center of the header
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         headerPanel.add(titleLabel, BorderLayout.CENTER);
-
-        // Add the entire header panel to the top of the main panel
         panel.add(headerPanel, BorderLayout.NORTH);
 
+        // --- Details Panel with GridBagLayout ---
+        JPanel detailsPanel = new JPanel(new GridBagLayout());
+        detailsPanel.setBackground(mainPanelColor);
+        detailsPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 5, 8, 5);
+        gbc.anchor = GridBagConstraints.WEST;
 
-        // --- Details Grid (Unchanged) ---
-        JPanel detailsGrid = new JPanel(new GridLayout(0, 2, 15, 15));
-        detailsGrid.setBackground(mainPanelColor);
-        detailsGrid.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0)); // Add top padding
-        detailsGrid.add(createDetailLabel("Course Name:"));
-        detailsGrid.add(createValueLabel(course.getName()));
-        detailsGrid.add(createDetailLabel("Course Code:"));
-        detailsGrid.add(createValueLabel(course.getCode()));
-        detailsGrid.add(createDetailLabel("Students Enrolled:"));
-        detailsGrid.add(createValueLabel(String.valueOf(course.getStudentCount())));
-        detailsGrid.add(createDetailLabel("Credits:"));
-        detailsGrid.add(createValueLabel(String.valueOf(course.getCredits())));
-        detailsGrid.add(createDetailLabel("Department:"));
-        detailsGrid.add(createValueLabel(course.getDepartment()));
-        panel.add(detailsGrid, BorderLayout.CENTER);
+        // Add detail rows...
+        gbc.gridx = 0; gbc.gridy = 0;
+        detailsPanel.add(createDetailLabel("Course Name:"), gbc);
+        gbc.gridx = 1;
+        detailsPanel.add(createValueLabel(course.getName()), gbc);
 
-        // The old button panel at the SOUTH has been removed.
+        gbc.gridx = 0; gbc.gridy = 1;
+        detailsPanel.add(createDetailLabel("Course Code:"), gbc);
+        gbc.gridx = 1;
+        detailsPanel.add(createValueLabel(course.getCode()), gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2;
+        detailsPanel.add(createDetailLabel("Students Enrolled:"), gbc);
+        gbc.gridx = 1;
+        detailsPanel.add(createValueLabel(String.valueOf(course.getStudentCount())), gbc);
+
+        gbc.gridx = 0; gbc.gridy = 3;
+        detailsPanel.add(createDetailLabel("Credits:"), gbc);
+        gbc.gridx = 1;
+        detailsPanel.add(createValueLabel(String.valueOf(course.getCredits())), gbc);
+
+        gbc.gridx = 0; gbc.gridy = 4;
+        detailsPanel.add(createDetailLabel("Department:"), gbc);
+        gbc.gridx = 1;
+        detailsPanel.add(createValueLabel(course.getDepartment()), gbc);
+
+        // --- NEW POSITION: Update Scores Button is now part of the GridBagLayout ---
+        JButton updateScoresButton = new JButton("Update Scores");
+        updateScoresButton.setBackground(buttonColor);
+        updateScoresButton.setForeground(textColor);
+        updateScoresButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        updateScoresButton.setFocusPainted(false);
+        updateScoresButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        updateScoresButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        updateScoresButton.addActionListener(e -> new UpdateScoresFrame().setVisible(true));
+
+        // Add button to the next row, aligned left
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2; // Span two columns
+        gbc.insets = new Insets(20, 5, 8, 5); // Add top margin
+        detailsPanel.add(updateScoresButton, gbc);
+
+        // Filler to push content to the top
+        gbc.gridy = 6;
+        gbc.weighty = 1.0;
+        detailsPanel.add(new JLabel(""), gbc);
+
+        // Wrapper panel to prevent horizontal stretching
+        JPanel containerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        containerPanel.setBackground(mainPanelColor);
+        containerPanel.add(detailsPanel);
+        panel.add(containerPanel, BorderLayout.CENTER);
+
+        // The button panel at the SOUTH has been removed.
 
         return panel;
     }
@@ -177,9 +208,6 @@ public class CourseManagementFrame extends JFrame {
         return label;
     }
 
-    /**
-     * A private inner class to act as a simple data structure for a course.
-     */
     private static class Course {
         private String name, code, department;
         private int studentCount, credits;
