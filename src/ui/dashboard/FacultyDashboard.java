@@ -76,7 +76,7 @@ public class FacultyDashboard extends JFrame {
         // Create navigation buttons
         JButton homeButton = createMenuButton("Dashboard Home");
         JButton gradesButton = createMenuButton("My Sections"); //SET COURSE STRUCTURE HERE (MAINE LIKHA H HATAIYO MAT YE)
-        JButton coursesButton = createMenuButton("Enter Scores");
+        JButton scoresButton = createMenuButton("Enter Scores");
         JButton receiptButton = createMenuButton("Stats");
         JButton TAButton = createMenuButton("Stats");
         JButton logoutButton = createMenuButton("Logout");
@@ -84,8 +84,13 @@ public class FacultyDashboard extends JFrame {
         // --- Add Action Listeners to buttons ---
         homeButton.addActionListener(e -> cardLayout.show(mainContentPanel, "HOME"));
         gradesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Sections"));
-        coursesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Scores"));
-        receiptButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Stats"));
+        scoresButton.addActionListener(e -> {
+            // 1. Create an instance of the new frame
+            CourseManagementFrame courseFrame = new CourseManagementFrame();
+
+            // 2. Make that new frame visible
+            courseFrame.setVisible(true);
+        });        receiptButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Stats"));
         TAButton.addActionListener(e -> cardLayout.show(mainContentPanel, "TA"));
         logoutButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Logout successful");
@@ -101,7 +106,7 @@ public class FacultyDashboard extends JFrame {
         panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
         panel.add(gradesButton);
         panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
-        panel.add(coursesButton);
+        panel.add(scoresButton);
         panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
         panel.add(receiptButton);
 
@@ -121,17 +126,15 @@ public class FacultyDashboard extends JFrame {
         homePanel.setBackground(mainPanelColor);
         homePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40)); // Add padding
 
-// --- Create a new panel just for the title labels ---
+
         JPanel titlePanel = new JPanel();
-// Use BoxLayout to stack the labels vertically
+
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
         titlePanel.setBackground(mainPanelColor); // Match the background
 
-// --- Create the labels ---
         JLabel welcomeLabel = new JLabel("Welcome, Faculty");
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
         welcomeLabel.setForeground(textColor);
-// Align labels to the left for a cleaner look
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel nameLabel = new JLabel("Faculty name: " + username);
@@ -148,56 +151,35 @@ public class FacultyDashboard extends JFrame {
         titlePanel.add(Box.createRigidArea(new Dimension(0, 10))); // Add a small vertical space
         titlePanel.add(nameLabel);
         titlePanel.add(rollLabel);
-
-// --- Add the single titlePanel to the NORTH of homePanel ---
         homePanel.add(titlePanel, BorderLayout.NORTH);
 
-// Panel to hold the stats boxes in the center
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 20));
         infoPanel.setBackground(mainPanelColor);
 
-// Create the two stat boxes using the helper method
+
         JPanel coueseBox = createStatBox("No. of courses Offered", "2");
-
-// Add boxes to the stats panel
         infoPanel.add(coueseBox);
-
-// Add the stats panel to the main home panel
         homePanel.add(infoPanel, BorderLayout.WEST);
-// --- 2. Grades Panel ---
-// MODIFIED SECTION
+
+// --- 2. Sections Panel ---
         JPanel sectionPanel = new JPanel(new BorderLayout(10, 10)); // Use BorderLayout
         sectionPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Add padding
         sectionPanel.setBackground(mainPanelColor);
 
-// Add a title label to the top
         JLabel gradesTitle = new JLabel("Your Courses");
         gradesTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         gradesTitle.setForeground(textColor);
         sectionPanel.add(gradesTitle, BorderLayout.WEST);
 
-
-        // --- 3. Courses Panel ---
-        JPanel scoresPanel = new JPanel();
-        scoresPanel.setBackground(mainPanelColor);
-        scoresPanel.add(new JLabel("Select course to update scores") {{
-            setFont(new Font("Segoe UI", Font.PLAIN, 24));
-            setForeground(textColor);
-        }});
-
-        JPanel coursesPanel = new JPanel();
-        coursesPanel.setBackground(mainPanelColor);
-        coursesPanel.add(new JLabel("Your Courses Will Be Displayed Here") {{
-            setFont(new Font("Segoe UI", Font.PLAIN, 24));
-            setForeground(textColor);
-        }});
-
+// --- 2. stats Panel ---
         JPanel statsPanel = new JPanel();
         statsPanel.setBackground(mainPanelColor);
         statsPanel.add(new JLabel("Select the course to see stats") {{
             setFont(new Font("Segoe UI", Font.PLAIN, 24));
             setForeground(textColor);
         }});
+
+        // --- 2. TA Panel ---
 
         JPanel TAPanel = new JPanel();
         TAPanel.setBackground(mainPanelColor);
@@ -211,7 +193,6 @@ public class FacultyDashboard extends JFrame {
         // The String is a unique key to identify each card
         mainContentPanel.add(homePanel, "HOME");
         mainContentPanel.add(sectionPanel, "Sections");
-        mainContentPanel.add(scoresPanel, "Scores");
         mainContentPanel.add(statsPanel, "Stats");
         mainContentPanel.add(TAPanel, "TA");
     }
