@@ -1,5 +1,3 @@
-// File: ui/dashboard/CourseManagementFrame.java
-
 package ui.dashboard;
 
 import javax.swing.*;
@@ -9,10 +7,6 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A dedicated frame for managing courses, listing them,
- * and showing details for a selected course.
- */
 public class CourseManagementFrame extends JFrame {
 
     // --- Style Colors ---
@@ -21,35 +15,29 @@ public class CourseManagementFrame extends JFrame {
     private Color linkColor = new Color(100, 180, 255);
     private Color textColor = Color.WHITE;
 
-    // --- Main Layout Components ---
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
 
     public CourseManagementFrame() {
         super("Course Management");
 
-        // --- Basic Frame Setup ---
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(1024, 768);
         setLocationRelativeTo(null); // Center on screen
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
 
-        // --- Create Content ---
         cardLayout = new CardLayout();
         mainContentPanel = new JPanel(cardLayout);
         mainContentPanel.setBackground(mainPanelColor);
 
-        createCoursePages(); // Helper to create the list and detail pages
+        createCoursePages();
 
         add(mainContentPanel);
 
         cardLayout.show(mainContentPanel, "COURSE_LIST");
     }
 
-    /**
-     * Creates the course list panel and a detail panel for each course.
-     */
     private void createCoursePages() {
         // --- Course List Panel ---
         JPanel courseListPanel = new JPanel();
@@ -103,9 +91,6 @@ public class CourseManagementFrame extends JFrame {
         mainContentPanel.add(courseListPanel, "COURSE_LIST");
     }
 
-    /**
-     * A helper method to create the generic course detail panel.
-     */
     private JPanel createCourseDetailPanel(Course course) {
         JPanel panel = new JPanel(new BorderLayout(20, 20));
         panel.setBackground(mainPanelColor);
