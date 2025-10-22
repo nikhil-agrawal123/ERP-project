@@ -173,5 +173,6 @@ alter table enrollments add column student_name varchar(50) not null,
 add column course_code varchar(50) not null,
 add column course_name varchar(50) not null,
     add column course_credits int not null,
-    add column completion boolean not null
+    add column completion boolean not null;
 
+alter table instructors drop column instructor_email;

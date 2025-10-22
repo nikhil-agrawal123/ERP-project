@@ -178,7 +178,7 @@ public class FacultyLoginFrame extends JFrame {
             return;
         }
 
-        String sql = "SELECT studentPass FROM studentAuth WHERE studentId = ?";
+        String sql = "SELECT facultyPass FROM facultyAuth WHERE facultyId = ?";
         Connector dbConnector = new Connector();
 
         try (Connection conn = dbConnector.connect();
@@ -190,7 +190,7 @@ public class FacultyLoginFrame extends JFrame {
 
             // 2. Check if a user with that username was found
             if (rs.next()) {
-                String storedHash = rs.getString("studentPass");
+                String storedHash = rs.getString("facultyPass");
 
                 if (BCrypt.checkpw(password, storedHash)) {
                     FacultyDashboard dashboard = new FacultyDashboard(username);

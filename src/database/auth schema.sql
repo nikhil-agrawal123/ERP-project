@@ -30,3 +30,6 @@ alter table adminauth drop column adminName;
 update parentauth
 set studentId = "nikhil24380"
 where id = 1;
+
+insert into facultyAuth(facultyId, facultyPass)
+    values ('alok','alok')
