@@ -41,13 +41,13 @@ public class ForgetPassword extends JFrame{
 
         if(userType.equals("parent")){
             getUserIdSQL = "SELECT user_id FROM users.students WHERE student_email = ?";
-            updatePassSQL = "UPDATE auth.parentPass SET parentPass = ? WHERE studentId = ?";
+            updatePassSQL = "UPDATE auth.parentAuth SET parentPass = ? WHERE studentId = ?";
         } else if(userType.equals("faculty")){
             getUserIdSQL = "SELECT user_id FROM users.instructors WHERE faculty_email = ?";
-            updatePassSQL = "UPDATE auth.facultyPass SET facultyPass = ? WHERE facultyId = ?";
+            updatePassSQL = "UPDATE auth.facultyAuth SET facultyPass = ? WHERE facultyId = ?";
         }else if(userType.equals("admin")){
             getUserIdSQL = "SELECT adminID FROM users.admin WHERE adminEmail = ?";
-            updatePassSQL = "UPDATE auth.adminPass SET adminPass = ? WHERE adminId = ?";
+            updatePassSQL = "UPDATE auth.adminAuth SET adminPass = ? WHERE adminId = ?";
         }else{
             getUserIdSQL = "SELECT user_id FROM users.students WHERE student_email = ?";
             updatePassSQL = "UPDATE auth.studentAuth SET studentPass = ? WHERE studentId = ?";

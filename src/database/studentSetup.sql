@@ -166,3 +166,12 @@ alter table courses add column course_type varchar(50);
 update courses
 set course_type = "mandatory"
 where course_code = "CS101";
+
+alter table enrollments drop column section_id
+
+alter table enrollments add column student_name varchar(50) not null,
+add column course_code varchar(50) not null,
+add column course_name varchar(50) not null,
+    add column course_credits int not null,
+    add column completion boolean not null
+
