@@ -8,7 +8,7 @@ import java.sql.*;
 import databaseConfig.Connector;
 import dependancy.org.mindrot.jbcrypt.BCrypt;
 
-import ui.dashboard.FacultyDashboard;
+import ui.dashboard.AdminDashboard;
 import ui.landing.LandingFrame;
 
 
@@ -194,7 +194,7 @@ public class AdminLoginFrame extends JFrame {
                 String storedHash = rs.getString("adminPass");
 
                 if (BCrypt.checkpw(password, storedHash)) {
-                    FacultyDashboard dashboard = new FacultyDashboard(username);
+                    AdminDashboard dashboard = new AdminDashboard(username, username);
                     dashboard.setVisible(true);
                     dispose();
                 } else {
