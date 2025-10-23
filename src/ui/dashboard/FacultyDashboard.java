@@ -1,10 +1,10 @@
-// File: ui/dashboard/StudentDashboard.java
-
 package ui.dashboard;
 
 import javax.swing.*;
 import ui.landing.LandingFrame;
 import java.awt.*;
+import databaseConfig.Connector;
+import java.sql.*;
 
 /**
  * A dashboard window for a student, featuring a side navigation menu
@@ -22,6 +22,8 @@ public class FacultyDashboard extends JFrame {
     // --- Main Layout Components ---
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
+    private int numCourses = 0;
+    private String facultyID = "";
 
 
     public FacultyDashboard(String username) {
@@ -121,6 +123,32 @@ public class FacultyDashboard extends JFrame {
      * Creates the different "pages" (panels) and adds them to the main content panel.
      */
     private void createContentCards(String username) {
+        String newSQl = "SELECT * FROM users.sections WHERE instructor_id = ?";
+        String sql = "SELECT * FROM users.instructors WHERE user_id = ?";
+        Connector connector = new Connector();
+
+        try (Connection conn = connector.connect()){
+            PreparedStatement preparedStatement = conn.prepareStatement(newSQl);
+            PreparedStatement preparedStatement1 = conn.prepareStatement(sql);
+            preparedStatement.setString(1, username);
+            preparedStatement1.setString(1, username);
+            ResultSet rs = preparedStatement.executeQuery();
+            ResultSet rs1 = preparedStatement1.executeQuery();
+
+            while (rs.next()) {
+                numCourses +=1;
+            }
+
+            while(rs1.next()) {
+                facultyID = rs1.getString("instructor_id");
+            }
+
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+
+
+
         // --- 1. Home Panel ---
         JPanel homePanel = new JPanel(new BorderLayout(20, 20));
         homePanel.setBackground(mainPanelColor);
@@ -138,12 +166,12 @@ public class FacultyDashboard extends JFrame {
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel nameLabel = new JLabel("Faculty name: " + username);
-        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Changed font
+        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         nameLabel.setForeground(textColor);
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel rollLabel = new JLabel("Faculty ID: 12345"); // Example roll no.
-        rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Changed font
+        JLabel rollLabel = new JLabel("Faculty ID: "  + facultyID);
+        rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         rollLabel.setForeground(textColor);
         rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -157,7 +185,7 @@ public class FacultyDashboard extends JFrame {
         infoPanel.setBackground(mainPanelColor);
 
 
-        JPanel coueseBox = createStatBox("No. of courses Offered", "2");
+        JPanel coueseBox = createStatBox("No. of courses Offered", String.valueOf(numCourses));
         infoPanel.add(coueseBox);
         homePanel.add(infoPanel, BorderLayout.WEST);
 
