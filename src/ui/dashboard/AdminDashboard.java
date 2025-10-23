@@ -4,32 +4,20 @@ import ui.landing.LandingFrame;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * An admin dashboard window.
- * Features a side navigation menu that opens new frames for each option
- * and a simple main content area.
- */
 public class AdminDashboard extends JFrame {
-
-    // --- Style Colors ---
     private Color bgColor = new Color(45, 45, 45);
     private Color sideMenuColor = new Color(60, 60, 60);
     private Color mainPanelColor = new Color(50, 50, 50);
     private Color buttonColor = new Color(57, 174, 168);
     private Color textColor = Color.WHITE;
-
     private String adminID;
 
-    // --- Main Layout Components ---
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
-
 
     public AdminDashboard(String adminID, String username) {
         super("Admin Dashboard - " + username);
         this.adminID = adminID;
-
-        // --- Basic Frame Setup ---
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1280, 800);
         setLocationRelativeTo(null);
@@ -37,33 +25,19 @@ public class AdminDashboard extends JFrame {
         getContentPane().setBackground(bgColor);
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
-
-        // Use BorderLayout for the main frame
         setLayout(new BorderLayout());
-
-        // --- Create and add the side menu and main content panels ---
         JPanel sideMenuPanel = createSideMenuPanel(username);
         add(sideMenuPanel, BorderLayout.WEST);
-
-        // The mainContentPanel will use CardLayout to show the home screen
         cardLayout = new CardLayout();
         mainContentPanel = new JPanel(cardLayout);
         mainContentPanel.setBackground(mainPanelColor);
 
-        // Create the simplified main content
         createMainContent(username);
 
         add(mainContentPanel, BorderLayout.CENTER);
-
-        // Show the initial "home" card
         cardLayout.show(mainContentPanel, "HOME");
     }
 
-    /**
-     * Creates the side navigation panel with buttons.
-     *
-     * @return The fully constructed side menu JPanel.
-     */
     private JPanel createSideMenuPanel(String username) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -76,8 +50,6 @@ public class AdminDashboard extends JFrame {
         menuTitle.setForeground(textColor);
         menuTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
         menuTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
-
-        // Create navigation buttons
         JButton homeButton = createMenuButton("Dashboard");
         JButton addUserButton = createMenuButton("Add Users");
         JButton manageUsersButton = createMenuButton("Manage Users");
@@ -85,9 +57,6 @@ public class AdminDashboard extends JFrame {
         JButton maintenanceButton = createMenuButton("Maintenance"); // Corrected spelling
         JButton logoutButton = createMenuButton("Logout");
 
-        // --- Add Action Listeners to buttons ---
-
-        // Home button just shows the main dashboard panel
         homeButton.addActionListener(e -> cardLayout.show(mainContentPanel, "HOME"));
 
         // Other buttons now open new JFrames
@@ -136,10 +105,6 @@ public class AdminDashboard extends JFrame {
 
         return panel;
     }
-
-    /**
-     * Creates the main content panel, which is just the blank home screen.
-     */
     private void createMainContent(String username) {
 
         // --- 1. Home Panel (The only panel) ---
@@ -196,21 +161,16 @@ public class AdminDashboard extends JFrame {
 
         return button;
     }
-
-    /**
-     * A helper method to quickly create placeholder frames for new features.
-     * @param title The title for the new frame.
-     */
     private void createPlaceholderFrame(String title) {
         JFrame placeholderFrame = new JFrame(title);
         placeholderFrame.setSize(800, 600);
-        placeholderFrame.setLocationRelativeTo(this); // Open near the main dashboard
-        placeholderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Only close this window
+        placeholderFrame.setLocationRelativeTo(this);
+        placeholderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(mainPanelColor);
 
-        JLabel label = new JLabel(title + " functionality will be here.");
+        JLabel label = new JLabel(title);
         label.setFont(new Font("Segoe UI", Font.PLAIN, 20));
         label.setForeground(textColor);
 
