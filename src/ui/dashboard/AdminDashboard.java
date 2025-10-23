@@ -97,9 +97,7 @@ public class AdminDashboard extends JFrame {
         panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
         panel.add(manageScoresButton);
         panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
-        panel.add(maintenanceButton); // Added the maintenance button
-
-        // Pushes the logout button to the bottom
+        panel.add(maintenanceButton);
         panel.add(Box.createVerticalGlue());
         panel.add(logoutButton);
 
@@ -139,14 +137,6 @@ public class AdminDashboard extends JFrame {
         // Add the single home panel to the card layout
         mainContentPanel.add(homePanel, "HOME");
     }
-
-
-    /**
-     * A helper method to create styled buttons for the side menu.
-     *
-     * @param text The text for the button.
-     * @return A styled JButton.
-     */
     private JButton createMenuButton(String text) {
         JButton button = new JButton(text);
         button.setBackground(buttonColor);
