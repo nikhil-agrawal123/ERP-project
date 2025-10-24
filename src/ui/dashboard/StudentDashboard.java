@@ -20,6 +20,8 @@ import java.awt.event.MouseEvent;
 import java.net.URI;
 import java.awt.Desktop;
 import javax.swing.JLayeredPane;
+import javax.swing.JPopupMenu;
+import javax.swing.JMenuItem;
 
 public class StudentDashboard extends JFrame {
 
@@ -36,6 +38,7 @@ public class StudentDashboard extends JFrame {
     private JLayeredPane mainContentPanel;
     private JPanel cardHolderPanel;
     private CardLayout cardLayout;
+    private JPopupMenu profileMenu;
 
     public StudentDashboard(String rollNum, String username) {
         super("Student Dashboard - " + username);
@@ -66,6 +69,12 @@ public class StudentDashboard extends JFrame {
 
         String initial = (username != null && !username.isEmpty()) ? username.substring(0, 1).toUpperCase() : "?";
         JButton profileButton = new CircularButton(initial);
+
+        createProfileMenu();
+
+        profileButton.addActionListener(e -> {
+            profileMenu.show(profileButton, 0, profileButton.getHeight() + 5);
+        });
 
         mainContentPanel.add(profileButton, JLayeredPane.PALETTE_LAYER);
 
@@ -236,8 +245,8 @@ public class StudentDashboard extends JFrame {
         linksPanel.add(Box.createVerticalGlue());
 
         statsContainer.add(linksPanel, BorderLayout.CENTER);
-
         centerContentPanel.add(statsContainer);
+
         JPanel rightSideContainer = new JPanel();
         rightSideContainer.setLayout(new BoxLayout(rightSideContainer, BoxLayout.Y_AXIS));
         rightSideContainer.setBackground(mainPanelColor);
@@ -253,6 +262,7 @@ public class StudentDashboard extends JFrame {
         centerContentPanel.add(rightSideContainer);
 
         homePanel.add(centerContentPanel, BorderLayout.CENTER);
+
         JPanel gradesPanel = new JPanel(new BorderLayout(10, 10));
         gradesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         gradesPanel.setBackground(mainPanelColor);
@@ -425,14 +435,11 @@ public class StudentDashboard extends JFrame {
         JLabel linkLabel = new JLabel(htmlText);
 
         linkLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-
         linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
         linkLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         linkLabel.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
-
                 try {
                     if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                         Desktop.getDesktop().browse(new URI(url));
@@ -535,6 +542,32 @@ public class StudentDashboard extends JFrame {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         return button;
+    }
+
+    private void createProfileMenu() {
+        profileMenu = new JPopupMenu();
+        profileMenu.setBackground(new Color(70, 70, 70));
+        profileMenu.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
+
+        profileMenu.add(createMenuItem("Option 1"));
+        profileMenu.add(createMenuItem("Option 2"));
+        profileMenu.add(new JPopupMenu.Separator());
+        profileMenu.add(createMenuItem("Option 3"));
+    }
+
+    private JMenuItem createMenuItem(String text) {
+        JMenuItem item = new JMenuItem(text);
+        item.setBackground(new Color(70, 70, 70));
+        item.setForeground(textColor);
+        item.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        item.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        item.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        item.addActionListener(e -> {
+            System.out.println("Clicked: " + text);
+        });
+
+        return item;
     }
 
     private class CircularButton extends JButton {
