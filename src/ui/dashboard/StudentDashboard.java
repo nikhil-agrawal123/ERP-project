@@ -11,14 +11,18 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.net.URI;
+import java.awt.Desktop;
+import javax.swing.JLayeredPane;
 
-/**
- * A dashboard window for a student, featuring a side navigation menu
- * and a main content area that switches between different panels.
- */
 public class StudentDashboard extends JFrame {
 
-    // --- Style Colors ---
     private Color bgColor = new Color(45, 45, 45);
     private Color sideMenuColor = new Color(60, 60, 60);
     private Color mainPanelColor = new Color(50, 50, 50);
@@ -29,76 +33,82 @@ public class StudentDashboard extends JFrame {
     private int credits = 0;
     private String rollNumber;
 
-    // --- Main Layout Components ---
-    private JPanel mainContentPanel;
+    private JLayeredPane mainContentPanel;
+    private JPanel cardHolderPanel;
     private CardLayout cardLayout;
 
-
-    public StudentDashboard(String rollNum,String username) {
+    public StudentDashboard(String rollNum, String username) {
         super("Student Dashboard - " + username);
 
-        // --- Basic Frame Setup ---
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1280, 800); // A more standard desktop aspect ratio
+        setSize(1280, 800);
         setLocationRelativeTo(null);
-        setResizable(true); // Allow resizing
+        setResizable(true);
         getContentPane().setBackground(bgColor);
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
 
-        // Use BorderLayout for the main frame
         setLayout(new BorderLayout());
 
         this.rollNumber = rollNum;
-        // --- Create and add the side menu and main content panels ---
         JPanel sideMenuPanel = createSideMenuPanel();
         add(sideMenuPanel, BorderLayout.WEST);
 
-        // The mainContentPanel will use CardLayout to switch between views
-        cardLayout = new CardLayout();
-        mainContentPanel = new JPanel(cardLayout);
+        mainContentPanel = new JLayeredPane();
         mainContentPanel.setBackground(mainPanelColor);
-        // This method can now safely use the correct rollNumber.
-        createContentCards(this.rollNumber, username);
         add(mainContentPanel, BorderLayout.CENTER);
 
+        cardLayout = new CardLayout();
+        cardHolderPanel = new JPanel(cardLayout);
+        cardHolderPanel.setOpaque(false);
 
-        // Show the initial "home" card
-        cardLayout.show(mainContentPanel, "HOME");
+        mainContentPanel.add(cardHolderPanel, JLayeredPane.DEFAULT_LAYER);
+
+        String initial = (username != null && !username.isEmpty()) ? username.substring(0, 1).toUpperCase() : "?";
+        JButton profileButton = new CircularButton(initial);
+
+        mainContentPanel.add(profileButton, JLayeredPane.PALETTE_LAYER);
+
+        mainContentPanel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                Dimension size = e.getComponent().getSize();
+                cardHolderPanel.setBounds(0, 0, size.width, size.height);
+
+                Dimension btnSize = profileButton.getPreferredSize();
+                int padding = 20;
+                profileButton.setBounds(size.width - btnSize.width - padding, padding, btnSize.width, btnSize.height);
+            }
+        });
+
+        createContentCards(cardHolderPanel, this.rollNumber, username);
+
+        cardLayout.show(cardHolderPanel, "HOME");
     }
 
-    /**
-     * Creates the side navigation panel with buttons.
-     *
-     * @return The fully constructed side menu JPanel.
-     */
     private JPanel createSideMenuPanel() {
         JPanel panel = new JPanel();
-        // Use BoxLayout to stack components vertically
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(sideMenuColor);
-        panel.setPreferredSize(new Dimension(220, 0)); // Set preferred width
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10)); // Padding
+        panel.setPreferredSize(new Dimension(220, 0));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
-        // Add a title label
         JLabel menuTitle = new JLabel("Navigation");
         menuTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
         menuTitle.setForeground(textColor);
         menuTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0)); // Bottom margin
+        menuTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
 
-        // Create navigation buttons
         JButton homeButton = createMenuButton("Dashboard Home");
         JButton gradesButton = createMenuButton("My Grades");
         JButton coursesButton = createMenuButton("My Courses");
         JButton receiptButton = createMenuButton("Fee Receipts");
         JButton logoutButton = createMenuButton("Logout");
 
-        // --- Add Action Listeners to buttons ---
-        homeButton.addActionListener(e -> cardLayout.show(mainContentPanel, "HOME"));
-        gradesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "GRADES"));
-        coursesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "COURSES"));
-        receiptButton.addActionListener(e -> cardLayout.show(mainContentPanel, "RECEIPTS"));
+        homeButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "HOME"));
+        gradesButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "GRADES"));
+        coursesButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "COURSES"));
+        receiptButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "RECEIPTS"));
 
         logoutButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Logout Successful");
@@ -107,28 +117,22 @@ public class StudentDashboard extends JFrame {
             dispose();
         });
 
-
-        // Add components to the panel
         panel.add(menuTitle);
         panel.add(homeButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
         panel.add(gradesButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
         panel.add(coursesButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
         panel.add(receiptButton);
 
-        // Pushes the logout button to the bottom
         panel.add(Box.createVerticalGlue());
         panel.add(logoutButton);
 
         return panel;
     }
 
-    /**
-     * Creates the different "pages" (panels) and adds them to the main content panel.
-     */
-    private void createContentCards(String rollNum, String username) {
+    private void createContentCards(JPanel cardHolder, String rollNum, String username) {
         Connector connector = new Connector();
         String sql = "SELECT g.score, c.credits " +
                 "FROM users.grades g " +
@@ -146,7 +150,6 @@ public class StudentDashboard extends JFrame {
             while (rs.next()) {
                 double score = rs.getDouble("score");
                 int courseCredits = rs.getInt("credits");
-                // Assuming score is out of 100, convert to a 10-point scale for CGPA
                 totalGradePoints += (score / 10.0) * courseCredits;
                 totalCredits += courseCredits;
             }
@@ -155,47 +158,41 @@ public class StudentDashboard extends JFrame {
             this.cg = (totalCredits > 0) ? totalGradePoints / totalCredits : 0.0;
             this.cg = Math.round(this.cg * 100.0) / 100.0;
 
-
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            // Optionally show an error message to the user
             JOptionPane.showMessageDialog(this, "Could not fetch student data.", "Database Error", JOptionPane.ERROR_MESSAGE);
         }
 
         JPanel homePanel = new JPanel(new BorderLayout(20, 20));
         homePanel.setBackground(mainPanelColor);
-        homePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40)); // Add padding
+        homePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
-        titlePanel.setBackground(mainPanelColor); // Match the background
+        titlePanel.setBackground(mainPanelColor);
 
-        // Welcome label at the top
         JLabel welcomeLabel = new JLabel("Welcome, " + username + "!");
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
         welcomeLabel.setForeground(textColor);
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel nameLabel = new JLabel("Student name: " + username);
-        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Changed font
+        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         nameLabel.setForeground(textColor);
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel rollLabel = new JLabel("Student Roll no.: " + this.rollNumber);
-        rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Changed font
+        rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         rollLabel.setForeground(textColor);
         rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // --- Add labels to the new title panel ---
         titlePanel.add(welcomeLabel);
-        titlePanel.add(Box.createRigidArea(new Dimension(0, 10))); // Add a small vertical space
+        titlePanel.add(Box.createRigidArea(new Dimension(0, 10)));
         titlePanel.add(nameLabel);
         titlePanel.add(rollLabel);
 
         homePanel.add(titlePanel, BorderLayout.NORTH);
 
-
-        // --- Center Content Section ---
         JPanel centerContentPanel = new JPanel(new GridLayout(1, 2, 40, 0));
         centerContentPanel.setBackground(mainPanelColor);
 
@@ -212,67 +209,81 @@ public class StudentDashboard extends JFrame {
         statsPanel.add(creditsBox);
         statsPanel.add(Box.createHorizontalGlue());
 
-        // --- MODIFIED SECTION: New container to align the stats panel to the top ---
         JPanel statsContainer = new JPanel(new BorderLayout());
         statsContainer.setBackground(mainPanelColor);
         statsContainer.add(statsPanel, BorderLayout.NORTH);
 
+        JPanel linksPanel = new JPanel();
+        linksPanel.setLayout(new BoxLayout(linksPanel, BoxLayout.Y_AXIS));
+        linksPanel.setBackground(mainPanelColor);
+        linksPanel.setBorder(BorderFactory.createEmptyBorder(40, 20, 20, 20));
+
+        JLabel linksTitle = new JLabel("Quick Links");
+        linksTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        linksTitle.setForeground(textColor);
+        linksTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        linksTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        linksPanel.add(linksTitle);
+
+        linksPanel.add(createClickableLink("Link 1", "https://example.com/link1"));
+        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        linksPanel.add(createClickableLink("Link 2", "https://example.com/link2"));
+        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        linksPanel.add(createClickableLink("Link 3", "https://example.com/link3"));
+        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        linksPanel.add(createClickableLink("Link 4", "https://example.com/link4"));
+
+        linksPanel.add(Box.createVerticalGlue());
+
+        statsContainer.add(linksPanel, BorderLayout.CENTER);
 
         centerContentPanel.add(statsContainer);
         JPanel rightSideContainer = new JPanel();
         rightSideContainer.setLayout(new BoxLayout(rightSideContainer, BoxLayout.Y_AXIS));
         rightSideContainer.setBackground(mainPanelColor);
 
-        // Create the individual panels
         JPanel coursesListPanel = createCoursesPanel();
-        JPanel appointmentsPanel = createAppointmentsPanel(); // The new panel
+        JPanel appointmentsPanel = createAppointmentsPanel();
 
-        // Add the panels to the right-side container
         rightSideContainer.add(coursesListPanel);
-        rightSideContainer.add(Box.createRigidArea(new Dimension(0, 20))); // Spacer for separation
+        rightSideContainer.add(Box.createRigidArea(new Dimension(0, 20)));
         rightSideContainer.add(appointmentsPanel);
-        rightSideContainer.add(Box.createVerticalGlue()); // Pushes panels to the top
+        rightSideContainer.add(Box.createVerticalGlue());
 
-        // Add the right-side container to the main grid layout
         centerContentPanel.add(rightSideContainer);
 
         homePanel.add(centerContentPanel, BorderLayout.CENTER);
-        // --- 2. Grades Panel ---
         JPanel gradesPanel = new JPanel(new BorderLayout(10, 10));
         gradesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         gradesPanel.setBackground(mainPanelColor);
 
-        // Add a title label to the top
         JLabel gradesTitle = new JLabel("Your Academic Grades");
         gradesTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         gradesTitle.setForeground(textColor);
         gradesPanel.add(gradesTitle, BorderLayout.NORTH);
 
-        // --- 3. Courses Panel ---
-        JPanel coursesPanel = new JPanel(new BorderLayout()); // Use BorderLayout
+        JPanel coursesPanel = new JPanel(new BorderLayout());
         coursesPanel.setBackground(mainPanelColor);
         coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Add a main title for the page
         JLabel pageTitle = new JLabel("My Registered Courses");
         pageTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         pageTitle.setForeground(textColor);
-        pageTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0)); // Bottom margin
+        pageTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         coursesPanel.add(pageTitle, BorderLayout.NORTH);
 
-        // Panel to hold the stack of course cards
         JPanel cardStackPanel = new JPanel();
         cardStackPanel.setLayout(new BoxLayout(cardStackPanel, BoxLayout.Y_AXIS));
         cardStackPanel.setBackground(mainPanelColor);
 
         cardStackPanel.add(createCourseCard("CSE121", "Discrete Mathematics"));
-        cardStackPanel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
+        cardStackPanel.add(Box.createRigidArea(new Dimension(0, 15)));
         cardStackPanel.add(createCourseCard("CSE201", "Advanced Programming"));
-        cardStackPanel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
+        cardStackPanel.add(Box.createRigidArea(new Dimension(0, 15)));
         cardStackPanel.add(createCourseCard("CSE231", "Operating Systems"));
 
         JScrollPane scrollPane = new JScrollPane(cardStackPanel);
-        scrollPane.setBorder(null); // Remove the default border of the scroll pane
+        scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(mainPanelColor);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
@@ -285,19 +296,12 @@ public class StudentDashboard extends JFrame {
             setForeground(textColor);
         }});
 
-        mainContentPanel.add(homePanel, "HOME");
-        mainContentPanel.add(gradesPanel, "GRADES");
-        mainContentPanel.add(coursesPanel, "COURSES");
-        mainContentPanel.add(receiptPanel, "RECEIPTS");
+        cardHolder.add(homePanel, "HOME");
+        cardHolder.add(gradesPanel, "GRADES");
+        cardHolder.add(coursesPanel, "COURSES");
+        cardHolder.add(receiptPanel, "RECEIPTS");
     }
 
-
-    /**
-     * A helper method to create styled buttons for the side menu.
-     *
-     * @param text The text for the button.
-     * @return A styled JButton.
-     */
     private JButton createMenuButton(String text) {
         JButton button = new JButton(text);
         button.setBackground(buttonColor);
@@ -306,7 +310,6 @@ public class StudentDashboard extends JFrame {
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Make buttons fill the width of the side menu
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         button.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -316,22 +319,19 @@ public class StudentDashboard extends JFrame {
 
     private JPanel createStatBox(String title, String value) {
         JPanel boxPanel = new JPanel(new BorderLayout());
-        boxPanel.setBackground(sideMenuColor); // Use a contrasting background
+        boxPanel.setBackground(sideMenuColor);
         boxPanel.setPreferredSize(new Dimension(250, 200));
         boxPanel.setMaximumSize(boxPanel.getPreferredSize());
-        // Combine a colored line border with internal padding
         boxPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(buttonColor, 2, true), // Rounded corners
+                BorderFactory.createLineBorder(buttonColor, 2, true),
                 BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
 
-        // Title label for the top of the box
         JLabel titleLabel = new JLabel(title, SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         titleLabel.setForeground(textColor);
         boxPanel.add(titleLabel, BorderLayout.NORTH);
 
-        // Value label for the center of the box
         JLabel valueLabel = new JLabel(value, SwingConstants.CENTER);
         valueLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 56));
         valueLabel.setForeground(textColor);
@@ -346,7 +346,6 @@ public class StudentDashboard extends JFrame {
         coursesPanel.setBackground(mainPanelColor);
         coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
 
-        // --- Panel Title ---
         JLabel titleLabel = new JLabel("Registered Courses", SwingConstants.LEFT);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         titleLabel.setForeground(textColor);
@@ -354,14 +353,12 @@ public class StudentDashboard extends JFrame {
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         coursesPanel.add(titleLabel);
 
-        // --- Hardcoded course data ---
         List<String> courseNames = new ArrayList<>();
         courseNames.add("CS101 - Intro to Programming");
         courseNames.add("MA203 - Linear Algebra");
         courseNames.add("PHY105 - Classical Mechanics");
         courseNames.add("EE201 - Digital Circuits");
 
-        // --- Display Courses as a Bulleted List ---
         if (courseNames.isEmpty()) {
             JLabel noCoursesLabel = new JLabel("No courses registered for this semester.");
             noCoursesLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -369,13 +366,12 @@ public class StudentDashboard extends JFrame {
             noCoursesLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             coursesPanel.add(noCoursesLabel);
         } else {
-            // Loop through the list and create a JLabel for each course
             for (String courseName : courseNames) {
-                JLabel courseLabel = new JLabel("\u2022 " + courseName); // \u2022 is the bullet character
+                JLabel courseLabel = new JLabel("\u2022 " + courseName);
                 courseLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
                 courseLabel.setForeground(textColor);
                 courseLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-                courseLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0)); // Add spacing below each item
+                courseLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
                 coursesPanel.add(courseLabel);
             }
         }
@@ -383,8 +379,6 @@ public class StudentDashboard extends JFrame {
         coursesPanel.add(Box.createVerticalGlue());
         return coursesPanel;
     }
-
-
 
     private JPanel createAppointmentsPanel() {
         JPanel appointmentsPanel = new JPanel();
@@ -399,7 +393,6 @@ public class StudentDashboard extends JFrame {
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         appointmentsPanel.add(titleLabel);
 
-        // --- Hardcoded appointment data ---
         List<String> appointmentDetails = new ArrayList<>();
         appointmentDetails.add("Dr. Alan Turing - 2025-10-20 at 11:00 AM");
         appointmentDetails.add("Prof. Ada Lovelace - 2025-10-22 at 02:30 PM");
@@ -412,13 +405,12 @@ public class StudentDashboard extends JFrame {
             noAppointmentsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             appointmentsPanel.add(noAppointmentsLabel);
         } else {
-            // Loop through the list and create a JLabel for each appointment
             for (String appointment : appointmentDetails) {
                 JLabel appointmentLabel = new JLabel("\u2022 " + appointment);
                 appointmentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
                 appointmentLabel.setForeground(textColor);
                 appointmentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-                appointmentLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0)); // Add spacing
+                appointmentLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
                 appointmentsPanel.add(appointmentLabel);
             }
         }
@@ -426,30 +418,72 @@ public class StudentDashboard extends JFrame {
         appointmentsPanel.add(Box.createVerticalGlue());
         return appointmentsPanel;
     }
+
+    private JLabel createClickableLink(String text, String url) {
+        String hexColor = String.format("#%02x%02x%02x", buttonColor.getRed(), buttonColor.getGreen(), buttonColor.getBlue());
+        String htmlText = "<html><u style='color:" + hexColor + "'>" + text + "</u></html>";
+        JLabel linkLabel = new JLabel(htmlText);
+
+        linkLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+
+        linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        linkLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        linkLabel.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+
+                try {
+                    if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                        Desktop.getDesktop().browse(new URI(url));
+                    } else {
+                        JOptionPane.showMessageDialog(StudentDashboard.this,
+                                "Cannot open link. OS does not support Desktop.browse.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(StudentDashboard.this,
+                            "Could not open link: " + e.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                String hoverHexColor = String.format("#%02x%02x%02x", buttonColor.darker().getRed(), buttonColor.darker().getGreen(), buttonColor.darker().getBlue());
+                String hoverText = "<html><u style='color:" + hoverHexColor + "'>" + text + "</u></html>";
+                linkLabel.setText(hoverText);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                linkLabel.setText(htmlText);
+            }
+        });
+
+        return linkLabel;
+    }
+
     private JPanel createCourseCard(String code, String name) {
-        // --- Main Card Panel ---
         JPanel cardPanel = new JPanel(new BorderLayout(10, 10));
-        cardPanel.setBackground(new Color(65, 65, 65)); // A slightly lighter gray for the card
+        cardPanel.setBackground(new Color(65, 65, 65));
         cardPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80)), // Outline
-                BorderFactory.createEmptyBorder(15, 20, 15, 20)      // Inner padding
+                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                BorderFactory.createEmptyBorder(15, 20, 15, 20)
         ));
-        // Set a max height to prevent cards from stretching vertically
         cardPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
 
-
-        // --- 1. Top Section: Course Code and Name ---
         JLabel titleLabel = new JLabel("Code - " + code + "   •   Course - " + name);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(buttonColor); // Using your theme color for highlight
+        titleLabel.setForeground(buttonColor);
         cardPanel.add(titleLabel, BorderLayout.NORTH);
 
+        JPanel detailsPanel = new JPanel(new GridLayout(1, 3, 20, 0));
+        detailsPanel.setOpaque(false);
 
-        // --- 2. Center Section: Details (Class Type, Credits, etc.) ---
-        JPanel detailsPanel = new JPanel(new GridLayout(1, 3, 20, 0)); // 1 row, 3 columns
-        detailsPanel.setOpaque(false); // Make it transparent to show card background
-
-        // Helper to create a detail column
         JPanel classTypePanel = createDetailColumn("Class Type", "Lecture");
         JPanel creditsPanel = createDetailColumn("Credits", "4");
         JPanel regTypePanel = createDetailColumn("Registration Type", "Mandatory (Core)");
@@ -459,8 +493,6 @@ public class StudentDashboard extends JFrame {
         detailsPanel.add(regTypePanel);
         cardPanel.add(detailsPanel, BorderLayout.CENTER);
 
-
-        // --- 3. Bottom Section: Action Buttons ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonsPanel.setOpaque(false);
 
@@ -474,9 +506,6 @@ public class StudentDashboard extends JFrame {
         return cardPanel;
     }
 
-    /**
-     * Helper to create a vertical column for a single detail item.
-     */
     private JPanel createDetailColumn(String title, String value) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -508,5 +537,60 @@ public class StudentDashboard extends JFrame {
         return button;
     }
 
+    private class CircularButton extends JButton {
 
+        public CircularButton(String text) {
+            super(text);
+
+            Dimension size = new Dimension(40, 40);
+            setPreferredSize(size);
+            setMaximumSize(size);
+            setMinimumSize(size);
+
+            setBackground(Color.WHITE);
+            setForeground(Color.BLACK);
+            setFont(new Font("Segoe UI", Font.BOLD, 18));
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            if (getModel().isArmed()) {
+                g2.setColor(getBackground().darker());
+            } else {
+                g2.setColor(getBackground());
+            }
+
+            g2.fillOval(0, 0, getWidth(), getHeight());
+
+            super.paintComponent(g);
+
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(Color.GRAY);
+            g2.drawOval(0, 0, getWidth() - 1, getHeight() - 1);
+            g2.dispose();
+        }
+
+        @Override
+        public boolean contains(int x, int y) {
+            int radius = getWidth() / 2;
+            int centerX = getWidth() / 2;
+            int centerY = getHeight() / 2;
+
+            return (Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)) <= Math.pow(radius, 2);
+        }
+    }
 }
