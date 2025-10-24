@@ -88,7 +88,7 @@ public class FacultyDashboard extends JFrame {
         gradesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Sections"));
         scoresButton.addActionListener(e -> {
             // 1. Create an instance of the new frame
-            CourseManagementFrame courseFrame = new CourseManagementFrame();
+            CourseManagementFrame courseFrame = new CourseManagementFrame(facultyID);
 
             // 2. Make that new frame visible
             courseFrame.setVisible(true);
@@ -217,8 +217,6 @@ public class FacultyDashboard extends JFrame {
         }});
 
 
-        // --- Add the panels to the CardLayout container ---
-        // The String is a unique key to identify each card
         mainContentPanel.add(homePanel, "HOME");
         mainContentPanel.add(sectionPanel, "Sections");
         mainContentPanel.add(statsPanel, "Stats");
@@ -239,7 +237,6 @@ public class FacultyDashboard extends JFrame {
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Make buttons fill the width of the side menu
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         button.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
         button.setAlignmentX(Component.CENTER_ALIGNMENT);

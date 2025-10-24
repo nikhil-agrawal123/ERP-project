@@ -18,7 +18,7 @@ public class CourseManagementFrame extends JFrame {
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
 
-    public CourseManagementFrame() {
+    public CourseManagementFrame(String userId) {
         super("Course Management");
 
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -31,14 +31,14 @@ public class CourseManagementFrame extends JFrame {
         mainContentPanel = new JPanel(cardLayout);
         mainContentPanel.setBackground(mainPanelColor);
 
-        createCoursePages();
+        createCoursePages(userId);
 
         add(mainContentPanel);
 
         cardLayout.show(mainContentPanel, "COURSE_LIST");
     }
 
-    private void createCoursePages() {
+    private void createCoursePages(String userId) {
         // --- Course List Panel ---
         JPanel courseListPanel = new JPanel();
         courseListPanel.setLayout(new BoxLayout(courseListPanel, BoxLayout.Y_AXIS));
@@ -55,7 +55,7 @@ public class CourseManagementFrame extends JFrame {
         // --- Hardcoded Course Data ---
         List<Course> courses = new ArrayList<>();
         courses.add(new Course("Data Structures", "CS201", 120, 4, "CSE"));
-        courses.add(new Course("Algorithms", "CS301", 95, 4, "CSE"));
+        courses.add(new Course("Algorithms", "CS301", 95    , 4, "CSE"));
         courses.add(new Course("Operating Systems", "CS302", 88, 3, "CSE"));
         courses.add(new Course("Database Management", "CS305", 110, 3, "IT"));
 

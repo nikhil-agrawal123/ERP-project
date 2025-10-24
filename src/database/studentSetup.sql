@@ -157,7 +157,7 @@ where user_id = "nikhil24380";
 INSERT INTO `grades` (`student_roll_no`, `course_code`, `semester`, `year`, `score`) VALUES
     ('2024380', 'CS101', '1', 2025, 85.50);
 
-alter table grades add column credits int not null
+alter table grades add column credits int not null;
 update grades
 set grades.credits = 4
 where student_roll_no = '2024380' and course_code ='CS101';
@@ -176,3 +176,9 @@ add column course_name varchar(50) not null,
     add column completion boolean not null;
 
 alter table instructors drop column instructor_email;
+
+alter table users.sections add column department varchar(50) not null;
+
+update sections
+set department = 'CSE'
+where section_id = 1;
