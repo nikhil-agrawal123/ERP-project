@@ -8,7 +8,7 @@ public class UpdateScoresFrame extends JFrame {
     private Color mainPanelColor = new Color(50, 50, 50);
     private Color textColor = Color.WHITE;
 
-    public UpdateScoresFrame() {
+    public UpdateScoresFrame(String code) {
         super("Update Scores");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(800, 600);

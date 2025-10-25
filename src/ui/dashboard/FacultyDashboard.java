@@ -42,7 +42,7 @@ public class FacultyDashboard extends JFrame {
         setLayout(new BorderLayout());
 
         // --- Create and add the side menu and main content panels ---
-        JPanel sideMenuPanel = createSideMenuPanel();
+        JPanel sideMenuPanel = createSideMenuPanel(username);
         add(sideMenuPanel, BorderLayout.WEST);
 
         // The mainContentPanel will use CardLayout to switch between views
@@ -60,7 +60,7 @@ public class FacultyDashboard extends JFrame {
      * Creates the side navigation panel with buttons.
      * @return The fully constructed side menu JPanel.
      */
-    private JPanel createSideMenuPanel() {
+    private JPanel createSideMenuPanel(String username) {
         JPanel panel = new JPanel();
         // Use BoxLayout to stack components vertically
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -88,7 +88,7 @@ public class FacultyDashboard extends JFrame {
         gradesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Sections"));
         scoresButton.addActionListener(e -> {
             // 1. Create an instance of the new frame
-            CourseManagementFrame courseFrame = new CourseManagementFrame(facultyID);
+            CourseManagementFrame courseFrame = new CourseManagementFrame(username);
 
             // 2. Make that new frame visible
             courseFrame.setVisible(true);

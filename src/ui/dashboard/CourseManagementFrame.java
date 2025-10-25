@@ -4,8 +4,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import databaseConfig.Connector;
 
 public class CourseManagementFrame extends JFrame {
 
@@ -34,30 +39,78 @@ public class CourseManagementFrame extends JFrame {
         createCoursePages(userId);
 
         add(mainContentPanel);
-
         cardLayout.show(mainContentPanel, "COURSE_LIST");
     }
 
     private void createCoursePages(String userId) {
-        // --- Course List Panel ---
         JPanel courseListPanel = new JPanel();
         courseListPanel.setLayout(new BoxLayout(courseListPanel, BoxLayout.Y_AXIS));
         courseListPanel.setBackground(mainPanelColor);
         courseListPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
-        JLabel scoresTitle = new JLabel("Select a Course");
+        JLabel scoresTitle = new JLabel("Select a Course You Teach");
         scoresTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         scoresTitle.setForeground(textColor);
         scoresTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         courseListPanel.add(scoresTitle);
         courseListPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        // --- Hardcoded Course Data ---
         List<Course> courses = new ArrayList<>();
-        courses.add(new Course("Data Structures", "CS201", 120, 4, "CSE"));
-        courses.add(new Course("Algorithms", "CS301", 95    , 4, "CSE"));
-        courses.add(new Course("Operating Systems", "CS302", 88, 3, "CSE"));
-        courses.add(new Course("Database Management", "CS305", 110, 3, "IT"));
+        Connector dbConnector = new Connector();
+
+        // --- Optimized SQL Query ---
+        String sql = """
+            SELECT 
+                c.course_title,
+                c.course_code,
+                c.credits,
+                s.department,
+                COUNT(DISTINCT e.student_id) AS student_count
+            FROM 
+                users.sections s
+            JOIN 
+                users.courses c ON s.course_code = c.course_code
+            LEFT JOIN 
+                users.enrollments e ON e.course_code = c.course_code
+            WHERE 
+                s.instructor_id = ?
+            GROUP BY 
+                c.course_title, c.course_code, c.credits, s.department
+            ORDER BY 
+                c.course_title
+            """;
+
+        try (Connection conn = dbConnector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userId);
+            System.out.println(userId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String name = rs.getString("course_title");
+                String code = rs.getString("course_code");
+                int studentCount = rs.getInt("student_count");
+                int credits = rs.getInt("credits");
+                String department = rs.getString("department");
+
+                courses.add(new Course(name, code, studentCount, credits, department));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JLabel errorLabel = new JLabel("Error loading courses: " + e.getMessage());
+            errorLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            errorLabel.setForeground(Color.RED);
+            courseListPanel.add(errorLabel);
+        }
+
+        if (courses.isEmpty()) {
+            JLabel noCoursesLabel = new JLabel("You are not assigned to any courses for the current term.");
+            noCoursesLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+            noCoursesLabel.setForeground(textColor);
+            courseListPanel.add(noCoursesLabel);
+        }
 
         for (Course course : courses) {
             JLabel courseLink = new JLabel(course.getName() + " (" + course.getCode() + ")");
@@ -71,10 +124,12 @@ public class CourseManagementFrame extends JFrame {
                 public void mouseClicked(MouseEvent e) {
                     cardLayout.show(mainContentPanel, "DETAIL_" + course.getCode());
                 }
+
                 @Override
                 public void mouseEntered(MouseEvent e) {
                     courseLink.setText("<html><u>" + course.getName() + " (" + course.getCode() + ")</u></html>");
                 }
+
                 @Override
                 public void mouseExited(MouseEvent e) {
                     courseLink.setText(course.getName() + " (" + course.getCode() + ")");
@@ -96,7 +151,6 @@ public class CourseManagementFrame extends JFrame {
         panel.setBackground(mainPanelColor);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
-        // --- Header Panel ---
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(mainPanelColor);
 
@@ -112,7 +166,6 @@ public class CourseManagementFrame extends JFrame {
         headerPanel.add(titleLabel, BorderLayout.CENTER);
         panel.add(headerPanel, BorderLayout.NORTH);
 
-        // --- Details Panel with GridBagLayout ---
         JPanel detailsPanel = new JPanel(new GridBagLayout());
         detailsPanel.setBackground(mainPanelColor);
         detailsPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
@@ -120,7 +173,6 @@ public class CourseManagementFrame extends JFrame {
         gbc.insets = new Insets(8, 5, 8, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Add detail rows...
         gbc.gridx = 0; gbc.gridy = 0;
         detailsPanel.add(createDetailLabel("Course Name:"), gbc);
         gbc.gridx = 1;
@@ -146,7 +198,6 @@ public class CourseManagementFrame extends JFrame {
         gbc.gridx = 1;
         detailsPanel.add(createValueLabel(course.getDepartment()), gbc);
 
-        // --- NEW POSITION: Update Scores Button is now part of the GridBagLayout ---
         JButton updateScoresButton = new JButton("Update Scores");
         updateScoresButton.setBackground(buttonColor);
         updateScoresButton.setForeground(textColor);
@@ -154,27 +205,22 @@ public class CourseManagementFrame extends JFrame {
         updateScoresButton.setFocusPainted(false);
         updateScoresButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         updateScoresButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        updateScoresButton.addActionListener(e -> new UpdateScoresFrame().setVisible(true));
+        updateScoresButton.addActionListener(e -> new UpdateScoresFrame(course.getCode()).setVisible(true));
 
-        // Add button to the next row, aligned left
         gbc.gridx = 0;
         gbc.gridy = 5;
-        gbc.gridwidth = 2; // Span two columns
-        gbc.insets = new Insets(20, 5, 8, 5); // Add top margin
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(20, 5, 8, 5);
         detailsPanel.add(updateScoresButton, gbc);
 
-        // Filler to push content to the top
         gbc.gridy = 6;
         gbc.weighty = 1.0;
         detailsPanel.add(new JLabel(""), gbc);
 
-        // Wrapper panel to prevent horizontal stretching
         JPanel containerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         containerPanel.setBackground(mainPanelColor);
         containerPanel.add(detailsPanel);
         panel.add(containerPanel, BorderLayout.CENTER);
-
-        // The button panel at the SOUTH has been removed.
 
         return panel;
     }
@@ -198,9 +244,13 @@ public class CourseManagementFrame extends JFrame {
         private int studentCount, credits;
 
         public Course(String name, String code, int studentCount, int credits, String department) {
-            this.name = name; this.code = code; this.studentCount = studentCount;
-            this.credits = credits; this.department = department;
+            this.name = name;
+            this.code = code;
+            this.studentCount = studentCount;
+            this.credits = credits;
+            this.department = department;
         }
+
         public String getName() { return name; }
         public String getCode() { return code; }
         public int getStudentCount() { return studentCount; }
@@ -215,11 +265,9 @@ public class CourseManagementFrame extends JFrame {
         button.setFont(new Font("Segoe UI", Font.BOLD, 16));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         button.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
-
         return button;
     }
 }
