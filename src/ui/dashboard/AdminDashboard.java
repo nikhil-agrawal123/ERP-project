@@ -2,6 +2,7 @@ package ui.dashboard;
 
 import ui.landing.LandingFrame;
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 
 public class AdminDashboard extends JFrame {
@@ -25,9 +26,9 @@ public class AdminDashboard extends JFrame {
         getContentPane().setBackground(bgColor);
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
+
         setLayout(new BorderLayout());
-        JPanel sideMenuPanel = createSideMenuPanel(username);
-        add(sideMenuPanel, BorderLayout.WEST);
+
         cardLayout = new CardLayout();
         mainContentPanel = new JPanel(cardLayout);
         mainContentPanel.setBackground(mainPanelColor);
@@ -38,119 +39,172 @@ public class AdminDashboard extends JFrame {
         cardLayout.show(mainContentPanel, "HOME");
     }
 
-    private JPanel createSideMenuPanel(String username) {
+    private void createMainContent(String username) {
+        JPanel homePanel = new JPanel(new BorderLayout(0, 0));
+        homePanel.setBackground(mainPanelColor);
+
+        JPanel rightSidePanel = createRightSidePanel();
+        homePanel.add(rightSidePanel, BorderLayout.EAST);
+
+        JPanel centerAndLeftContainer = new JPanel(new BorderLayout(0, 0));
+        centerAndLeftContainer.setBackground(mainPanelColor);
+
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setBackground(mainPanelColor);
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+
+        JLabel welcomeLabel = new JLabel("Welcome, " + username + "!");
+        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
+        welcomeLabel.setForeground(textColor);
+        welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        titlePanel.add(welcomeLabel);
+
+        centerAndLeftContainer.add(titlePanel, BorderLayout.NORTH);
+
+        JPanel profilePanel = createAdminProfilePanel(username);
+        centerAndLeftContainer.add(profilePanel, BorderLayout.WEST);
+
+        JPanel functionPanel = createFunctionPanel();
+        centerAndLeftContainer.add(functionPanel, BorderLayout.CENTER);
+
+        homePanel.add(centerAndLeftContainer, BorderLayout.CENTER);
+
+        mainContentPanel.add(homePanel, "HOME");
+    }
+
+    private JPanel createAdminProfilePanel(String username) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(sideMenuColor);
-        panel.setPreferredSize(new Dimension(220, 0));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
+        panel.setBackground(mainPanelColor);
+        panel.setPreferredSize(new Dimension(300, 0));
 
-        JLabel menuTitle = new JLabel("Navigation");
-        menuTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        menuTitle.setForeground(textColor);
-        menuTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
-        JButton homeButton = createMenuButton("Dashboard");
-        JButton addUserButton = createMenuButton("Add Users");
-        JButton manageUsersButton = createMenuButton("Manage Users");
-        JButton manageScoresButton = createMenuButton("Manage Scores");
-        JButton maintenanceButton = createMenuButton("Maintenance"); // Corrected spelling
-        JButton logoutButton = createMenuButton("Logout");
+        Border lineBorder = BorderFactory.createMatteBorder(0, 0, 0, 1, Color.GRAY);
+        Border paddingBorder = BorderFactory.createEmptyBorder(20, 20, 20, 20);
+        panel.setBorder(BorderFactory.createCompoundBorder(lineBorder, paddingBorder));
 
-        homeButton.addActionListener(e -> cardLayout.show(mainContentPanel, "HOME"));
+        JPanel photoPanel = new JPanel();
+        photoPanel.setBackground(Color.YELLOW);
+        Dimension photoSize = new Dimension(150, 150);
+        photoPanel.setPreferredSize(photoSize);
+        photoPanel.setMaximumSize(photoSize);
+        photoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Other buttons now open new JFrames
-        addUserButton.addActionListener(e -> {
-            // Open the Add Users frame (placeholder)
-            createPlaceholderFrame("Add Users");
-        });
+        JLabel nameLabel = new JLabel("Name: " + username);
+        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        nameLabel.setForeground(textColor);
+        nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        manageUsersButton.addActionListener(e -> {
-            // Open the Manage Users frame (placeholder)
-            createPlaceholderFrame("Manage Users");
-        });
+        JLabel idLabel = new JLabel("ID: " + this.adminID);
+        idLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        idLabel.setForeground(textColor);
+        idLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        manageScoresButton.addActionListener(e -> {
-            // Open the Manage Scores frame (placeholder)
-            createPlaceholderFrame("Manage Scores");
-        });
+        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+        panel.add(photoPanel);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
+        panel.add(nameLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(idLabel);
+        panel.add(Box.createVerticalGlue());
 
-        maintenanceButton.addActionListener(e -> {
-            // Open the Maintenance frame (placeholder)
-            createPlaceholderFrame("Maintenance");
-        });
+        return panel;
+    }
 
-        logoutButton.addActionListener(e -> {
+    private JPanel createFunctionPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
+        panel.setBackground(mainPanelColor);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JButton addUserBox = createFunctionBox("Add Users");
+        addUserBox.addActionListener(e -> createPlaceholderFrame("Add Users"));
+
+        JButton manageUsersBox = createFunctionBox("Manage Users");
+        manageUsersBox.addActionListener(e -> createPlaceholderFrame("Manage Users"));
+
+        JButton manageScoresBox = createFunctionBox("Manage Scores");
+        manageScoresBox.addActionListener(e -> createPlaceholderFrame("Manage Scores"));
+
+        JButton maintenanceBox = createFunctionBox("Maintenance");
+        maintenanceBox.addActionListener(e -> createPlaceholderFrame("Maintenance"));
+
+        JButton logoutBox = createFunctionBox("Logout");
+        logoutBox.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Logout Successful");
             new LandingFrame().setVisible(true);
             dispose();
         });
 
-
-        // Add components to the panel
-        panel.add(menuTitle);
-        panel.add(homeButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
-        panel.add(addUserButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
-        panel.add(manageUsersButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
-        panel.add(manageScoresButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
-        panel.add(maintenanceButton);
-        panel.add(Box.createVerticalGlue());
-        panel.add(logoutButton);
+        panel.add(addUserBox);
+        panel.add(manageUsersBox);
+        panel.add(manageScoresBox);
+        panel.add(maintenanceBox);
+        panel.add(logoutBox);
 
         return panel;
     }
-    private void createMainContent(String username) {
 
-        // --- 1. Home Panel (The only panel) ---
-        JPanel homePanel = new JPanel(new BorderLayout(20, 20));
-        homePanel.setBackground(mainPanelColor);
-        homePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+    private JPanel createRightSidePanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(mainPanelColor);
+        panel.setPreferredSize(new Dimension(220, 0));
 
-        JPanel titlePanel = new JPanel();
-        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
-        titlePanel.setBackground(mainPanelColor); // Match the background
+        Border lineBorder = BorderFactory.createMatteBorder(0, 1, 0, 0, Color.GRAY);
+        Border paddingBorder = BorderFactory.createEmptyBorder(0, 20, 20, 20);
+        panel.setBorder(BorderFactory.createCompoundBorder(lineBorder, paddingBorder));
 
-        // Welcome label at the top
-        JLabel welcomeLabel = new JLabel("Welcome, " + username + "!");
-        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
-        welcomeLabel.setForeground(textColor);
-        welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JButton b1 = createStyledButton("Button 1");
+        JButton b2 = createStyledButton("Button 2");
+        JButton b3 = createStyledButton("Button 3");
 
-        // ID Label (replaces roll number)
-        JLabel idLabel = new JLabel("ID: " + this.adminID);
-        idLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        idLabel.setForeground(textColor);
-        idLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        b1.addActionListener(e -> System.out.println("Button 1 pressed"));
+        b2.addActionListener(e -> System.out.println("Button 2 pressed"));
+        b3.addActionListener(e -> System.out.println("Button 3 pressed"));
 
-        // --- Add labels to the title panel ---
-        titlePanel.add(welcomeLabel);
-        titlePanel.add(Box.createRigidArea(new Dimension(0, 10))); // Vertical space
-        titlePanel.add(idLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 105)));
 
-        // Add title panel to the top of the home panel
-        homePanel.add(titlePanel, BorderLayout.NORTH);
+        panel.add(b1);
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+        panel.add(b2);
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+        panel.add(b3);
+        panel.add(Box.createVerticalGlue());
 
-        // Add the single home panel to the card layout
-        mainContentPanel.add(homePanel, "HOME");
+        return panel;
     }
-    private JButton createMenuButton(String text) {
+
+    private JButton createFunctionBox(String text) {
+        JButton button = new JButton(text);
+        button.setPreferredSize(new Dimension(180, 180));
+        button.setBackground(sideMenuColor);
+        button.setForeground(textColor);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setBorder(BorderFactory.createLineBorder(buttonColor, 1));
+
+        return button;
+    }
+
+    private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         button.setBackground(buttonColor);
         button.setForeground(textColor);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        button.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
+        Dimension buttonSize = new Dimension(200, 60);
+        button.setPreferredSize(buttonSize);
+        button.setMaximumSize(buttonSize);
+
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         return button;
     }
+
     private void createPlaceholderFrame(String title) {
         JFrame placeholderFrame = new JFrame(title);
         placeholderFrame.setSize(800, 600);
