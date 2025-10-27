@@ -279,11 +279,24 @@ public class StudentDashboard extends JFrame {
 
             List<List<Object>> semTable = new ArrayList<>();
 
-            String sql2 = "SELECT course_code, course_name, course_credits, gradePoint FROM users.enrollments WHERE semester = ? AND student_id = ?";
+            String sql2 = """
+            SELECT
+                e.course_code,
+                        e.course_name,
+                        e.course_credits,
+                        e.gradePoint,
+                        c.offeredBy
+                FROM
+                users.enrollments e
+                JOIN
+                users.courses c ON e.course_code = c.course_code
+                WHERE
+                e.semester = ? AND e.student_id = ?
+            """;
 
             try (Connection connection = connector.connect()) {
                 PreparedStatement pstmt = connection.prepareStatement(sql2);
-                pstmt.setInt(1, i); // Use setInt for the semester number
+                pstmt.setInt(1, i);
                 pstmt.setString(2, username);
 
                 ResultSet rs = pstmt.executeQuery();
@@ -291,16 +304,19 @@ public class StudentDashboard extends JFrame {
                 boolean semesterHasData = false;
 
                 while (rs.next()) {
-                    semesterHasData = true; // We found at least one course in this semester
+                    semesterHasData = true;
 
                     List<Object> courseRow = new ArrayList<>();
 
                     courseRow.add(rs.getString("course_code"));
                     courseRow.add(rs.getString("course_name"));
                     courseRow.add(rs.getInt("course_credits"));
-                    courseRow.add("prof name here"); // Your placeholder
-                    courseRow.add(rs.getDouble("gradePoint"));
-
+                    courseRow.add(rs.getString("offeredBy"));
+                    if(rs.getDouble("gradePoint") == 0.0){
+                        courseRow.add("N/A");
+                    }else{
+                        courseRow.add(rs.getDouble("gradePoint"));
+                    }
                     semTable.add(courseRow);
                 }
 

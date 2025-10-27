@@ -208,3 +208,25 @@ alter table enrollments add column gradePoint double;
 update enrollments
 set enrollments.gradePoint = 10
 where student_id = 'nikhil24380';
+
+alter table users.enrollments drop key `student_section_UNIQUE`;
+
+insert into users.enrollments(student_id, student_name, course_code, course_name, course_credits, completion, semester ) values
+                   ('nikhil24380' ,'nikhil agrawal', 'MTH301', 'Real Analysis' ,'4', FALSE,'2');
+
+alter table users.courses add column offeredBy varchar(100);
+
+update courses
+set offeredBy = 'Dr. Alok Gupta'
+where course_code = 'CS101';
+
+alter table courses drop column course_type;
+
+insert into users.courses(course_code, course_title, credits, offeredBy) values
+    ('MTH301', 'Real Analysis' , '4' ,  , 'Dr. Nambita Ray')
+
+alter table students add column currentSem int not null;
+
+update students
+set students.currentSem = 3
+where student_roll_no = '2024380';
