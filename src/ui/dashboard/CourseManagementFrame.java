@@ -84,7 +84,6 @@ public class CourseManagementFrame extends JFrame {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, userId);
-            System.out.println(userId);
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {

@@ -182,3 +182,23 @@ alter table users.sections add column department varchar(50) not null;
 update sections
 set department = 'CSE'
 where section_id = 1;
+
+alter table enrollments add column grade varchar(5);
+
+update enrollments
+set enrollments.student_name = 'nikhil agrawal' ,enrollments.course_code = 'CSE101' , enrollments.course_name = 'Intro to Programing', enrollments.course_credits = 4 , enrollments.completion = TRUE
+where enrollments.student_id = 'nikhil24380';
+
+update enrollments
+set enrollments.course_code = 'CS101'
+where student_id = 'nikhil24380';
+
+update enrollments
+set enrollments.grade = 'A+'
+where student_id = 'nikhil24380';
+
+alter table enrollments add column semester int not null ;
+
+update enrollments
+set enrollments.semester = 1
+where enrollments.student_id = 'nikhil24380';

@@ -4,6 +4,7 @@ import org.json.JSONObject;
 import ui.landing.LandingFrame;
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.table.DefaultTableModel; // Added for JTable
 import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
 import databaseConfig.Connector;
@@ -142,6 +143,7 @@ public class StudentDashboard extends JFrame {
     }
 
     private void createContentCards(JPanel cardHolder, String rollNum, String username) {
+
         Connector connector = new Connector();
         String sql = "SELECT g.score, c.credits " +
                 "FROM users.grades g " +
@@ -263,6 +265,7 @@ public class StudentDashboard extends JFrame {
 
         homePanel.add(centerContentPanel, BorderLayout.CENTER);
 
+
         JPanel gradesPanel = new JPanel(new BorderLayout(10, 10));
         gradesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         gradesPanel.setBackground(mainPanelColor);
@@ -271,6 +274,7 @@ public class StudentDashboard extends JFrame {
         gradesTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         gradesTitle.setForeground(textColor);
         gradesPanel.add(gradesTitle, BorderLayout.NORTH);
+
 
         JPanel coursesPanel = new JPanel(new BorderLayout());
         coursesPanel.setBackground(mainPanelColor);
@@ -282,22 +286,48 @@ public class StudentDashboard extends JFrame {
         pageTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         coursesPanel.add(pageTitle, BorderLayout.NORTH);
 
-        JPanel cardStackPanel = new JPanel();
-        cardStackPanel.setLayout(new BoxLayout(cardStackPanel, BoxLayout.Y_AXIS));
-        cardStackPanel.setBackground(mainPanelColor);
+        String[] columnNames = {"Course ID", "Course Name", "Credits", "Instructor", "Grade Point"};
 
-        cardStackPanel.add(createCourseCard("CSE121", "Discrete Mathematics"));
-        cardStackPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        cardStackPanel.add(createCourseCard("CSE201", "Advanced Programming"));
-        cardStackPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        cardStackPanel.add(createCourseCard("CSE231", "Operating Systems"));
+        Object[][] data = {
+                { "CSE121", "Discrete Mathematics", 4, "Dr. Alan Turing", 9.0 },
+                { "CSE201", "Advanced Programming", 4, "Prof. Ada Lovelace", 8.5 },
+                { "CSE231", "Operating Systems", 4, "Dr. Grace Hopper", 8.0 },
+                { "HUM101", "Ethics in CS", 2, "Prof. J. Weizenbaum", 9.5 },
+                { "MAT200", "Linear Algebra", 2, "Dr. G. Boole", 8.8 }
+        };
 
-        JScrollPane scrollPane = new JScrollPane(cardStackPanel);
-        scrollPane.setBorder(null);
+        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        JTable table = new JTable(model);
+
+        table.setBackground(mainPanelColor);
+        table.setForeground(textColor);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setRowHeight(28);
+        table.setGridColor(sideMenuColor.brighter());
+        table.setFillsViewportHeight(true);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setSelectionBackground(buttonColor.darker());
+        table.setSelectionForeground(textColor);
+
+        table.getTableHeader().setBackground(sideMenuColor);
+        table.getTableHeader().setForeground(buttonColor);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
+        table.getTableHeader().setBorder(BorderFactory.createLineBorder(sideMenuColor));
+        table.getTableHeader().setReorderingAllowed(false);
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(sideMenuColor));
         scrollPane.getViewport().setBackground(mainPanelColor);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         coursesPanel.add(scrollPane, BorderLayout.CENTER);
+
 
         JPanel receiptPanel = new JPanel();
         receiptPanel.setBackground(mainPanelColor);
@@ -305,6 +335,7 @@ public class StudentDashboard extends JFrame {
             setFont(new Font("Segoe UI", Font.PLAIN, 24));
             setForeground(textColor);
         }});
+
 
         cardHolder.add(homePanel, "HOME");
         cardHolder.add(gradesPanel, "GRADES");
@@ -472,76 +503,6 @@ public class StudentDashboard extends JFrame {
         });
 
         return linkLabel;
-    }
-
-    private JPanel createCourseCard(String code, String name) {
-        JPanel cardPanel = new JPanel(new BorderLayout(10, 10));
-        cardPanel.setBackground(new Color(65, 65, 65));
-        cardPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80)),
-                BorderFactory.createEmptyBorder(15, 20, 15, 20)
-        ));
-        cardPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
-
-        JLabel titleLabel = new JLabel("Code - " + code + "   •   Course - " + name);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(buttonColor);
-        cardPanel.add(titleLabel, BorderLayout.NORTH);
-
-        JPanel detailsPanel = new JPanel(new GridLayout(1, 3, 20, 0));
-        detailsPanel.setOpaque(false);
-
-        JPanel classTypePanel = createDetailColumn("Class Type", "Lecture");
-        JPanel creditsPanel = createDetailColumn("Credits", "4");
-        JPanel regTypePanel = createDetailColumn("Registration Type", "Mandatory (Core)");
-
-        detailsPanel.add(classTypePanel);
-        detailsPanel.add(creditsPanel);
-        detailsPanel.add(regTypePanel);
-        cardPanel.add(detailsPanel, BorderLayout.CENTER);
-
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        buttonsPanel.setOpaque(false);
-
-        buttonsPanel.add(createStyledButton("Time Table"));
-        buttonsPanel.add(createStyledButton("Attendance"));
-        buttonsPanel.add(createStyledButton("Assignment"));
-        buttonsPanel.add(createStyledButton("Lesson Plan"));
-        buttonsPanel.add(createStyledButton("Course Feedback"));
-        cardPanel.add(buttonsPanel, BorderLayout.SOUTH);
-
-        return cardPanel;
-    }
-
-    private JPanel createDetailColumn(String title, String value) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setOpaque(false);
-
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        titleLabel.setForeground(Color.LIGHT_GRAY);
-
-        JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        valueLabel.setForeground(textColor);
-
-        panel.add(titleLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 5)));
-        panel.add(valueLabel);
-
-        return panel;
-    }
-
-    private JButton createStyledButton(String text) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        button.setForeground(textColor);
-        button.setBackground(new Color(80, 80, 80));
-        button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        return button;
     }
 
     private void createProfileMenu() {
