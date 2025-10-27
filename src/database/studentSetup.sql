@@ -202,3 +202,9 @@ alter table enrollments add column semester int not null ;
 update enrollments
 set enrollments.semester = 1
 where enrollments.student_id = 'nikhil24380';
+
+alter table enrollments add column gradePoint double;
+
+update enrollments
+set enrollments.gradePoint = 10
+where student_id = 'nikhil24380';

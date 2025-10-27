@@ -1,28 +1,20 @@
 package ui.dashboard;
 
-import org.json.JSONObject;
 import ui.landing.LandingFrame;
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
-import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
 import databaseConfig.Connector;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.net.URI;
 import java.awt.Desktop;
-import javax.swing.JLayeredPane;
-import javax.swing.JPopupMenu;
-import javax.swing.JMenuItem;
+import java.util.Map;
+import java.util.HashMap;
 
 public class StudentDashboard extends JFrame {
 
@@ -110,13 +102,13 @@ public class StudentDashboard extends JFrame {
         menuTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
 
         JButton homeButton = createMenuButton("Dashboard Home");
-        JButton gradesButton = createMenuButton("My Grades");
+        JButton registerForCourses = createMenuButton("Register For Courses");
         JButton coursesButton = createMenuButton("My Courses");
         JButton receiptButton = createMenuButton("Fee Receipts");
         JButton logoutButton = createMenuButton("Logout");
 
         homeButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "HOME"));
-        gradesButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "GRADES"));
+        registerForCourses.addActionListener(e -> cardLayout.show(cardHolderPanel, "Course List"));
         coursesButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "COURSES"));
         receiptButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "RECEIPTS"));
 
@@ -130,9 +122,9 @@ public class StudentDashboard extends JFrame {
         panel.add(menuTitle);
         panel.add(homeButton);
         panel.add(Box.createRigidArea(new Dimension(0, 15)));
-        panel.add(gradesButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 15)));
         panel.add(coursesButton);
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+        panel.add(registerForCourses);
         panel.add(Box.createRigidArea(new Dimension(0, 15)));
         panel.add(receiptButton);
 
@@ -253,10 +245,8 @@ public class StudentDashboard extends JFrame {
         rightSideContainer.setLayout(new BoxLayout(rightSideContainer, BoxLayout.Y_AXIS));
         rightSideContainer.setBackground(mainPanelColor);
 
-        JPanel coursesListPanel = createCoursesPanel();
         JPanel appointmentsPanel = createAppointmentsPanel();
 
-        rightSideContainer.add(coursesListPanel);
         rightSideContainer.add(Box.createRigidArea(new Dimension(0, 20)));
         rightSideContainer.add(appointmentsPanel);
         rightSideContainer.add(Box.createVerticalGlue());
@@ -283,25 +273,45 @@ public class StudentDashboard extends JFrame {
         gradesTabs.setForeground(textColor);
         gradesTabs.setFocusable(false);
 
-        String[] gradeColumnNames = {"Course ID", "Course Name", "Letter Grade", "Grade Point"};
-        Object[][] sem1GradeData = {
-                { "CSE121", "Discrete Mathematics", "A+", 9.0 },
-                { "HUM101", "Ethics in CS", "A+", 9.5 }
-        };
-        JTable sem1GradeTable = createStyledTable(sem1GradeData, gradeColumnNames);
-        JScrollPane sem1GradeScrollPane = createStyledScrollPane(sem1GradeTable);
-        gradesTabs.addTab("Semester 1", sem1GradeScrollPane);
+        Map<Integer, List<List<Object>>> semesterData = new HashMap<>();
 
-        Object[][] sem2GradeData = {
-                { "CSE201", "Advanced Programming", "A", 8.5 },
-                { "CSE231", "Operating Systems", "B+", 8.0 },
-                { "MAT200", "Linear Algebra", "A", 8.8 }
-        };
-        JTable sem2GradeTable = createStyledTable(sem2GradeData, gradeColumnNames);
-        JScrollPane sem2GradeScrollPane = createStyledScrollPane(sem2GradeTable);
-        gradesTabs.addTab("Semester 2", sem2GradeScrollPane);
+        for (int i = 1; i < 9; i++) { // Loop through semesters 1 to 8
 
-        gradesPanel.add(gradesTabs, BorderLayout.CENTER);
+            List<List<Object>> semTable = new ArrayList<>();
+
+            String sql2 = "SELECT course_code, course_name, course_credits, gradePoint FROM users.enrollments WHERE semester = ? AND student_id = ?";
+
+            try (Connection connection = connector.connect()) {
+                PreparedStatement pstmt = connection.prepareStatement(sql2);
+                pstmt.setInt(1, i); // Use setInt for the semester number
+                pstmt.setString(2, username);
+
+                ResultSet rs = pstmt.executeQuery();
+
+                boolean semesterHasData = false;
+
+                while (rs.next()) {
+                    semesterHasData = true; // We found at least one course in this semester
+
+                    List<Object> courseRow = new ArrayList<>();
+
+                    courseRow.add(rs.getString("course_code"));
+                    courseRow.add(rs.getString("course_name"));
+                    courseRow.add(rs.getInt("course_credits"));
+                    courseRow.add("prof name here"); // Your placeholder
+                    courseRow.add(rs.getDouble("gradePoint"));
+
+                    semTable.add(courseRow);
+                }
+
+                if (semesterHasData) {
+                    semesterData.put(i, semTable);
+                }
+
+            } catch (SQLException e) {
+                System.out.println(e);
+            }
+        }
 
 
         // --- MODIFIED COURSES PANEL ---
@@ -323,25 +333,20 @@ public class StudentDashboard extends JFrame {
 
         String[] columnNames = {"Course ID", "Course Name", "Credits", "Instructor", "Grade Point"};
 
-        Object[][] sem1Data = {
-                { "CSE121", "Discrete Mathematics", 4, "Dr. Alan Turing", 9.0 },
-                { "HUM101", "Ethics in CS", 2, "Prof. J. Weizenbaum", 9.5 }
-        };
-        JTable sem1Table = createStyledTable(sem1Data, columnNames);
-        JScrollPane sem1ScrollPane = createStyledScrollPane(sem1Table);
-        semesterTabs.addTab("Semester 1", sem1ScrollPane);
+        for (int i = 1; i < 9; i++) {
+            if (semesterData.containsKey(i)) {
 
-        Object[][] sem2Data = {
-                { "CSE201", "Advanced Programming", 4, "Prof. Ada Lovelace", 8.5 },
-                { "CSE231", "Operating Systems", 4, "Dr. Grace Hopper", 8.0 },
-                { "MAT200", "Linear Algebra", 2, "Dr. G. Boole", 8.8 }
-        };
-        JTable sem2Table = createStyledTable(sem2Data, columnNames);
-        JScrollPane sem2ScrollPane = createStyledScrollPane(sem2Table);
-        semesterTabs.addTab("Semester 2", sem2ScrollPane);
+                List<List<Object>> semesterTableData = semesterData.get(i);
 
-        // Add more tabs here as needed
-        // semesterTabs.addTab("Semester 3", createStyledScrollPane(sem3Table));
+                Object[][] data = new Object[semesterTableData.size()][];
+                for (int j = 0; j < semesterTableData.size(); j++) {
+                    data[j] = semesterTableData.get(j).toArray(new Object[0]);
+                }
+                JTable semTable = createStyledTable(data, columnNames);
+                JScrollPane scrollPane = createStyledScrollPane(semTable);
+                semesterTabs.addTab("Semester " + i, scrollPane);
+            }
+        }
 
         coursesPanel.add(semesterTabs, BorderLayout.CENTER);
 
@@ -398,45 +403,6 @@ public class StudentDashboard extends JFrame {
         return boxPanel;
     }
 
-    private JPanel createCoursesPanel() {
-        JPanel coursesPanel = new JPanel();
-        coursesPanel.setLayout(new BoxLayout(coursesPanel, BoxLayout.Y_AXIS));
-        coursesPanel.setBackground(mainPanelColor);
-        coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
-
-        JLabel titleLabel = new JLabel("Registered Courses", SwingConstants.LEFT);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        titleLabel.setForeground(textColor);
-        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
-        coursesPanel.add(titleLabel);
-
-        List<String> courseNames = new ArrayList<>();
-        courseNames.add("CS101 - Intro to Programming");
-        courseNames.add("MA203 - Linear Algebra");
-        courseNames.add("PHY105 - Classical Mechanics");
-        courseNames.add("EE201 - Digital Circuits");
-
-        if (courseNames.isEmpty()) {
-            JLabel noCoursesLabel = new JLabel("No courses registered for this semester.");
-            noCoursesLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-            noCoursesLabel.setForeground(textColor);
-            noCoursesLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            coursesPanel.add(noCoursesLabel);
-        } else {
-            for (String courseName : courseNames) {
-                JLabel courseLabel = new JLabel("\u2022 " + courseName);
-                courseLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-                courseLabel.setForeground(textColor);
-                courseLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-                courseLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-                coursesPanel.add(courseLabel);
-            }
-        }
-
-        coursesPanel.add(Box.createVerticalGlue());
-        return coursesPanel;
-    }
 
     private JPanel createAppointmentsPanel() {
         JPanel appointmentsPanel = new JPanel();
@@ -522,7 +488,6 @@ public class StudentDashboard extends JFrame {
         return linkLabel;
     }
 
-    // --- NEW HELPER METHOD 1 ---
     private JTable createStyledTable(Object[][] data, String[] columnNames) {
         DefaultTableModel model = new DefaultTableModel(data, columnNames) {
             @Override
@@ -548,7 +513,6 @@ public class StudentDashboard extends JFrame {
         return table;
     }
 
-    // --- NEW HELPER METHOD 2 ---
     private JScrollPane createStyledScrollPane(Component view) {
         JScrollPane scrollPane = new JScrollPane(view);
         scrollPane.setBorder(BorderFactory.createLineBorder(sideMenuColor));
