@@ -4,7 +4,7 @@ import org.json.JSONObject;
 import ui.landing.LandingFrame;
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.table.DefaultTableModel; // Added for JTable
+import javax.swing.table.DefaultTableModel;
 import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
 import databaseConfig.Connector;
@@ -266,6 +266,7 @@ public class StudentDashboard extends JFrame {
         homePanel.add(centerContentPanel, BorderLayout.CENTER);
 
 
+        // --- MODIFIED GRADES PANEL ---
         JPanel gradesPanel = new JPanel(new BorderLayout(10, 10));
         gradesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         gradesPanel.setBackground(mainPanelColor);
@@ -273,9 +274,37 @@ public class StudentDashboard extends JFrame {
         JLabel gradesTitle = new JLabel("Your Academic Grades");
         gradesTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         gradesTitle.setForeground(textColor);
+        gradesTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         gradesPanel.add(gradesTitle, BorderLayout.NORTH);
 
+        JTabbedPane gradesTabs = new JTabbedPane();
+        gradesTabs.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        gradesTabs.setBackground(mainPanelColor);
+        gradesTabs.setForeground(textColor);
+        gradesTabs.setFocusable(false);
 
+        String[] gradeColumnNames = {"Course ID", "Course Name", "Letter Grade", "Grade Point"};
+        Object[][] sem1GradeData = {
+                { "CSE121", "Discrete Mathematics", "A+", 9.0 },
+                { "HUM101", "Ethics in CS", "A+", 9.5 }
+        };
+        JTable sem1GradeTable = createStyledTable(sem1GradeData, gradeColumnNames);
+        JScrollPane sem1GradeScrollPane = createStyledScrollPane(sem1GradeTable);
+        gradesTabs.addTab("Semester 1", sem1GradeScrollPane);
+
+        Object[][] sem2GradeData = {
+                { "CSE201", "Advanced Programming", "A", 8.5 },
+                { "CSE231", "Operating Systems", "B+", 8.0 },
+                { "MAT200", "Linear Algebra", "A", 8.8 }
+        };
+        JTable sem2GradeTable = createStyledTable(sem2GradeData, gradeColumnNames);
+        JScrollPane sem2GradeScrollPane = createStyledScrollPane(sem2GradeTable);
+        gradesTabs.addTab("Semester 2", sem2GradeScrollPane);
+
+        gradesPanel.add(gradesTabs, BorderLayout.CENTER);
+
+
+        // --- MODIFIED COURSES PANEL ---
         JPanel coursesPanel = new JPanel(new BorderLayout());
         coursesPanel.setBackground(mainPanelColor);
         coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -286,47 +315,35 @@ public class StudentDashboard extends JFrame {
         pageTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         coursesPanel.add(pageTitle, BorderLayout.NORTH);
 
+        JTabbedPane semesterTabs = new JTabbedPane();
+        semesterTabs.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        semesterTabs.setBackground(mainPanelColor);
+        semesterTabs.setForeground(textColor);
+        semesterTabs.setFocusable(false);
+
         String[] columnNames = {"Course ID", "Course Name", "Credits", "Instructor", "Grade Point"};
 
-        Object[][] data = {
+        Object[][] sem1Data = {
                 { "CSE121", "Discrete Mathematics", 4, "Dr. Alan Turing", 9.0 },
+                { "HUM101", "Ethics in CS", 2, "Prof. J. Weizenbaum", 9.5 }
+        };
+        JTable sem1Table = createStyledTable(sem1Data, columnNames);
+        JScrollPane sem1ScrollPane = createStyledScrollPane(sem1Table);
+        semesterTabs.addTab("Semester 1", sem1ScrollPane);
+
+        Object[][] sem2Data = {
                 { "CSE201", "Advanced Programming", 4, "Prof. Ada Lovelace", 8.5 },
                 { "CSE231", "Operating Systems", 4, "Dr. Grace Hopper", 8.0 },
-                { "HUM101", "Ethics in CS", 2, "Prof. J. Weizenbaum", 9.5 },
                 { "MAT200", "Linear Algebra", 2, "Dr. G. Boole", 8.8 }
         };
+        JTable sem2Table = createStyledTable(sem2Data, columnNames);
+        JScrollPane sem2ScrollPane = createStyledScrollPane(sem2Table);
+        semesterTabs.addTab("Semester 2", sem2ScrollPane);
 
-        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
+        // Add more tabs here as needed
+        // semesterTabs.addTab("Semester 3", createStyledScrollPane(sem3Table));
 
-        JTable table = new JTable(model);
-
-        table.setBackground(mainPanelColor);
-        table.setForeground(textColor);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.setRowHeight(28);
-        table.setGridColor(sideMenuColor.brighter());
-        table.setFillsViewportHeight(true);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(buttonColor.darker());
-        table.setSelectionForeground(textColor);
-
-        table.getTableHeader().setBackground(sideMenuColor);
-        table.getTableHeader().setForeground(buttonColor);
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
-        table.getTableHeader().setBorder(BorderFactory.createLineBorder(sideMenuColor));
-        table.getTableHeader().setReorderingAllowed(false);
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createLineBorder(sideMenuColor));
-        scrollPane.getViewport().setBackground(mainPanelColor);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
-        coursesPanel.add(scrollPane, BorderLayout.CENTER);
+        coursesPanel.add(semesterTabs, BorderLayout.CENTER);
 
 
         JPanel receiptPanel = new JPanel();
@@ -503,6 +520,41 @@ public class StudentDashboard extends JFrame {
         });
 
         return linkLabel;
+    }
+
+    // --- NEW HELPER METHOD 1 ---
+    private JTable createStyledTable(Object[][] data, String[] columnNames) {
+        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        JTable table = new JTable(model);
+        table.setBackground(mainPanelColor);
+        table.setForeground(textColor);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setRowHeight(28);
+        table.setGridColor(sideMenuColor.brighter());
+        table.setFillsViewportHeight(true);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setSelectionBackground(buttonColor.darker());
+        table.setSelectionForeground(textColor);
+        table.getTableHeader().setBackground(sideMenuColor);
+        table.getTableHeader().setForeground(buttonColor);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
+        table.getTableHeader().setBorder(BorderFactory.createLineBorder(sideMenuColor));
+        table.getTableHeader().setReorderingAllowed(false);
+        return table;
+    }
+
+    // --- NEW HELPER METHOD 2 ---
+    private JScrollPane createStyledScrollPane(Component view) {
+        JScrollPane scrollPane = new JScrollPane(view);
+        scrollPane.setBorder(BorderFactory.createLineBorder(sideMenuColor));
+        scrollPane.getViewport().setBackground(mainPanelColor);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        return scrollPane;
     }
 
     private void createProfileMenu() {
