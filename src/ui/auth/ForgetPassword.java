@@ -8,6 +8,7 @@ import databaseConfig.Connector;
 import dependancy.org.mindrot.jbcrypt.BCrypt;
 import ui.landing.LandingFrame;
 import java.util.Random;
+import middleware.*;
 
 public class ForgetPassword extends JFrame{
     private JTextField userEmail;
@@ -19,6 +20,8 @@ public class ForgetPassword extends JFrame{
     private final Color textFieldBgColor = new Color(60, 60, 60);
     private boolean success = true;
     private String user;
+
+    private services passreset;
 
     public ForgetPassword(String userType){
         super("Forget Password");
@@ -32,88 +35,45 @@ public class ForgetPassword extends JFrame{
         setIconImage(image.getImage());
 
         initComponents(userType);
+
+        this.passreset = new services();
         layoutComponents();
     }
 
     private void updateDatabase(String newHash, String userType) {
-        String getUserIdSQL = "";
-        String updatePassSQL = "";
+        boolean reset = passreset.forgetPass(userEmail.getText(),userType,newHash);
+        if (reset) {
+            JFrame frame = new JFrame();
+            frame.setSize(300,200);
+            frame.setLocationRelativeTo(null);
 
-        if(userType.equals("parent")){
-            getUserIdSQL = "SELECT user_id FROM users.students WHERE student_email = ?";
-            updatePassSQL = "UPDATE auth.parentAuth SET parentPass = ? WHERE studentId = ?";
-        } else if(userType.equals("faculty")){
-            getUserIdSQL = "SELECT user_id FROM users.instructors WHERE email = ?";
-            updatePassSQL = "UPDATE auth.facultyAuth SET facultyPass = ? WHERE facultyId = ?";
-        }else if(userType.equals("admin")){
-            getUserIdSQL = "SELECT adminID FROM users.admin WHERE adminEmail = ?";
-            updatePassSQL = "UPDATE auth.adminAuth SET adminPass = ? WHERE adminId = ?";
-        }else{
-            getUserIdSQL = "SELECT user_id FROM users.students WHERE student_email = ?";
-            updatePassSQL = "UPDATE auth.studentAuth SET studentPass = ? WHERE studentId = ?";
-        }
+            Object[] option = {"Proceed to login"};
+            int choice = JOptionPane.showOptionDialog(
+                    frame,
+                    "Password updated Succesfully",
+                    "Success",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    option,
+                    option[0]
+            );
 
-        Connector dbConnector = new Connector();
-
-        try (Connection conn = dbConnector.connect()) {
-            PreparedStatement preparedStatement = conn.prepareStatement(getUserIdSQL);
-            preparedStatement.setString(1, userEmail.getText());
-            try{
-                ResultSet rs = preparedStatement.executeQuery();
-                if (rs.next()) {
-                    String studentId = rs.getString("user_id");
-                    System.out.println("Found student ID: " + studentId);
-
-                    PreparedStatement ps = conn.prepareStatement(updatePassSQL);
-                    ps.setString(1, newHash);
-                    ps.setString(2, studentId);
-
-                    int rowsAffected = ps.executeUpdate();
-
-                    if (rowsAffected > 0) {
-                        JFrame frame = new JFrame();
-                        frame.setSize(300,200);
-                        frame.setLocationRelativeTo(null);
-
-                        Object[] option = {"Proceed to login"};
-                        int choice = JOptionPane.showOptionDialog(
-                                frame,
-                                "Password updated Succesfully",
-                                "Success",
-                                JOptionPane.DEFAULT_OPTION,
-                                JOptionPane.INFORMATION_MESSAGE,
-                                null,
-                                option,
-                                option[0]
-                        );
-
-                        if(choice == 0){
-                            LandingFrame landingFrame = new LandingFrame();
-                            landingFrame.setVisible(true);
-                            dispose();
-                        }else{
-                            LandingFrame landingFrame = new LandingFrame();
-                            landingFrame.setVisible(true);
-                            dispose();
-                        }
-                        frame.dispose();
-
-                        System.out.println("Password reset successful");
-                    } else {
-                        success = false;
-                        System.out.println("Update failed, no rows were changed.");
-                    }
-
-                } else {
-                    // Handle the case where the email was not found in the database.
-                    System.out.println("No user found with the email: " + userEmail.getText());
-                }
-            } catch (SQLException ex) {
-                System.out.println(ex.getMessage());
+            if(choice == 0){
+                LandingFrame landingFrame = new LandingFrame();
+                landingFrame.setVisible(true);
+                dispose();
+            }else{
+                LandingFrame landingFrame = new LandingFrame();
+                landingFrame.setVisible(true);
+                dispose();
             }
+            frame.dispose();
 
-        } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Password reset successful");
+        } else {
+            success = false;
+            System.out.println("Update failed, no rows were changed.");
         }
     }
 

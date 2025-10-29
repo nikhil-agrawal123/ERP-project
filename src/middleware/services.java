@@ -54,4 +54,13 @@ public class services {
             return false;
         }
     }
+
+    public boolean forgetPass(String userEmail , String userType,String newHash) {
+        try {
+            return authRepository.forgetPass(userEmail,userType,newHash);
+        }catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

@@ -53,4 +53,49 @@ public class authPoints {
             throw new SQLException("Error fetching user data.", e);
         }
     }
+
+    public boolean forgetPass(String userEmail, String userType, String newHash) throws SQLException {
+        String getUserIdSQL = "";
+        String updatePassSQL = "";
+
+        if(userType.equals("parent")){
+            getUserIdSQL = "SELECT user_id FROM users.students WHERE student_email = ?";
+            updatePassSQL = "UPDATE auth.parentAuth SET parentPass = ? WHERE studentId = ?";
+        } else if(userType.equals("faculty")){
+            getUserIdSQL = "SELECT user_id FROM users.instructors WHERE email = ?";
+            updatePassSQL = "UPDATE auth.facultyAuth SET facultyPass = ? WHERE facultyId = ?";
+        }else if(userType.equals("admin")){
+            getUserIdSQL = "SELECT adminID FROM users.admin WHERE adminEmail = ?";
+            updatePassSQL = "UPDATE auth.adminAuth SET adminPass = ? WHERE adminId = ?";
+        }else{
+            getUserIdSQL = "SELECT user_id FROM users.students WHERE student_email = ?";
+            updatePassSQL = "UPDATE auth.studentAuth SET studentPass = ? WHERE studentId = ?";
+        }
+
+        try(Connection conn = dbConnector.connect()){
+            PreparedStatement preparedStatement = conn.prepareStatement(getUserIdSQL);
+            preparedStatement.setString(1, userEmail);
+            try{
+                ResultSet rs = preparedStatement.executeQuery();
+                if (rs.next()) {
+                    String studentId = rs.getString("user_id");
+                    System.out.println("Found student ID: " + studentId);
+
+                    PreparedStatement ps = conn.prepareStatement(updatePassSQL);
+                    ps.setString(1, newHash);
+                    ps.setString(2, studentId);
+
+                    int rowsAffected = ps.executeUpdate();
+
+                    if(rowsAffected > 0){
+                        return true;
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return false;
+    }
 }
