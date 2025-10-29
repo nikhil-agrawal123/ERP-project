@@ -5,14 +5,15 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.sql.*;
-import dependancy.org.mindrot.jbcrypt.BCrypt;
-import databaseConfig.Connector;
+import middleware.services;
 
 import ui.dashboard.FacultyDashboard;
 import ui.landing.LandingFrame;
 
 public class FacultyLoginFrame extends JFrame {
     private int numTry = 3;
+
+    private services facultyService;
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -35,6 +36,8 @@ public class FacultyLoginFrame extends JFrame {
         setIconImage(image.getImage());
         initComponents();
         layoutComponents();
+
+        this.facultyService = new services();
 
     }
 
@@ -178,45 +181,18 @@ public class FacultyLoginFrame extends JFrame {
             return;
         }
 
-        String sql = "SELECT facultyPass FROM facultyAuth WHERE facultyId = ?";
-        Connector dbConnector = new Connector();
+        boolean getAuthRes = facultyService.loginFaculty(username, password);
 
-        try (Connection conn = dbConnector.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, username);
-
-            ResultSet rs = pstmt.executeQuery();
-
-            // 2. Check if a user with that username was found
-            if (rs.next()) {
-                String storedHash = rs.getString("facultyPass");
-
-                if (BCrypt.checkpw(password, storedHash)) {
-                    FacultyDashboard dashboard = new FacultyDashboard(username);
-                    dashboard.setVisible(true);
-                    dispose();
-                } else {
-                    // Password does NOT match the hash
-                    JOptionPane.showMessageDialog(this,
-                            "Incorrect username or password.",
-                            "Login Failed",
-                            JOptionPane.ERROR_MESSAGE);
-                    numTry -= 1;
-                }
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "Incorrect username or password.",
-                        "Login Failed",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if(getAuthRes) {
+            FacultyDashboard dashboard = new FacultyDashboard(username);
+            dashboard.setVisible(true);
+            dispose();
+        } else {
             JOptionPane.showMessageDialog(this,
-                    "An error occurred with the database.",
-                    "Database Error",
+                    "Incorrect username or password.",
+                    "Login Failed",
                     JOptionPane.ERROR_MESSAGE);
+            numTry -= 1;
         }
     }
     public void handleLock() {

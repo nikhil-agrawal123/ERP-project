@@ -7,8 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import ui.landing.LandingFrame;
 import ui.dashboard.StudentDashboard;
-import java.time.*;
-import middleware.studentMiddleware;
+import middleware.services;
 
 /**
  * The initial login window for the application.
@@ -17,7 +16,7 @@ import middleware.studentMiddleware;
  */
 public class StudentLoginFrame extends JFrame {
 
-    private studentMiddleware studentService;
+    private services studentService;
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -43,7 +42,7 @@ public class StudentLoginFrame extends JFrame {
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
 
-        this.studentService = new studentMiddleware();
+        this.studentService = new services();
 
         initComponents();
         layoutComponents();
