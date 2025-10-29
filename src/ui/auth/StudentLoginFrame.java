@@ -5,11 +5,10 @@ import java.sql.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import dependancy.org.mindrot.jbcrypt.BCrypt;
 import ui.landing.LandingFrame;
-import databaseConfig.Connector;
 import ui.dashboard.StudentDashboard;
 import java.time.*;
+import middleware.studentMiddleware;
 
 /**
  * The initial login window for the application.
@@ -17,6 +16,8 @@ import java.time.*;
  * connected later.
  */
 public class StudentLoginFrame extends JFrame {
+
+    private studentMiddleware studentService;
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -41,6 +42,8 @@ public class StudentLoginFrame extends JFrame {
         getContentPane().setBackground(backgroundColor);
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
+
+        this.studentService = new studentMiddleware();
 
         initComponents();
         layoutComponents();
@@ -76,7 +79,11 @@ public class StudentLoginFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(numTry > 0){
-                    handleLoginAttempt();
+                    try {
+                        handleLoginAttempt();
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }else {
                     handleLock();
                 }
@@ -174,7 +181,7 @@ public class StudentLoginFrame extends JFrame {
     /**
      * This method is called when the login button is clicked.
      */
-    private void handleLoginAttempt() {
+    private void handleLoginAttempt() throws SQLException {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
@@ -186,54 +193,16 @@ public class StudentLoginFrame extends JFrame {
             return;
         }
 
-        String sql = "SELECT sa.studentPass, s.student_roll_no " +
-                "FROM auth.studentAuth sa " +
-                "JOIN users.students s ON sa.studentId = s.user_id " +
-                "WHERE sa.studentId = ?";
-
-        Connector dbConnector = new Connector();
-
-        try (Connection conn = dbConnector.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-
-            // Check if a user with that username was found
-            if (rs.next()) {
-                // Read both columns from the single result set
-                String storedHash = rs.getString("studentPass");
-                String storedRollNumber = rs.getString("student_roll_no");
-
-                if (BCrypt.checkpw(password, storedHash)) {
-                    // Login successful, open the dashboard
-                    StudentDashboard dashboard = new StudentDashboard(storedRollNumber, username);
-                    dashboard.setVisible(true);
-                    dispose();
-                } else {
-                    // Password does NOT match the hash
-                    JOptionPane.showMessageDialog(this,
-                            "Incorrect username or password.",
-                            "Login Failed",
-                            JOptionPane.ERROR_MESSAGE);
-                    numTry -= 1;
-                }
-            } else {
-                // No user found with that username
-                JOptionPane.showMessageDialog(this,
-                        "Incorrect username or password.",
-                        "Login Failed",
-                        JOptionPane.ERROR_MESSAGE);
+        String rollNumber = studentService.loginStudent(username, password);
+        if (rollNumber != null) {
+            StudentDashboard dashboard = new StudentDashboard(rollNumber, username);
+            dashboard.setVisible(true);
+            dispose();
+        }else{
+            JOptionPane.showMessageDialog(this, "Incorrect username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            numTry -= 1;
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                    "An error occurred with the database.",
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
         }
-    }
 
     public void handleLock() {
         loginButton.setEnabled(false);

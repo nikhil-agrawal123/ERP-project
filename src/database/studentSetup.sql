@@ -223,10 +223,20 @@ where course_code = 'CS101';
 alter table courses drop column course_type;
 
 insert into users.courses(course_code, course_title, credits, offeredBy) values
-    ('MTH301', 'Real Analysis' , '4' ,  , 'Dr. Nambita Ray')
+    ('MTH301', 'Real Analysis' , '4'  , 'Dr. Nambita Ray');
 
 alter table students add column currentSem int not null;
 
 update students
 set students.currentSem = 3
 where student_roll_no = '2024380';
+
+ALTER table courses add column semester varchar(100) not null;
+
+update courses
+set courses.semester = 'Monsoon 2024'
+where credits = '4';
+
+insert into courses (course_code, course_title, credits, semester, offeredBy)
+values ('CS201' ,'Data Structures and Algorythm', 4, 'Monsoon 2025', 'Dr. Sambudho'),
+       ('MTH300' , 'Discrete Structures' , 4 , 'Monsoon 2025', 'Nikhil Chaudary');

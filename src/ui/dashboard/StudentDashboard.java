@@ -108,7 +108,7 @@ public class StudentDashboard extends JFrame {
         JButton logoutButton = createMenuButton("Logout");
 
         homeButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "HOME"));
-        registerForCourses.addActionListener(e -> cardLayout.show(cardHolderPanel, "Course List"));
+        registerForCourses.addActionListener(e -> cardLayout.show(cardHolderPanel, "REGISTER"));
         coursesButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "COURSES"));
         receiptButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "RECEIPTS"));
 
@@ -255,24 +255,6 @@ public class StudentDashboard extends JFrame {
 
         homePanel.add(centerContentPanel, BorderLayout.CENTER);
 
-
-        // --- MODIFIED GRADES PANEL ---
-        JPanel gradesPanel = new JPanel(new BorderLayout(10, 10));
-        gradesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        gradesPanel.setBackground(mainPanelColor);
-
-        JLabel gradesTitle = new JLabel("Your Academic Grades");
-        gradesTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        gradesTitle.setForeground(textColor);
-        gradesTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
-        gradesPanel.add(gradesTitle, BorderLayout.NORTH);
-
-        JTabbedPane gradesTabs = new JTabbedPane();
-        gradesTabs.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        gradesTabs.setBackground(mainPanelColor);
-        gradesTabs.setForeground(textColor);
-        gradesTabs.setFocusable(false);
-
         Map<Integer, List<List<Object>>> semesterData = new HashMap<>();
 
         for (int i = 1; i < 9; i++) { // Loop through semesters 1 to 8
@@ -313,7 +295,7 @@ public class StudentDashboard extends JFrame {
                     courseRow.add(rs.getInt("course_credits"));
                     courseRow.add(rs.getString("offeredBy"));
                     if(rs.getDouble("gradePoint") == 0.0){
-                        courseRow.add("N/A");
+                        courseRow.add("Yet to be declared");
                     }else{
                         courseRow.add(rs.getDouble("gradePoint"));
                     }
@@ -366,17 +348,23 @@ public class StudentDashboard extends JFrame {
 
         coursesPanel.add(semesterTabs, BorderLayout.CENTER);
 
+        JPanel registerPanel = new JPanel();
+        registerPanel.setBackground(mainPanelColor);
+        registerPanel.add(new JLabel("All courses here") {{
+            setFont(new Font("Segoe UI", Font.PLAIN, 24));
+            setForeground(textColor);
+        }});
 
         JPanel receiptPanel = new JPanel();
         receiptPanel.setBackground(mainPanelColor);
-        receiptPanel.add(new JLabel("Your Courses Will Be Displayed Here") {{
+        receiptPanel.add(new JLabel("Fee updates are here") {{
             setFont(new Font("Segoe UI", Font.PLAIN, 24));
             setForeground(textColor);
         }});
 
 
         cardHolder.add(homePanel, "HOME");
-        cardHolder.add(gradesPanel, "GRADES");
+        cardHolder.add(registerPanel, "REGISTER");
         cardHolder.add(coursesPanel, "COURSES");
         cardHolder.add(receiptPanel, "RECEIPTS");
     }
