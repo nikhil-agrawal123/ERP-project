@@ -4,19 +4,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
-import databaseConfig.Connector;
-import dependancy.org.mindrot.jbcrypt.BCrypt;
+import middleware.*;
 import ui.dashboard.ParentDashboard;
 import ui.landing.LandingFrame;
 
 
 public class ParentLoginFrame extends JFrame {
-
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -29,6 +23,9 @@ public class ParentLoginFrame extends JFrame {
     Color borderColor = new Color(150, 150, 150);
     private Color textFieldBgColor = new Color(60, 60, 60);
     private int numTry = 3;
+
+    private services parentLogin;
+
     public ParentLoginFrame() {
         super("Parent Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -40,6 +37,7 @@ public class ParentLoginFrame extends JFrame {
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
 
+        this.parentLogin = new services();
 
         initComponents();
         layoutComponents();
@@ -72,7 +70,11 @@ public class ParentLoginFrame extends JFrame {
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                handleLoginAttempt();
+                if(numTry > 0){
+                    handleLoginAttempt();
+                }else{
+                    handleLock();
+                }
             }
         });
 
@@ -181,45 +183,18 @@ public class ParentLoginFrame extends JFrame {
             return;
         }
 
-        String sql = "SELECT parentPass FROM parentAuth WHERE studentId = ?";
-        Connector dbConnector = new Connector();
+        boolean loginSuccess = parentLogin.parentLogin(username, password);
 
-        try (Connection conn = dbConnector.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, username);
-
-            ResultSet rs = pstmt.executeQuery();
-
-            // 2. Check if a user with that username was found
-            if (rs.next()) {
-                String storedHash = rs.getString("parentPass");
-
-                if (BCrypt.checkpw(password, storedHash)) {
-                    ParentDashboard dashboard = new ParentDashboard(username);
-                    dashboard.setVisible(true);
-                    dispose();
-                } else {
-                    // Password does NOT match the hash
-                    JOptionPane.showMessageDialog(this,
-                            "Incorrect username or password.",
-                            "Login Failed",
-                            JOptionPane.ERROR_MESSAGE);
-                    numTry -= 1;
-                }
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "Incorrect username or password.",
-                        "Login Failed",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if (loginSuccess) {
+            ParentDashboard dashboard = new ParentDashboard(username);
+            dashboard.setVisible(true);
+            dispose();
+        } else {
             JOptionPane.showMessageDialog(this,
-                    "An error occurred with the database.",
-                    "Database Error",
+                    "Incorrect username or password.",
+                    "Login Failed",
                     JOptionPane.ERROR_MESSAGE);
+            numTry -= 1;
         }
     }
     public void handleLock() {

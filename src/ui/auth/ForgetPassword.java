@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
 
-import databaseConfig.Connector;
 import dependancy.org.mindrot.jbcrypt.BCrypt;
 import ui.landing.LandingFrame;
 import java.util.Random;

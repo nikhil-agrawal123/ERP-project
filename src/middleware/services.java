@@ -55,6 +55,26 @@ public class services {
         }
     }
 
+    public boolean parentLogin(String username, String password) {
+        try {
+            String gethash = authRepository.getDataByParent(username);
+            if(gethash == null) {
+                System.out.println("Login attempt failed: User not found.");
+            }else {
+                if (BCrypt.checkpw(password, gethash)) {
+                    return true;
+                }else  {
+                    System.out.println("Login attempt failed: Incorrect password.");
+                    return false;
+                }
+            }
+        }catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
     public boolean forgetPass(String userEmail , String userType,String newHash) {
         try {
             return authRepository.forgetPass(userEmail,userType,newHash);

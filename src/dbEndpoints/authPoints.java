@@ -3,6 +3,7 @@ package dbEndpoints;
 import java.sql.*;
 import databaseConfig.Connector;
 import dbClasses.*;
+import dependancy.org.mindrot.jbcrypt.BCrypt;
 
 public class authPoints {
     Connector dbConnector = new Connector();
@@ -92,10 +93,24 @@ public class authPoints {
                     }
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
-                return false;
+                throw new SQLException("Error fetching user data.", e);
             }
         }
         return false;
+    }
+
+    public String getDataByParent(String username) throws SQLException {
+        String sql = "SELECT parentPass FROM parentAuth WHERE studentId = ?";
+        try (Connection conn = dbConnector.connect();
+        PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, username);
+            ResultSet rs = preparedStatement.executeQuery();
+            if (rs.next()) {
+                return rs.getString("parentPass");
+            }
+        }catch (SQLException e){
+            throw new SQLException("Error fetching user data.", e);
+        }
+        return null;
     }
 }
