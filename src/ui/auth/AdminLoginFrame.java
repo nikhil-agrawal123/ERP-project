@@ -5,15 +5,15 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.sql.*;
-import databaseConfig.Connector;
-import dependancy.org.mindrot.jbcrypt.BCrypt;
 
 import ui.dashboard.AdminDashboard;
 import ui.landing.LandingFrame;
+import middleware.services;
 
 
 public class AdminLoginFrame extends JFrame {
 
+    private services admin;
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -40,6 +40,7 @@ public class AdminLoginFrame extends JFrame {
         initComponents();
         layoutComponents();
 
+        this.admin = new services();
     }
 
     private void initComponents() {
@@ -179,47 +180,20 @@ public class AdminLoginFrame extends JFrame {
             return;
         }
 
-        String sql = "SELECT adminPass FROM adminAuth WHERE adminId = ?";
-        Connector dbConnector = new Connector();
-
-        try (Connection conn = dbConnector.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, username);
-
-            ResultSet rs = pstmt.executeQuery();
-
-            // 2. Check if a user with that username was found
-            if (rs.next()) {
-                String storedHash = rs.getString("adminPass");
-
-                if (BCrypt.checkpw(password, storedHash)) {
-                    AdminDashboard dashboard = new AdminDashboard(username, username);
-                    dashboard.setVisible(true);
-                    dispose();
-                } else {
-                    // Password does NOT match the hash
-                    JOptionPane.showMessageDialog(this,
-                            "Incorrect username or password.",
-                            "Login Failed",
-                            JOptionPane.ERROR_MESSAGE);
-                    numTry -= 1;
-                }
+        boolean login = admin.adminLogin(username,password);
+            if (login) {
+                AdminDashboard dashboard = new AdminDashboard(username, username);
+                dashboard.setVisible(true);
+                dispose();
             } else {
+                // Password does NOT match the hash
                 JOptionPane.showMessageDialog(this,
                         "Incorrect username or password.",
                         "Login Failed",
                         JOptionPane.ERROR_MESSAGE);
+                numTry -= 1;
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                    "An error occurred with the database.",
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
         }
-    }
 
     public void handleLock() {
         loginButton.setEnabled(false);

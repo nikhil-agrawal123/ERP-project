@@ -83,4 +83,23 @@ public class services {
             return false;
         }
     }
+
+    public boolean adminLogin(String username, String password) {
+        try{
+            String hash = authRepository.getDataByAdmin(username);
+            if(hash == null) {
+                System.out.println("Login attempt failed: User not found.");
+            }else{
+                if (BCrypt.checkpw(password, hash)) {
+                    return true;
+                }else{
+                    System.out.println("Login attempt failed: Incorrect password.");
+                    return false;
+                }
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

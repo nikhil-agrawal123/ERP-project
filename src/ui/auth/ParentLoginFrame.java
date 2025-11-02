@@ -20,7 +20,6 @@ public class ParentLoginFrame extends JFrame {
     Color backgroundColor = new Color(45, 45, 45);
     Color buttonColor = new Color(57, 174, 168);
     Color textColor = Color.WHITE;
-    Color borderColor = new Color(150, 150, 150);
     private Color textFieldBgColor = new Color(60, 60, 60);
     private int numTry = 3;
 

@@ -3,7 +3,6 @@ package dbEndpoints;
 import java.sql.*;
 import databaseConfig.Connector;
 import dbClasses.*;
-import dependancy.org.mindrot.jbcrypt.BCrypt;
 
 public class authPoints {
     Connector dbConnector = new Connector();
@@ -13,7 +12,6 @@ public class authPoints {
                 "FROM auth.studentAuth sa " +
                 "JOIN users.students s ON sa.studentId = s.user_id " +
                 "WHERE sa.studentId = ?";
-
 
         try (Connection conn = dbConnector.connect();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
@@ -101,14 +99,31 @@ public class authPoints {
 
     public String getDataByParent(String username) throws SQLException {
         String sql = "SELECT parentPass FROM parentAuth WHERE studentId = ?";
-        try (Connection conn = dbConnector.connect();
-        PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+        try (Connection conn = dbConnector.connect()){
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
+                preparedStatement.setString(1, username);
+                ResultSet rs = preparedStatement.executeQuery();
+                if (rs.next()) {
+                    return rs.getString("parentPass");
+                }
+        }catch (SQLException e){
+            throw new SQLException("Error fetching user data.", e);
+        }
+
+        return null;
+    }
+
+    public String getDataByAdmin(String username) throws SQLException {
+        String sql = "SELECT adminPass FROM adminAuth WHERE adminId = ?";
+
+        try (Connection conn = dbConnector.connect()){
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setString(1, username);
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
-                return rs.getString("parentPass");
+                return rs.getString("adminPass");
             }
-        }catch (SQLException e){
+        }catch (SQLException e) {
             throw new SQLException("Error fetching user data.", e);
         }
         return null;
