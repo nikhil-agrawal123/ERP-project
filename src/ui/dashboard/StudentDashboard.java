@@ -147,6 +147,10 @@ public class StudentDashboard extends JFrame {
         return panel;
     }
 
+    // --- 1. MODIFIED createContentCards METHOD ---
+    // This method now contains the new 2-row (top/bottom) layout
+// --- 1. MODIFIED createContentCards METHOD ---
+    // This method now contains the new 2-row (top/bottom) layout
     private void createContentCards(JPanel cardHolder, String rollNum, String username) {
 
         StudentCgCredits dashboardData = enrollmentService.getCgData(rollNum);
@@ -185,8 +189,17 @@ public class StudentDashboard extends JFrame {
         titlePanel.add(nameLabel);
         titlePanel.add(rollLabel);
         homePanel.add(titlePanel, BorderLayout.NORTH);
-        JPanel centerContentPanel = new JPanel(new GridLayout(1, 2, 40, 0));
+
+        // 1. Main content area now uses BorderLayout to stack top and bottom panels
+        // --- GAP INCREASED from 20 to 40 ---
+        JPanel centerContentPanel = new JPanel(new BorderLayout(0, 40)); // 40px vertical gap
         centerContentPanel.setBackground(mainPanelColor);
+
+        // 2. Create TOP panel for Stats and Appointments
+        JPanel topPanel = new JPanel(new GridLayout(1, 2, 40, 0)); // 1 row, 2 cols, 40px h-gap
+        topPanel.setBackground(mainPanelColor);
+
+        // 3. Create Stats Panel (for the left side of topPanel)
         JPanel statsPanel = new JPanel();
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.X_AXIS));
         statsPanel.setBackground(mainPanelColor);
@@ -197,46 +210,75 @@ public class StudentDashboard extends JFrame {
         statsPanel.add(Box.createRigidArea(new Dimension(50, 0)));
         statsPanel.add(creditsBox);
         statsPanel.add(Box.createHorizontalGlue());
-        JPanel statsContainer = new JPanel(new BorderLayout());
-        statsContainer.setBackground(mainPanelColor);
-        statsContainer.add(statsPanel, BorderLayout.NORTH);
+
+        // 4. Create Appointments Panel (for the right side of topPanel)
+        JPanel appointmentsPanel = createAppointmentsPanel();
+
+        // 5. Add Stats and Appointments to the TOP panel
+        topPanel.add(statsPanel);
+        topPanel.add(appointmentsPanel);
+
+        // 6. Create BOTTOM panel for the two Link lists
+        JPanel bottomPanel = new JPanel(new GridLayout(1, 2, 40, 0)); // 1 row, 2 cols, 40px h-gap
+        bottomPanel.setBackground(mainPanelColor);
+
+        // 7. Create "Quick Links" Panel (for the left side of bottomPanel)
         JPanel linksPanel = new JPanel();
         linksPanel.setLayout(new BoxLayout(linksPanel, BoxLayout.Y_AXIS));
         linksPanel.setBackground(mainPanelColor);
-        linksPanel.setBorder(BorderFactory.createEmptyBorder(40, 20, 20, 20));
+        linksPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20)); // Removed top padding
         JLabel linksTitle = new JLabel("Quick Links");
-        linksTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        // --- FONT SIZE INCREASED from 20 to 22 ---
+        linksTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
         linksTitle.setForeground(textColor);
         linksTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         linksTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         linksPanel.add(linksTitle);
-        linksPanel.add(createClickableLink("Link 1", "https://example.com/link1"));
+        linksPanel.add(createClickableLink("IIITD Website", "https://iiitd.ac.in/"));
         linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        linksPanel.add(createClickableLink("Link 2", "https://example.com/link2"));
+        linksPanel.add(createClickableLink("Academic Dishonesty Policy", "https://www.iiitd.ac.in/academics/resources/academic-dishonesty"));
         linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        linksPanel.add(createClickableLink("Link 3", "https://example.com/link3"));
+        linksPanel.add(createClickableLink("Library Website", "https://library.iiitd.edu.in/"));
         linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        linksPanel.add(createClickableLink("Link 4", "https://example.com/link4"));
         linksPanel.add(Box.createVerticalGlue());
-        statsContainer.add(linksPanel, BorderLayout.CENTER);
-        centerContentPanel.add(statsContainer);
-        JPanel rightSideContainer = new JPanel();
-        rightSideContainer.setLayout(new BoxLayout(rightSideContainer, BoxLayout.Y_AXIS));
-        rightSideContainer.setBackground(mainPanelColor);
-        JPanel appointmentsPanel = createAppointmentsPanel();
-        rightSideContainer.add(Box.createRigidArea(new Dimension(0, 20)));
-        rightSideContainer.add(appointmentsPanel);
-        rightSideContainer.add(Box.createVerticalGlue());
-        centerContentPanel.add(rightSideContainer);
+
+        // 8. Create "More Resources" Panel (for the right side of bottomPanel)
+        JPanel moreLinksPanel = new JPanel();
+        moreLinksPanel.setLayout(new BoxLayout(moreLinksPanel, BoxLayout.Y_AXIS));
+        moreLinksPanel.setBackground(mainPanelColor);
+        moreLinksPanel.setBorder(BorderFactory.createEmptyBorder(0, 25, 20, 25)); // Removed top padding
+        JLabel moreLinksTitle = new JLabel("Minor Programs Offered");
+        // --- FONT SIZE INCREASED from 20 to 22 ---
+        moreLinksTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        moreLinksTitle.setForeground(textColor);
+        moreLinksTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        moreLinksTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        moreLinksPanel.add(moreLinksTitle);
+        moreLinksPanel.add(createClickableLink("Minor in Economics", "https://iiitd.ac.in/sites/default/files/docs/education/2018-July-Regulation-for-Minor-in-Economics.pdf"));
+        moreLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        moreLinksPanel.add(createClickableLink("Minor in Quantum Technologies", "https://iiitd.ac.in/sites/default/files/docs/education/2022/Minor%20in%20Quantum%20Technologies%20Aug%202022.pdf"));
+        moreLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        moreLinksPanel.add(createClickableLink("Minor in Computational Biology", "https://iiitd.ac.in/sites/default/files/docs/education/2018%20July%20Regulation%20for%20Minor%20in%20Computational%20Biology%20(CB).pdf"));
+        moreLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        moreLinksPanel.add(createClickableLink("Minor in Entrepreneurship", "https://iiitd.ac.in/sites/default/files/docs/education/2024/2024-July-Regulations%20for%20Minor%20in%20Entrepreneurship.pdf"));
+        moreLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        moreLinksPanel.add(createClickableLink("Minor in Human Centered Design", "https://iiitd.ac.in/sites/default/files/docs/education/2025/2025-January-Minor%20in%20Human%20Centered%20Design.pdf"));
+        moreLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        moreLinksPanel.add(Box.createVerticalGlue());
+
+        // 9. Add the two link panels to the BOTTOM panel
+        bottomPanel.add(linksPanel);
+        bottomPanel.add(moreLinksPanel);
+
+        // 10. Add the top and bottom panels to the main center panel
+        centerContentPanel.add(topPanel, BorderLayout.NORTH);
+        centerContentPanel.add(bottomPanel, BorderLayout.CENTER);
+
+        // 11. Add the main center panel to the home panel
         homePanel.add(centerContentPanel, BorderLayout.CENTER);
 
 
-        // --- OLD SQL BLOCK DELETED ---
-        // The 'for' loop that ran 8 SQL queries is now gone.
-
-
-        // --- MODIFIED COURSES PANEL ---
-        // This panel is now clean and uses the EnrollmentService.
+        // --- COURSES PANEL ---
         JPanel coursesPanel = new JPanel(new BorderLayout());
         coursesPanel.setBackground(mainPanelColor);
         coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -247,10 +289,9 @@ public class StudentDashboard extends JFrame {
         pageTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         coursesPanel.add(pageTitle, BorderLayout.NORTH);
 
-        // 1. Get the data from the service ONCE.
         Map<Integer, List<StudentRegisteredCourse>> semesterData = enrollmentService.getSemesterData(username);
 
-        // 2. Create the Tabbed Pane
+        // --- Corrected Typo: JTabbedPane ---
         JTabbedPane semesterTabs = new JTabbedPane();
         semesterTabs.setFont(new Font("Segoe UI", Font.BOLD, 16));
         semesterTabs.setBackground(mainPanelColor);
@@ -317,7 +358,6 @@ public class StudentDashboard extends JFrame {
         cardHolder.add(coursesPanel, "COURSES");
         cardHolder.add(receiptPanel, "RECEIPTS");
     }
-
     private JButton createMenuButton(String text) {
         JButton button = new JButton(text);
         button.setBackground(buttonColor);
@@ -357,6 +397,8 @@ public class StudentDashboard extends JFrame {
     }
 
 
+    // --- 2. MODIFIED createAppointmentsPanel METHOD ---
+    // Font size was increased
     private JPanel createAppointmentsPanel() {
         JPanel appointmentsPanel = new JPanel();
         appointmentsPanel.setLayout(new BoxLayout(appointmentsPanel, BoxLayout.Y_AXIS));
@@ -377,14 +419,16 @@ public class StudentDashboard extends JFrame {
 
         if (appointmentDetails.isEmpty()) {
             JLabel noAppointmentsLabel = new JLabel("No appointments scheduled.");
-            noAppointmentsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            // --- FONT SIZE INCREASED ---
+            noAppointmentsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
             noAppointmentsLabel.setForeground(textColor);
             noAppointmentsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             appointmentsPanel.add(noAppointmentsLabel);
         } else {
             for (String appointment : appointmentDetails) {
                 JLabel appointmentLabel = new JLabel("\u2022 " + appointment);
-                appointmentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                // --- FONT SIZE INCREASED ---
+                appointmentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
                 appointmentLabel.setForeground(textColor);
                 appointmentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
                 appointmentLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
@@ -396,12 +440,16 @@ public class StudentDashboard extends JFrame {
         return appointmentsPanel;
     }
 
+    // --- 3. MODIFIED createClickableLink METHOD ---
+    // Removed underline (HTML) and set color/font size directly
     private JLabel createClickableLink(String text, String url) {
-        String hexColor = String.format("#%02x%02x%02x", buttonColor.getRed(), buttonColor.getGreen(), buttonColor.getBlue());
-        String htmlText = "<html><u style='color:" + hexColor + "'>" + text + "</u></html>";
-        JLabel linkLabel = new JLabel(htmlText);
+        // No HTML needed. Just create a normal JLabel.
+        JLabel linkLabel = new JLabel(text);
 
-        linkLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        // Set the text color to your 'green' buttonColor
+        linkLabel.setForeground(buttonColor);
+        // --- FONT SIZE INCREASED ---
+        linkLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         linkLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -427,14 +475,14 @@ public class StudentDashboard extends JFrame {
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                String hoverHexColor = String.format("#%02x%02x%02x", buttonColor.darker().getRed(), buttonColor.darker().getGreen(), buttonColor.darker().getBlue());
-                String hoverText = "<html><u style='color:" + hoverHexColor + "'>" + text + "</u></html>";
-                linkLabel.setText(hoverText);
+                // On hover, set the color to a darker shade of green
+                linkLabel.setForeground(buttonColor.darker());
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                linkLabel.setText(htmlText);
+                // When mouse leaves, set it back to the original green
+                linkLabel.setForeground(buttonColor);
             }
         });
 
@@ -492,7 +540,7 @@ public class StudentDashboard extends JFrame {
         profileMenu.setBackground(new Color(70, 70, 70));
         profileMenu.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
         profileMenu.add(createMenuItem("Manage Account"));
-        profileMenu.add(createMenuItem("notifications"));
+        profileMenu.add(createMenuItem("Notifications"));
     }
 
     private JMenuItem createMenuItem(String text) {
@@ -505,6 +553,8 @@ public class StudentDashboard extends JFrame {
 
         item.addActionListener(e -> {
             System.out.println("Clicked: " + text);
+            // You can add functionality here, e.g., open a new dialog
+            // if (text.equals("Manage Account")) { ... }
         });
 
         return item;
@@ -548,6 +598,8 @@ public class StudentDashboard extends JFrame {
             g2.dispose();
         }
 
+
+
         @Override
         protected void paintBorder(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
@@ -567,4 +619,3 @@ public class StudentDashboard extends JFrame {
         }
     }
 }
-
