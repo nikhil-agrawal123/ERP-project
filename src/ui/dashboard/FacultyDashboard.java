@@ -6,39 +6,30 @@ import java.awt.*;
 import databaseConfig.Connector;
 import java.sql.*;
 
-/**
- * A dashboard window for a student, featuring a side navigation menu
- * and a main content area that switches between different panels.
- */
 public class FacultyDashboard extends JFrame {
-
-    // --- Style Colors ---
     private Color bgColor = new Color(45, 45, 45);
     private Color sideMenuColor = new Color(60, 60, 60);
     private Color mainPanelColor = new Color(50, 50, 50);
     private Color buttonColor = new Color(57, 174, 168);
     private Color textColor = Color.WHITE;
 
-    // --- Main Layout Components ---
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
-    private int numCourses = 0;
-    private String facultyID = "";
 
+    private int numCourses = 0;
+    private String facultyID = "N/A"; // Initialize to a default
 
     public FacultyDashboard(String username) {
         super("Faculty Dashboard - " + username);
 
-        // --- Basic Frame Setup ---
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1280, 800); // A more standard desktop aspect ratio
+        setSize(1280, 800);
         setLocationRelativeTo(null);
-        setResizable(true); // Allow resizing
+        setResizable(true);
         getContentPane().setBackground(bgColor);
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
 
-        // Use BorderLayout for the main frame
         setLayout(new BorderLayout());
 
         // --- Create and add the side menu and main content panels ---
@@ -49,7 +40,10 @@ public class FacultyDashboard extends JFrame {
         cardLayout = new CardLayout();
         mainContentPanel = new JPanel(cardLayout);
         mainContentPanel.setBackground(mainPanelColor);
-        createContentCards(username); // Helper to create the different pages
+
+        // This method now contains the database logic
+        createContentCards(username);
+
         add(mainContentPanel, BorderLayout.CENTER);
 
         // Show the initial "home" card
@@ -58,41 +52,39 @@ public class FacultyDashboard extends JFrame {
 
     /**
      * Creates the side navigation panel with buttons.
+     *
+     * @param username The username of the logged-in faculty.
      * @return The fully constructed side menu JPanel.
      */
     private JPanel createSideMenuPanel(String username) {
         JPanel panel = new JPanel();
-        // Use BoxLayout to stack components vertically
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(sideMenuColor);
-        panel.setPreferredSize(new Dimension(220, 0)); // Set preferred width
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10)); // Padding
+        panel.setPreferredSize(new Dimension(220, 0));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
-        // Add a title label
         JLabel menuTitle = new JLabel("Navigation");
         menuTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
         menuTitle.setForeground(textColor);
         menuTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0)); // Bottom margin
+        menuTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
 
         // Create navigation buttons
         JButton homeButton = createMenuButton("Dashboard Home");
-        JButton gradesButton = createMenuButton("My Sections"); //SET COURSE STRUCTURE HERE (MAINE LIKHA H HATAIYO MAT YE)
+        JButton courseButton = createMenuButton("My Courses");
         JButton scoresButton = createMenuButton("Enter Scores");
-        JButton receiptButton = createMenuButton("Stats");
-        JButton TAButton = createMenuButton("Stats");
+        JButton statsButton = createMenuButton("Stats");
+        JButton TAButton = createMenuButton("TA Info");
         JButton logoutButton = createMenuButton("Logout");
 
         // --- Add Action Listeners to buttons ---
         homeButton.addActionListener(e -> cardLayout.show(mainContentPanel, "HOME"));
-        gradesButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Sections"));
+        courseButton.addActionListener(e -> cardLayout.show(mainContentPanel, "COURSES"));
         scoresButton.addActionListener(e -> {
-            // 1. Create an instance of the new frame
             CourseManagementFrame courseFrame = new CourseManagementFrame(username);
-
-            // 2. Make that new frame visible
             courseFrame.setVisible(true);
-        });        receiptButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Stats"));
+        });
+        statsButton.addActionListener(e -> cardLayout.show(mainContentPanel, "Stats"));
         TAButton.addActionListener(e -> cardLayout.show(mainContentPanel, "TA"));
         logoutButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Logout successful");
@@ -101,64 +93,83 @@ public class FacultyDashboard extends JFrame {
             dispose();
         });
 
-
         // Add components to the panel
         panel.add(menuTitle);
         panel.add(homeButton);
         panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
-        panel.add(gradesButton);
+        panel.add(courseButton);
         panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
         panel.add(scoresButton);
         panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
-        panel.add(receiptButton);
+        panel.add(statsButton);
+        panel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacer
+        panel.add(TAButton);
 
-        // Pushes the logout button to the bottom
-        panel.add(Box.createVerticalGlue());
+        panel.add(Box.createVerticalGlue()); // Pushes logout button to the bottom
         panel.add(logoutButton);
 
         return panel;
     }
 
     /**
-     * Creates the different "pages" (panels) and adds them to the main content panel.
+     * Creates all the content panels for the CardLayout.
+     * This method also performs the initial database query to populate the dashboard.
+     *
+     * @param username The user_id of the faculty member.
      */
     private void createContentCards(String username) {
-        String newSQl = "SELECT * FROM users.sections WHERE instructor_id = ?";
-        String sql = "SELECT * FROM users.instructors WHERE user_id = ?";
+
+        String instructorQuery = "SELECT instructor_id FROM users.instructors WHERE user_id = ?";
+        String coursesQuery = "SELECT COUNT(*) AS course_count FROM users.sections WHERE instructor_id = ?";
+
         Connector connector = new Connector();
 
-        try (Connection conn = connector.connect()){
-            PreparedStatement preparedStatement = conn.prepareStatement(newSQl);
-            PreparedStatement preparedStatement1 = conn.prepareStatement(sql);
-            preparedStatement.setString(1, username);
-            preparedStatement1.setString(1, username);
-            ResultSet rs = preparedStatement.executeQuery();
-            ResultSet rs1 = preparedStatement1.executeQuery();
+        try (Connection conn = connector.connect()) {
 
-            while (rs.next()) {
-                numCourses +=1;
+            // Step 1: Get the facultyID using the username (user_id)
+            try (PreparedStatement psInstructors = conn.prepareStatement(instructorQuery)) {
+                psInstructors.setString(1, username);
+                try (ResultSet rsInstructors = psInstructors.executeQuery()) {
+                    if (rsInstructors.next()) {
+                        facultyID = rsInstructors.getString("instructor_id");
+                    } else {
+                        // Handle case where no faculty ID is found for this user
+                        JOptionPane.showMessageDialog(this,
+                                "Could not find faculty details for user: " + username,
+                                "Database Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             }
 
-            while(rs1.next()) {
-                facultyID = rs1.getString("instructor_id");
+            // Step 2: Use the retrieved facultyID to get the course count
+            if (!facultyID.equals("N/A")) {
+                try (PreparedStatement psCourses = conn.prepareStatement(coursesQuery)) {
+                    // Use the facultyID, not the username
+                    psCourses.setString(1, facultyID);
+                    try (ResultSet rsCourses = psCourses.executeQuery()) {
+                        if (rsCourses.next()) {
+                            // Get the count from the alias
+                            numCourses = rsCourses.getInt("course_count");
+                        }
+                    }
+                }
             }
 
-        }catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Failed to connect to the database. Please check your connection.",
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
         }
-
-
 
         // --- 1. Home Panel ---
         JPanel homePanel = new JPanel(new BorderLayout(20, 20));
         homePanel.setBackground(mainPanelColor);
-        homePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40)); // Add padding
-
+        homePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
         JPanel titlePanel = new JPanel();
-
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
-        titlePanel.setBackground(mainPanelColor); // Match the background
+        titlePanel.setBackground(mainPanelColor);
 
         JLabel welcomeLabel = new JLabel("Welcome, Faculty");
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
@@ -170,13 +181,13 @@ public class FacultyDashboard extends JFrame {
         nameLabel.setForeground(textColor);
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel rollLabel = new JLabel("Faculty ID: "  + facultyID);
+        JLabel rollLabel = new JLabel("Faculty ID: " + facultyID);
         rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         rollLabel.setForeground(textColor);
         rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         titlePanel.add(welcomeLabel);
-        titlePanel.add(Box.createRigidArea(new Dimension(0, 10))); // Add a small vertical space
+        titlePanel.add(Box.createRigidArea(new Dimension(0, 10)));
         titlePanel.add(nameLabel);
         titlePanel.add(rollLabel);
         homePanel.add(titlePanel, BorderLayout.NORTH);
@@ -184,48 +195,50 @@ public class FacultyDashboard extends JFrame {
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 20));
         infoPanel.setBackground(mainPanelColor);
 
-
-        JPanel coueseBox = createStatBox("No. of courses Offered", String.valueOf(numCourses));
-        infoPanel.add(coueseBox);
+        JPanel courseBox = createStatBox("No. of courses Offered", String.valueOf(numCourses));
+        infoPanel.add(courseBox);
         homePanel.add(infoPanel, BorderLayout.WEST);
 
-// --- 2. Sections Panel ---
-        JPanel sectionPanel = new JPanel(new BorderLayout(10, 10)); // Use BorderLayout
-        sectionPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Add padding
-        sectionPanel.setBackground(mainPanelColor);
+        // --- 2. Courses Panel ---
+        JPanel CoursePanel = new JPanel(new BorderLayout(10, 10));
+        CoursePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        CoursePanel.setBackground(mainPanelColor);
 
         JLabel gradesTitle = new JLabel("Your Courses");
         gradesTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         gradesTitle.setForeground(textColor);
-        sectionPanel.add(gradesTitle, BorderLayout.WEST);
+        CoursePanel.add(gradesTitle, BorderLayout.NORTH);
 
-// --- 2. stats Panel ---
+        // --- 3. Stats Panel ---
         JPanel statsPanel = new JPanel();
         statsPanel.setBackground(mainPanelColor);
-        statsPanel.add(new JLabel("Select the course to see stats") {{
-            setFont(new Font("Segoe UI", Font.PLAIN, 24));
-            setForeground(textColor);
-        }});
+        statsPanel.add(new JLabel("Select the course to see stats") {
+            {
+                setFont(new Font("Segoe UI", Font.PLAIN, 24));
+                setForeground(textColor);
+            }
+        });
 
-        // --- 2. TA Panel ---
-
+        // --- 4. TA Panel ---
         JPanel TAPanel = new JPanel();
         TAPanel.setBackground(mainPanelColor);
-        TAPanel.add(new JLabel("Click on the course to see TA's Assigned") {{
-            setFont(new Font("Segoe UI", Font.PLAIN, 24));
-            setForeground(textColor);
-        }});
+        TAPanel.add(new JLabel("Click on the course to see TA's Assigned") {
+            {
+                setFont(new Font("Segoe UI", Font.PLAIN, 24));
+                setForeground(textColor);
+            }
+        });
 
-
+        // --- Add all cards to the main panel ---
         mainContentPanel.add(homePanel, "HOME");
-        mainContentPanel.add(sectionPanel, "Sections");
+        mainContentPanel.add(CoursePanel, "COURSES");
         mainContentPanel.add(statsPanel, "Stats");
         mainContentPanel.add(TAPanel, "TA");
     }
 
-
     /**
      * A helper method to create styled buttons for the side menu.
+     *
      * @param text The text for the button.
      * @return A styled JButton.
      */
@@ -244,23 +257,27 @@ public class FacultyDashboard extends JFrame {
         return button;
     }
 
+    /**
+     * A helper method to create a styled statistics box.
+     *
+     * @param title The text for the top of the box.
+     * @param value The text for the center of the box.
+     * @return A styled JPanel.
+     */
     private JPanel createStatBox(String title, String value) {
         JPanel boxPanel = new JPanel(new BorderLayout());
-        boxPanel.setBackground(sideMenuColor); // Use a contrasting background
+        boxPanel.setBackground(sideMenuColor);
         boxPanel.setPreferredSize(new Dimension(250, 200));
-        // Combine a colored line border with internal padding
         boxPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(buttonColor, 2, true), // Rounded corners
+                BorderFactory.createLineBorder(buttonColor, 2, true),
                 BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
 
-        // Title label for the top of the box
         JLabel titleLabel = new JLabel(title, SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         titleLabel.setForeground(textColor);
         boxPanel.add(titleLabel, BorderLayout.NORTH);
 
-        // Value label for the center of the box
         JLabel valueLabel = new JLabel(value, SwingConstants.CENTER);
         valueLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 52));
         valueLabel.setForeground(textColor);
