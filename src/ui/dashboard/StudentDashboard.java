@@ -81,7 +81,32 @@ public class StudentDashboard extends JFrame {
             int y = profileButton.getHeight() + 5;
             profileMenu.show(profileButton, x, y);
         });
+
+        JButton onlineLinkButton = createMenuButton("Check Degree Requirements");
+        onlineLinkButton.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
+
+        onlineLinkButton.addActionListener(e -> {
+            try {
+                String url = "https://iiitd.ac.in/sites/default/files/docs/education/2024/2024-May-BTech(CSE)-Regulations.pdf";
+                if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                    Desktop.getDesktop().browse(new URI(url));
+                } else {
+                    JOptionPane.showMessageDialog(StudentDashboard.this,
+                            "Cannot open link. OS does not support Desktop.browse.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(StudentDashboard.this,
+                        "Could not open link: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
         mainContentPanel.add(profileButton, JLayeredPane.PALETTE_LAYER);
+        mainContentPanel.add(onlineLinkButton, JLayeredPane.PALETTE_LAYER); // Add the new button
 
         mainContentPanel.addComponentListener(new ComponentAdapter() {
             @Override
@@ -89,9 +114,20 @@ public class StudentDashboard extends JFrame {
                 Dimension size = e.getComponent().getSize();
                 cardHolderPanel.setBounds(0, 0, size.width, size.height);
 
-                Dimension btnSize = profileButton.getPreferredSize();
                 int padding = 20;
-                profileButton.setBounds(size.width - btnSize.width - padding, padding, btnSize.width, btnSize.height);
+                int buttonSpacing = 140;
+
+                Dimension profileBtnSize = profileButton.getPreferredSize();
+                Dimension linkBtnSize = onlineLinkButton.getPreferredSize();
+                int profileX = size.width - profileBtnSize.width - padding;
+                int profileY = padding;
+
+                int linkButtonX = profileX - linkBtnSize.width - buttonSpacing;
+
+                int linkButtonY = profileY + (profileBtnSize.height - linkBtnSize.height) / 2;
+
+                profileButton.setBounds(profileX, profileY, profileBtnSize.width, profileBtnSize.height);
+                onlineLinkButton.setBounds(linkButtonX, linkButtonY, linkBtnSize.width, linkBtnSize.height);
             }
         });
 
@@ -239,6 +275,8 @@ public class StudentDashboard extends JFrame {
         linksPanel.add(createClickableLink("Academic Dishonesty Policy", "https://www.iiitd.ac.in/academics/resources/academic-dishonesty"));
         linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         linksPanel.add(createClickableLink("Library Website", "https://library.iiitd.edu.in/"));
+        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        linksPanel.add(createClickableLink("Fee Structure", "https://www.iiitd.ac.in/admission/fees"));
         linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         linksPanel.add(Box.createVerticalGlue());
 
