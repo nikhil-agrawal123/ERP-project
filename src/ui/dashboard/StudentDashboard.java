@@ -76,9 +76,11 @@ public class StudentDashboard extends JFrame {
         createProfileMenu();
 
         profileButton.addActionListener(e -> {
-            profileMenu.show(profileButton, 0, profileButton.getHeight() + 5);
+            int menuWidth = profileMenu.getPreferredSize().width;
+            int x = profileButton.getWidth() - menuWidth;
+            int y = profileButton.getHeight() + 5;
+            profileMenu.show(profileButton, x, y);
         });
-
         mainContentPanel.add(profileButton, JLayeredPane.PALETTE_LAYER);
 
         mainContentPanel.addComponentListener(new ComponentAdapter() {
@@ -489,11 +491,8 @@ public class StudentDashboard extends JFrame {
         profileMenu = new JPopupMenu();
         profileMenu.setBackground(new Color(70, 70, 70));
         profileMenu.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
-
-        profileMenu.add(createMenuItem("Option 1"));
-        profileMenu.add(createMenuItem("Option 2"));
-        profileMenu.add(new JPopupMenu.Separator());
-        profileMenu.add(createMenuItem("Option 3"));
+        profileMenu.add(createMenuItem("Manage Account"));
+        profileMenu.add(createMenuItem("notifications"));
     }
 
     private JMenuItem createMenuItem(String text) {
