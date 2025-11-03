@@ -7,7 +7,7 @@ import dbClasses.*;
 public class authPoints {
     Connector dbConnector = new Connector();
 
-    public studentService getAuthDataByUsername(String username) throws SQLException {
+    public studentClass getAuthDataByUsername(String username) throws SQLException {
         String sql = "SELECT sa.studentPass, s.student_roll_no " +
                 "FROM auth.studentAuth sa " +
                 "JOIN users.students s ON sa.studentId = s.user_id " +
@@ -23,7 +23,7 @@ public class authPoints {
                     String storedHash = rs.getString("studentPass");
                     String storedRollNumber = rs.getString("student_roll_no");
 
-                    return new studentService(storedHash, storedRollNumber);
+                    return new studentClass(storedHash, storedRollNumber);
                 } else {
                     return null;
                 }

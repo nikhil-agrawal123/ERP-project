@@ -1,10 +1,10 @@
 package dbClasses;
 
-public class studentService {
+public class studentClass {
     private final String passwordHash;
     private final String studentRollNo;
 
-    public studentService(String passwordHash, String studentRollNo) {
+    public studentClass(String passwordHash, String studentRollNo) {
         this.passwordHash = passwordHash;
         this.studentRollNo = studentRollNo;
     }

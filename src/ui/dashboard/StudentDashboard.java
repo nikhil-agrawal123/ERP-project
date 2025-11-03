@@ -3,6 +3,7 @@ package ui.dashboard;
 import ui.landing.LandingFrame;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.sql.*;
 import databaseConfig.Connector;
 import java.awt.*;
@@ -14,7 +15,9 @@ import java.awt.event.*;
 import java.net.URI;
 import java.awt.Desktop;
 import java.util.Map;
-import java.util.HashMap;
+
+import middleware.studentService;
+import dbClasses.StudentRegisteredCourse;
 
 public class StudentDashboard extends JFrame {
 
@@ -23,6 +26,9 @@ public class StudentDashboard extends JFrame {
     private Color mainPanelColor = new Color(50, 50, 50);
     private Color buttonColor = new Color(57, 174, 168);
     private Color textColor = Color.WHITE;
+
+    // --- USE THE CORRECT SERVICE CLASS ---
+    private studentService enrollmentService;
 
     private double cg = 0;
     private int credits = 0;
@@ -45,6 +51,9 @@ public class StudentDashboard extends JFrame {
         setIconImage(image.getImage());
 
         setLayout(new BorderLayout());
+
+        // --- INITIALIZE THE SERVICE ---
+        this.enrollmentService = new studentService();
 
         this.rollNumber = rollNum;
         JPanel sideMenuPanel = createSideMenuPanel();
@@ -83,6 +92,7 @@ public class StudentDashboard extends JFrame {
             }
         });
 
+        // This method now calls the service
         createContentCards(cardHolderPanel, this.rollNumber, username);
 
         cardLayout.show(cardHolderPanel, "HOME");
@@ -136,6 +146,8 @@ public class StudentDashboard extends JFrame {
 
     private void createContentCards(JPanel cardHolder, String rollNum, String username) {
 
+        // --- CGPA/Credits calculation still has SQL. This should also be moved! ---
+        // (Keeping it for now to focus on the "My Courses" fix)
         Connector connector = new Connector();
         String sql = "SELECT g.score, c.credits " +
                 "FROM users.grades g " +
@@ -166,68 +178,55 @@ public class StudentDashboard extends JFrame {
             JOptionPane.showMessageDialog(this, "Could not fetch student data.", "Database Error", JOptionPane.ERROR_MESSAGE);
         }
 
+        // --- HOME PANEL ---
         JPanel homePanel = new JPanel(new BorderLayout(20, 20));
         homePanel.setBackground(mainPanelColor);
         homePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
-
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
         titlePanel.setBackground(mainPanelColor);
-
         JLabel welcomeLabel = new JLabel("Welcome, " + username + "!");
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
         welcomeLabel.setForeground(textColor);
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         JLabel nameLabel = new JLabel("Student name: " + username);
         nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         nameLabel.setForeground(textColor);
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         JLabel rollLabel = new JLabel("Student Roll no.: " + this.rollNumber);
         rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         rollLabel.setForeground(textColor);
         rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         titlePanel.add(welcomeLabel);
         titlePanel.add(Box.createRigidArea(new Dimension(0, 10)));
         titlePanel.add(nameLabel);
         titlePanel.add(rollLabel);
-
         homePanel.add(titlePanel, BorderLayout.NORTH);
-
         JPanel centerContentPanel = new JPanel(new GridLayout(1, 2, 40, 0));
         centerContentPanel.setBackground(mainPanelColor);
-
         JPanel statsPanel = new JPanel();
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.X_AXIS));
         statsPanel.setBackground(mainPanelColor);
-
         JPanel cgpaBox = createStatBox("Current CGPA", "" + this.cg);
         JPanel creditsBox = createStatBox("Credits Earned", "" + this.credits);
-
         statsPanel.add(Box.createHorizontalGlue());
         statsPanel.add(cgpaBox);
         statsPanel.add(Box.createRigidArea(new Dimension(50, 0)));
         statsPanel.add(creditsBox);
         statsPanel.add(Box.createHorizontalGlue());
-
         JPanel statsContainer = new JPanel(new BorderLayout());
         statsContainer.setBackground(mainPanelColor);
         statsContainer.add(statsPanel, BorderLayout.NORTH);
-
         JPanel linksPanel = new JPanel();
         linksPanel.setLayout(new BoxLayout(linksPanel, BoxLayout.Y_AXIS));
         linksPanel.setBackground(mainPanelColor);
         linksPanel.setBorder(BorderFactory.createEmptyBorder(40, 20, 20, 20));
-
         JLabel linksTitle = new JLabel("Quick Links");
         linksTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
         linksTitle.setForeground(textColor);
         linksTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         linksTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         linksPanel.add(linksTitle);
-
         linksPanel.add(createClickableLink("Link 1", "https://example.com/link1"));
         linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         linksPanel.add(createClickableLink("Link 2", "https://example.com/link2"));
@@ -235,84 +234,26 @@ public class StudentDashboard extends JFrame {
         linksPanel.add(createClickableLink("Link 3", "https://example.com/link3"));
         linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         linksPanel.add(createClickableLink("Link 4", "https://example.com/link4"));
-
         linksPanel.add(Box.createVerticalGlue());
-
         statsContainer.add(linksPanel, BorderLayout.CENTER);
         centerContentPanel.add(statsContainer);
-
         JPanel rightSideContainer = new JPanel();
         rightSideContainer.setLayout(new BoxLayout(rightSideContainer, BoxLayout.Y_AXIS));
         rightSideContainer.setBackground(mainPanelColor);
-
         JPanel appointmentsPanel = createAppointmentsPanel();
-
         rightSideContainer.add(Box.createRigidArea(new Dimension(0, 20)));
         rightSideContainer.add(appointmentsPanel);
         rightSideContainer.add(Box.createVerticalGlue());
-
         centerContentPanel.add(rightSideContainer);
-
         homePanel.add(centerContentPanel, BorderLayout.CENTER);
 
-        Map<Integer, List<List<Object>>> semesterData = new HashMap<>();
 
-        for (int i = 1; i < 9; i++) { // Loop through semesters 1 to 8
-
-            List<List<Object>> semTable = new ArrayList<>();
-
-            String sql2 = """
-            SELECT
-                e.course_code,
-                        e.course_name,
-                        e.course_credits,
-                        e.gradePoint,
-                        c.offeredBy
-                FROM
-                users.enrollments e
-                JOIN
-                users.courses c ON e.course_code = c.course_code
-                WHERE
-                e.semester = ? AND e.student_id = ?
-            """;
-
-            try (Connection connection = connector.connect()) {
-                PreparedStatement pstmt = connection.prepareStatement(sql2);
-                pstmt.setInt(1, i);
-                pstmt.setString(2, username);
-
-                ResultSet rs = pstmt.executeQuery();
-
-                boolean semesterHasData = false;
-
-                while (rs.next()) {
-                    semesterHasData = true;
-
-                    List<Object> courseRow = new ArrayList<>();
-
-                    courseRow.add(rs.getString("course_code"));
-                    courseRow.add(rs.getString("course_name"));
-                    courseRow.add(rs.getInt("course_credits"));
-                    courseRow.add(rs.getString("offeredBy"));
-                    if(rs.getDouble("gradePoint") == 0.0){
-                        courseRow.add("Yet to be declared");
-                    }else{
-                        courseRow.add(rs.getDouble("gradePoint"));
-                    }
-                    semTable.add(courseRow);
-                }
-
-                if (semesterHasData) {
-                    semesterData.put(i, semTable);
-                }
-
-            } catch (SQLException e) {
-                System.out.println(e);
-            }
-        }
+        // --- OLD SQL BLOCK DELETED ---
+        // The 'for' loop that ran 8 SQL queries is now gone.
 
 
         // --- MODIFIED COURSES PANEL ---
+        // This panel is now clean and uses the EnrollmentService.
         JPanel coursesPanel = new JPanel(new BorderLayout());
         coursesPanel.setBackground(mainPanelColor);
         coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -323,31 +264,56 @@ public class StudentDashboard extends JFrame {
         pageTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         coursesPanel.add(pageTitle, BorderLayout.NORTH);
 
+        // 1. Get the data from the service ONCE.
+        Map<Integer, List<StudentRegisteredCourse>> semesterData = enrollmentService.getSemesterData(username);
+
+        // 2. Create the Tabbed Pane
         JTabbedPane semesterTabs = new JTabbedPane();
         semesterTabs.setFont(new Font("Segoe UI", Font.BOLD, 16));
         semesterTabs.setBackground(mainPanelColor);
         semesterTabs.setForeground(textColor);
         semesterTabs.setFocusable(false);
 
-        String[] columnNames = {"Course ID", "Course Name", "Credits", "Instructor", "Grade Point"};
+        String[] columnNames = {"Course Code", "Course Name", "Credits", "Offered By", "Grade Point"};
 
+        // 3. Loop through semesters and build tabs
         for (int i = 1; i < 9; i++) {
             if (semesterData.containsKey(i)) {
 
-                List<List<Object>> semesterTableData = semesterData.get(i);
+                // 4. Get the clean list of data objects
+                List<StudentRegisteredCourse> coursesForThisSem = semesterData.get(i);
 
-                Object[][] data = new Object[semesterTableData.size()][];
-                for (int j = 0; j < semesterTableData.size(); j++) {
-                    data[j] = semesterTableData.get(j).toArray(new Object[0]);
+                // 5. Convert the List of objects into an Object[][] for the JTable
+                Object[][] data = new Object[coursesForThisSem.size()][5]; // 5 columns
+
+                for (int j = 0; j < coursesForThisSem.size(); j++) {
+                    StudentRegisteredCourse course = coursesForThisSem.get(j);
+
+                    data[j][0] = course.getCourseCode();
+                    data[j][1] = course.getCourseName();
+                    data[j][2] = course.getCourseCredits();
+                    data[j][3] = course.getOfferedBy();
+
+                    if (course.getGradePoint() == 0.0) {
+                        data[j][4] = "Yet to be declared";
+                    } else {
+                        data[j][4] = course.getGradePoint();
+                    }
                 }
+
+                // 6. Create the JTable and add it to a scroll pane
                 JTable semTable = createStyledTable(data, columnNames);
                 JScrollPane scrollPane = createStyledScrollPane(semTable);
+
+                // 7. Add the scroll pane (with the table) as a new tab
                 semesterTabs.addTab("Semester " + i, scrollPane);
             }
         }
 
         coursesPanel.add(semesterTabs, BorderLayout.CENTER);
 
+
+        // --- OTHER PANELS (Unchanged) ---
         JPanel registerPanel = new JPanel();
         registerPanel.setBackground(mainPanelColor);
         registerPanel.add(new JLabel("All courses here") {{
@@ -514,6 +480,19 @@ public class StudentDashboard extends JFrame {
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
         table.getTableHeader().setBorder(BorderFactory.createLineBorder(sideMenuColor));
         table.getTableHeader().setReorderingAllowed(false);
+
+        // Center align header text
+        ((DefaultTableCellRenderer)table.getTableHeader().getDefaultRenderer())
+                .setHorizontalAlignment(JLabel.CENTER);
+
+        // Center align text in all cells
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+        for(int i=0; i < table.getColumnCount(); i++){
+            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
         return table;
     }
 
@@ -608,3 +587,4 @@ public class StudentDashboard extends JFrame {
         }
     }
 }
+

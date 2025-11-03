@@ -16,7 +16,7 @@ public class services {
 
     public String loginStudent(String username, String password) {
         try {
-            studentService authData = authRepository.getAuthDataByUsername(username);
+            studentClass authData = authRepository.getAuthDataByUsername(username);
 
             if (authData == null) {
                 System.out.println("Login attempt failed: User not found.");
