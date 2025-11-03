@@ -1,5 +1,6 @@
 package ui.dashboard;
 
+import dbClasses.StudentCgCredits;
 import ui.landing.LandingFrame;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -146,36 +147,16 @@ public class StudentDashboard extends JFrame {
 
     private void createContentCards(JPanel cardHolder, String rollNum, String username) {
 
-        // --- CGPA/Credits calculation still has SQL. This should also be moved! ---
-        // (Keeping it for now to focus on the "My Courses" fix)
-        Connector connector = new Connector();
-        String sql = "SELECT g.score, c.credits " +
-                "FROM users.grades g " +
-                "JOIN users.courses c ON g.course_code = c.course_code " +
-                "WHERE g.student_roll_no = ?";
+        StudentCgCredits dashboardData = enrollmentService.getCgData(rollNum);
 
-        try (Connection connection = connector.connect()) {
-            PreparedStatement pstmt = connection.prepareStatement(sql);
-            pstmt.setString(1, rollNum);
-            ResultSet rs = pstmt.executeQuery();
-
-            double totalGradePoints = 0;
-            int totalCredits = 0;
-
-            while (rs.next()) {
-                double score = rs.getDouble("score");
-                int courseCredits = rs.getInt("credits");
-                totalGradePoints += (score / 10.0) * courseCredits;
-                totalCredits += courseCredits;
-            }
-
-            this.credits = totalCredits;
-            this.cg = (totalCredits > 0) ? totalGradePoints / totalCredits : 0.0;
-            this.cg = Math.round(this.cg * 100.0) / 100.0;
-
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            JOptionPane.showMessageDialog(this, "Could not fetch student data.", "Database Error", JOptionPane.ERROR_MESSAGE);
+        if (dashboardData != null) {
+            this.credits = dashboardData.getCredits();
+            this.cg = dashboardData.getCg()/dashboardData.getCredits();
+        } else {
+            // Handle error case
+            this.credits = 0;
+            this.cg = 0.0;
+            JOptionPane.showMessageDialog(this, "Could not fetch student CGPA data.", "Database Error", JOptionPane.ERROR_MESSAGE);
         }
 
         // --- HOME PANEL ---

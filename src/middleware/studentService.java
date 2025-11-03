@@ -1,8 +1,10 @@
 package middleware;
+import dbClasses.StudentCgCredits;
 import dbEndpoints.studentPoints;
 import java.sql.*;
 import java.util.*;
 import dbClasses.StudentRegisteredCourse;
+import ui.dashboard.StudentDashboard;
 
 public class studentService {
     private studentPoints student;
@@ -30,5 +32,23 @@ public class studentService {
         }
 
         return semesterData;
+    }
+
+    public StudentCgCredits getCgData(String rollNumber) {
+        int credits = 0;
+        double cg = 0;
+
+        try{
+            List<StudentCgCredits> studentCgCredits = student.getCgCreditsByStudent(rollNumber);
+
+            for(StudentCgCredits d:studentCgCredits){
+                credits += d.getCredits();
+                cg += (d.getCg()/10.0)*d.getCredits();
+            }
+            return new StudentCgCredits(credits, Math.round(cg*100.0)/100.0);
+    }catch (SQLException e){
+        e.printStackTrace();
+        }
+        return null;
     }
 }

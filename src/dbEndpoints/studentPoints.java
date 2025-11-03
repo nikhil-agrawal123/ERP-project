@@ -15,7 +15,6 @@ public class studentPoints {
     public List<StudentRegisteredCourse> findCoursesByStudent(String username) throws SQLException {
         List<StudentRegisteredCourse> allCourses = new ArrayList<>();
 
-        // This single, efficient query gets all data at once.
         String sql = """
             SELECT
                 e.semester,
@@ -56,6 +55,27 @@ public class studentPoints {
         }
 
         return allCourses;
+    }
+
+    public List<StudentCgCredits> getCgCreditsByStudent(String username) throws SQLException {
+        List<StudentCgCredits> allCgCredits = new ArrayList<>();
+        String sql = "SELECT g.score, c.credits " +
+                "FROM users.grades g " +
+                "JOIN users.courses c ON g.course_code = c.course_code " +
+                "WHERE g.student_roll_no = ?";
+        try (Connection connection = connector.connect();
+        PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                StudentCgCredits c = new StudentCgCredits(
+                        rs.getInt("credits"),
+                        rs.getDouble("score")
+                );
+                allCgCredits.add(c);
+            }
+        }
+        return allCgCredits;
     }
 }
 
