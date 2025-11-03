@@ -39,6 +39,7 @@ public class StudentDashboard extends JFrame {
     private JPanel cardHolderPanel;
     private CardLayout cardLayout;
     private JPopupMenu profileMenu;
+    private JButton onlineLinkButton;
 
     public StudentDashboard(String rollNum, String username) {
         super("Student Dashboard - " + username);
@@ -82,7 +83,7 @@ public class StudentDashboard extends JFrame {
             profileMenu.show(profileButton, x, y);
         });
 
-        JButton onlineLinkButton = createMenuButton("Check Degree Requirements");
+        onlineLinkButton = createMenuButton("Check Degree Requirements");
         onlineLinkButton.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
 
         onlineLinkButton.addActionListener(e -> {
@@ -156,10 +157,27 @@ public class StudentDashboard extends JFrame {
         JButton receiptButton = createMenuButton("Fee Receipts");
         JButton logoutButton = createMenuButton("Logout");
 
-        homeButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "HOME"));
-        registerForCourses.addActionListener(e -> cardLayout.show(cardHolderPanel, "REGISTER"));
-        coursesButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "COURSES"));
-        receiptButton.addActionListener(e -> cardLayout.show(cardHolderPanel, "RECEIPTS"));
+        // --- THIS IS THE CORRECTED SECTION ---
+        homeButton.addActionListener(e -> {
+            cardLayout.show(cardHolderPanel, "HOME");
+            onlineLinkButton.setVisible(true); // Show the button
+        });
+
+        registerForCourses.addActionListener(e -> {
+            cardLayout.show(cardHolderPanel, "REGISTER");
+            onlineLinkButton.setVisible(false); // Hide the button
+        });
+
+        coursesButton.addActionListener(e -> {
+            cardLayout.show(cardHolderPanel, "COURSES");
+            onlineLinkButton.setVisible(false); // Hide the button
+        });
+
+        receiptButton.addActionListener(e -> {
+            cardLayout.show(cardHolderPanel, "RECEIPTS");
+            onlineLinkButton.setVisible(false); // Hide the button
+        });
+        // --- END OF CORRECTION ---
 
         logoutButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Logout Successful");
@@ -183,10 +201,6 @@ public class StudentDashboard extends JFrame {
         return panel;
     }
 
-    // --- 1. MODIFIED createContentCards METHOD ---
-    // This method now contains the new 2-row (top/bottom) layout
-// --- 1. MODIFIED createContentCards METHOD ---
-    // This method now contains the new 2-row (top/bottom) layout
     private void createContentCards(JPanel cardHolder, String rollNum, String username) {
 
         StudentCgCredits dashboardData = enrollmentService.getCgData(rollNum);
