@@ -28,7 +28,9 @@ public class LandingFrame extends JFrame {
         // --- Frame Setup ---
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1080, 1080);
-        setLocationRelativeTo(null); // C
+        setLocationRelativeTo(null);
+        ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
+        setIconImage(image.getImage());
         // enter the window
         setResizable(false);
         // --- UI Components ---
