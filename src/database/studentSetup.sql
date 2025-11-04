@@ -137,20 +137,12 @@ INSERT INTO `enrollments` (`student_id`, `section_id`) VALUES
                                                            ('nikhil24380', (SELECT section_id FROM sections WHERE course_code = 'CS101' AND instructor_id = 'alok')),
                                                            ('rohan24390', (SELECT section_id FROM sections WHERE course_code = 'CS101' AND instructor_id = 'alok'));
 
-
 alter table students add column student_email varchar(50);
-alter table instructors add column instructor_email varchar(50)
+alter table instructors add column instructor_email varchar(50);
 
-use auth;
-update studentauth
-set studentId = "nikhil24380"
-where id = 1;
 
 use users;
 
-update students
-set students.student_email = "nikhil24380@iiitd.ac.in"
-where user_id = "nikhil24380";
 
 INSERT INTO `grades` (`student_roll_no`, `course_code`, `semester`, `year`, `score`) VALUES
     ('2024380', 'CS101', '1', 2025, 85.50);
@@ -160,7 +152,7 @@ update grades
 set grades.credits = 4
 where student_roll_no = '2024380' and course_code ='CS101';
 
-
+alter table enrollments drop column section_id;
 
 alter table enrollments add column student_name varchar(50) not null,
 add column course_code varchar(50) not null,
@@ -202,9 +194,6 @@ update enrollments
 set enrollments.gradePoint = 10
 where student_id = 'nikhil24380';
 
-
-alter table enrollments DROP column `section_id`;
-
 insert into users.enrollments(student_id, student_name, course_code, course_name, course_credits, completion, semester ) values
                    ('nikhil24380' ,'nikhil agrawal', 'MTH301', 'Real Analysis' ,'4', FALSE,'2');
 
@@ -213,8 +202,6 @@ alter table users.courses add column offeredBy varchar(100);
 update courses
 set offeredBy = 'Dr. Alok Gupta'
 where course_code = 'CS101';
-
-alter table courses drop column course_type;
 
 insert into users.courses(course_code, course_title, credits, offeredBy) values
     ('MTH301', 'Real Analysis' , '4'  , 'Dr. Nambita Ray');

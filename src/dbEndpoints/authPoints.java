@@ -34,7 +34,7 @@ public class authPoints {
         }
     }
 
-    public facultyService getAuthDataByFaculty(String faculty) throws SQLException {
+    public facultyClass getAuthDataByFaculty(String faculty) throws SQLException {
         String sql = "SELECT facultyPass FROM facultyAuth WHERE facultyId = ?";
 
         try (Connection conn = dbConnector.connect()){
@@ -43,7 +43,7 @@ public class authPoints {
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
                 String storedHash = rs.getString("facultyPass");
-                return new facultyService(storedHash);
+                return new facultyClass(storedHash);
             }else{
                 return null;
             }

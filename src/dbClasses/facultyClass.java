@@ -1,9 +1,9 @@
 package dbClasses;
 
-public class facultyService {
+public class facultyClass {
     private String passwordHash;
 
-    public facultyService(String passwordHash) {
+    public facultyClass(String passwordHash) {
         this.passwordHash = passwordHash;
     }
 

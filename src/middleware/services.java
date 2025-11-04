@@ -38,7 +38,7 @@ public class services {
 
     public boolean loginFaculty(String username, String password) {
         try {
-            facultyService authData = authRepository.getAuthDataByFaculty(username);
+            facultyClass authData = authRepository.getAuthDataByFaculty(username);
             if(authData == null) {
                 return false;
             }else  {
