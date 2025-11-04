@@ -27,6 +27,8 @@ create table parentAuth(
 alter table adminauth drop column adminName;
 
 
+
+
 update parentauth
 set studentId = "nikhil24380"
 where id = 1;

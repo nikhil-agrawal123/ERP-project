@@ -137,8 +137,6 @@ INSERT INTO `enrollments` (`student_id`, `section_id`) VALUES
                                                            ('nikhil24380', (SELECT section_id FROM sections WHERE course_code = 'CS101' AND instructor_id = 'alok')),
                                                            ('rohan24390', (SELECT section_id FROM sections WHERE course_code = 'CS101' AND instructor_id = 'alok'));
 
-INSERT INTO `grades` (`enrollment_id`, `assessment_type`, `score`) VALUES
-    ((SELECT enrollment_id FROM enrollments WHERE student_id = 'nikhil24380' LIMIT 1), 'Midterm Exam', 85.50);
 
 alter table students add column student_email varchar(50);
 alter table instructors add column instructor_email varchar(50)
@@ -162,12 +160,7 @@ update grades
 set grades.credits = 4
 where student_roll_no = '2024380' and course_code ='CS101';
 
-alter table courses add column course_type varchar(50);
-update courses
-set course_type = "mandatory"
-where course_code = "CS101";
 
-alter table enrollments drop column section_id
 
 alter table enrollments add column student_name varchar(50) not null,
 add column course_code varchar(50) not null,
@@ -209,7 +202,8 @@ update enrollments
 set enrollments.gradePoint = 10
 where student_id = 'nikhil24380';
 
-alter table users.enrollments drop key `student_section_UNIQUE`;
+
+alter table enrollments DROP column `section_id`;
 
 insert into users.enrollments(student_id, student_name, course_code, course_name, course_credits, completion, semester ) values
                    ('nikhil24380' ,'nikhil agrawal', 'MTH301', 'Real Analysis' ,'4', FALSE,'2');

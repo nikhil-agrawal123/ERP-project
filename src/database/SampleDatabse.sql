@@ -38,22 +38,3 @@ values
 insert  into auth.adminauth(adminId, adminName, adminPass)
 values
     ( "nikhil","nikhil", "$2a$10$Kc/0I11BVSsNDxsuYAsJDekSvfAze0t7auWjff5OF6oC/anfVdVje");
-
-use users;
-insert into users.student (studentName, studentRollNumber, numberCourses,registerCourses, completedCourses, currentSemester, currentCGPA, currentCredits, feeHistory, studentId,studentEmail)
-values ("nikhil" , "2024380",4, '{"1": {"course_code": "MTH201" , "course_name":"Real Analysis" ,"course_instructor" : "Namambita Ray","course_credits" : 4 }}','{
-  "1": {
-    "course_code": "MTH201",
-    "course_name": "Real Analysis",
-    "course_instructor": "Namambita Ray",
-    "course_credits": 4
-  }
-}' , 2 ,8.0 , 40 ,'{"1": {"course_code": "MTH201" , "course_name":"Real Analysis" ,"course_instructor" : "Namambita Ray","course_credits" : 4 }}',2024380,"nikhil24380@iiitd.ac.in");
-
-UPDATE users.student
-set studentId = "nikhil"
-where id = 1;
-
-update users.student
-set studentEmail = "nikhil24380@iiitd.ac.in"
-where id = 1;
