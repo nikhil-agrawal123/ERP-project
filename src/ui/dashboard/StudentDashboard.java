@@ -1,12 +1,11 @@
 package ui.dashboard;
 
-import dbClasses.StudentCgCredits;
+import dbClasses.*;
 import ui.landing.LandingFrame;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.sql.*;
-import databaseConfig.Connector;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +17,6 @@ import java.awt.Desktop;
 import java.util.Map;
 
 import middleware.studentService;
-import dbClasses.StudentRegisteredCourse;
 
 public class StudentDashboard extends JFrame {
 
@@ -222,21 +220,16 @@ public class StudentDashboard extends JFrame {
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
         titlePanel.setBackground(mainPanelColor);
-        JLabel welcomeLabel = new JLabel("Welcome, " + username + "!");
+        JLabel welcomeLabel = new JLabel("Welcome, " + username);
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
         welcomeLabel.setForeground(textColor);
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel nameLabel = new JLabel("Student name: " + username);
-        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        nameLabel.setForeground(textColor);
-        nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel rollLabel = new JLabel("Student Roll no.: " + this.rollNumber);
         rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         rollLabel.setForeground(textColor);
         rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         titlePanel.add(welcomeLabel);
         titlePanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        titlePanel.add(nameLabel);
         titlePanel.add(rollLabel);
         homePanel.add(titlePanel, BorderLayout.NORTH);
 

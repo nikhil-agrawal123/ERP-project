@@ -240,3 +240,7 @@ where credits = '4';
 insert into courses (course_code, course_title, credits, semester, offeredBy)
 values ('CS201' ,'Data Structures and Algorythm', 4, 'Monsoon 2025', 'Dr. Sambudho'),
        ('MTH300' , 'Discrete Structures' , 4 , 'Monsoon 2025', 'Nikhil Chaudary');
+
+update sections
+set instructor_id = 'INST-CS-501'
+where course_code = 'CS101';

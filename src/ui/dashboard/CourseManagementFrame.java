@@ -83,7 +83,7 @@ public class CourseManagementFrame extends JFrame {
         try (Connection conn = dbConnector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, userId);
+            pstmt.setString(1, "INST-CS-501");
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {

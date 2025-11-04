@@ -4,7 +4,6 @@ import dbEndpoints.studentPoints;
 import java.sql.*;
 import java.util.*;
 import dbClasses.StudentRegisteredCourse;
-import ui.dashboard.StudentDashboard;
 
 public class studentService {
     private studentPoints student;
