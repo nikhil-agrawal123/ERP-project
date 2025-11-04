@@ -38,3 +38,4 @@ values
 insert  into auth.adminauth(adminId, adminName, adminPass)
 values
     ( "nikhil","nikhil", "$2a$10$Kc/0I11BVSsNDxsuYAsJDekSvfAze0t7auWjff5OF6oC/anfVdVje");
+

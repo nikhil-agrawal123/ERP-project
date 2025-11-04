@@ -194,6 +194,10 @@ update enrollments
 set enrollments.gradePoint = 10
 where student_id = 'nikhil24380';
 
+ALTER TABLE enrollments DROP FOREIGN KEY fk_enrollments_sections;
+ALTER TABLE enrollments DROP INDEX fk_enrollments_sections_idx;
+ALTER TABLE enrollments DROP COLUMN section_id;
+
 insert into users.enrollments(student_id, student_name, course_code, course_name, course_credits, completion, semester ) values
                    ('nikhil24380' ,'nikhil agrawal', 'MTH301', 'Real Analysis' ,'4', FALSE,'2');
 
@@ -222,6 +226,23 @@ insert into courses (course_code, course_title, credits, semester, offeredBy)
 values ('CS201' ,'Data Structures and Algorythm', 4, 'Monsoon 2025', 'Dr. Sambudho'),
        ('MTH300' , 'Discrete Structures' , 4 , 'Monsoon 2025', 'Nikhil Chaudary');
 
-update sections
-set instructor_id = 'INST-CS-501'
-where course_code = 'CS101';
+
+USE users;
+SET foreign_key_checks = 0;
+
+UPDATE sections
+SET instructor_id = 'INST-CS-501'
+WHERE instructor_id = 'alok' AND course_code = 'CS101';
+
+SET foreign_key_checks = 1;
+
+ALTER TABLE sections DROP FOREIGN KEY fk_sections_instructors;
+
+ALTER TABLE sections DROP INDEX fk_sections_instructors_idx;
+
+ALTER TABLE sections
+    ADD CONSTRAINT `fk_sections_instructor_id`
+        FOREIGN KEY (`instructor_id`)
+            REFERENCES `instructors` (`instructor_id`);
+
+ALTER TABLE sections ADD INDEX `fk_sections_instructor_id_idx` (`instructor_id` ASC);
