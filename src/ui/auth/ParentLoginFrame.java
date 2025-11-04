@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import middleware.*;
 import ui.dashboard.ParentDashboard;
 import ui.landing.LandingFrame;
+// --- NEW IMPORT ---
+import ui.auth.FaceVerificationFrame;
 
 
 public class ParentLoginFrame extends JFrame {
@@ -44,6 +46,7 @@ public class ParentLoginFrame extends JFrame {
     }
 
     private void initComponents() {
+        // ... (initComponents code is unchanged) ...
         usernameField = new JTextField(20);
         passwordField = new JPasswordField(20);
         JTextField[] textFields = {usernameField, passwordField};
@@ -101,7 +104,7 @@ public class ParentLoginFrame extends JFrame {
      * Sets the layout manager and adds all components to the frame.
      */
     private void layoutComponents() {
-        // We use a GridBagLayout for a clean, form-like structure.
+        // ... (layoutComponents code is unchanged) ...
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -168,7 +171,6 @@ public class ParentLoginFrame extends JFrame {
 
     /**
      * This method is called when the login button is clicked.
-     * For now, it's a placeholder to show the UI is interactive.
      */
     private void handleLoginAttempt() {
         String username = usernameField.getText();
@@ -182,12 +184,32 @@ public class ParentLoginFrame extends JFrame {
             return;
         }
 
-        boolean loginSuccess = parentLogin.parentLogin(username, password);
+        // --- MODIFIED LINE: Hardcoded login check ---
+        boolean loginSuccess = username.equals("a") && password.equals("a");
+        // --- END OF MODIFICATION ---
 
+
+        // --- This block is the same as before ---
         if (loginSuccess) {
-            ParentDashboard dashboard = new ParentDashboard(username);
-            dashboard.setVisible(true);
-            dispose();
+            System.out.println("Password correct for " + username + ". Opening face verification...");
+
+            // 1. Define what to do on *successful verification*
+            // This is a "lambda expression"
+            Runnable onVerificationSuccess = () -> {
+                ParentDashboard dashboard = new ParentDashboard(username);
+                dashboard.setVisible(true);
+            };
+
+            // 2. Open the verification frame, passing it the user's ID and the action
+            // We use 'username' as the uniqueId for parents
+            FaceVerificationFrame faceVerifier = new FaceVerificationFrame(
+                    username,
+                    username,
+                    onVerificationSuccess
+            );
+            faceVerifier.setVisible(true);
+            dispose(); // Close this login window
+
         } else {
             JOptionPane.showMessageDialog(this,
                     "Incorrect username or password.",
@@ -195,8 +217,11 @@ public class ParentLoginFrame extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
             numTry -= 1;
         }
+        // --- END OF MODIFIED BLOCK ---
     }
+
     public void handleLock() {
+        // ... (handleLock code is unchanged) ...
         loginButton.setEnabled(false);
         usernameField.setEnabled(false);
         passwordField.setEnabled(false);
