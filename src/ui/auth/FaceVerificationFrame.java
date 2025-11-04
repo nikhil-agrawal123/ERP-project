@@ -122,7 +122,6 @@ public class FaceVerificationFrame extends JFrame {
 
         verifyButton.addActionListener(e -> {
             // ---
-            // TODO: Add your actual face recognition logic here
             // 1. Capture image: webcam.getImage()
             // 2. Load stored template for 'uniqueId' from database
             // 3. Compare them using a model (e.g., JavaCV's LBPHFaceRecognizer)
