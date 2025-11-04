@@ -2,6 +2,7 @@ package ui.dashboard;
 
 import dbClasses.*;
 import ui.landing.LandingFrame;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -20,10 +21,11 @@ import middleware.studentService;
 
 public class StudentDashboard extends JFrame {
 
-    private Color bgColor = new Color(45, 45, 45);
+    private String username;private Color bgColor = new Color(45, 45, 45);
     private Color sideMenuColor = new Color(60, 60, 60);
     private Color mainPanelColor = new Color(50, 50, 50);
     private Color buttonColor = new Color(57, 174, 168);
+
     private Color textColor = Color.WHITE;
 
     // --- USE THE CORRECT SERVICE CLASS ---
@@ -56,6 +58,7 @@ public class StudentDashboard extends JFrame {
         this.enrollmentService = new studentService();
 
         this.rollNumber = rollNum;
+        this.username = username;
         JPanel sideMenuPanel = createSideMenuPanel();
         add(sideMenuPanel, BorderLayout.WEST);
 
@@ -162,8 +165,11 @@ public class StudentDashboard extends JFrame {
         });
 
         registerForCourses.addActionListener(e -> {
-            cardLayout.show(cardHolderPanel, "REGISTER");
-            onlineLinkButton.setVisible(false); // Hide the button
+            CourseList courseListFrame = new CourseList(rollNumber, username);
+            courseListFrame.setVisible(true);
+
+            // Close the current dashboard window
+            dispose();
         });
 
         coursesButton.addActionListener(e -> {
@@ -205,7 +211,7 @@ public class StudentDashboard extends JFrame {
 
         if (dashboardData != null) {
             this.credits = dashboardData.getCredits();
-            this.cg = dashboardData.getCg()/dashboardData.getCredits();
+            this.cg = dashboardData.getCg() / dashboardData.getCredits();
         } else {
             // Handle error case
             this.credits = 0;
@@ -278,6 +284,8 @@ public class StudentDashboard extends JFrame {
         linksTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         linksPanel.add(linksTitle);
         linksPanel.add(createClickableLink("IIITD Website", "https://iiitd.ac.in/"));
+        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        linksPanel.add(createClickableLink("Course Directory", "https://techtree.iiitd.edu.in/"));
         linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         linksPanel.add(createClickableLink("Academic Dishonesty Policy", "https://www.iiitd.ac.in/academics/resources/academic-dishonesty"));
         linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
@@ -403,6 +411,7 @@ public class StudentDashboard extends JFrame {
         cardHolder.add(coursesPanel, "COURSES");
         cardHolder.add(receiptPanel, "RECEIPTS");
     }
+
     private JButton createMenuButton(String text) {
         JButton button = new JButton(text);
         button.setBackground(buttonColor);
@@ -558,14 +567,14 @@ public class StudentDashboard extends JFrame {
         table.getTableHeader().setReorderingAllowed(false);
 
         // Center align header text
-        ((DefaultTableCellRenderer)table.getTableHeader().getDefaultRenderer())
+        ((DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer())
                 .setHorizontalAlignment(JLabel.CENTER);
 
         // Center align text in all cells
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
 
-        for(int i=0; i < table.getColumnCount(); i++){
+        for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
@@ -642,7 +651,6 @@ public class StudentDashboard extends JFrame {
 
             g2.dispose();
         }
-
 
 
         @Override
