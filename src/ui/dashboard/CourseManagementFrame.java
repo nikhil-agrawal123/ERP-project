@@ -197,24 +197,60 @@ public class CourseManagementFrame extends JFrame {
         gbc.gridx = 1;
         detailsPanel.add(createValueLabel(course.getDepartment()), gbc);
 
+        // --- Button 1: "View Enrolled Students" (Renamed) ---
+        JButton viewStudentsButton = new JButton("View Enrolled Students");
+        viewStudentsButton.setBackground(buttonColor);
+        viewStudentsButton.setForeground(textColor);
+        viewStudentsButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        viewStudentsButton.setFocusPainted(false);
+        viewStudentsButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        viewStudentsButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
+        viewStudentsButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(panel, "Opening student list for " + course.getCode());
+            // Example: new ViewStudentsFrame(course.getCode()).setVisible(true);
+        });
+
+        // --- Button 2: "Update Scores" (Existing) ---
         JButton updateScoresButton = new JButton("Update Scores");
         updateScoresButton.setBackground(buttonColor);
         updateScoresButton.setForeground(textColor);
         updateScoresButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
         updateScoresButton.setFocusPainted(false);
         updateScoresButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        updateScoresButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        updateScoresButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
         updateScoresButton.addActionListener(e -> new UpdateScoresFrame(course.getCode()).setVisible(true));
 
+        // --- Button 3: "Set Grading Policy" (New) ---
+        JButton setGradingPolicyButton = new JButton("Set Grading Policy");
+        setGradingPolicyButton.setBackground(buttonColor);
+        setGradingPolicyButton.setForeground(textColor);
+        setGradingPolicyButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        setGradingPolicyButton.setFocusPainted(false);
+        setGradingPolicyButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        setGradingPolicyButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
+        setGradingPolicyButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(panel, "Opening grading policy for " + course.getCode());
+            // Example: new GradingPolicyFrame(course.getCode()).setVisible(true);
+        });
+
+        // --- Panel to hold all three buttons ---
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0)); // 15px horizontal gap
+        buttonPanel.setBackground(mainPanelColor);
+        buttonPanel.add(viewStudentsButton);
+        buttonPanel.add(updateScoresButton);
+        buttonPanel.add(setGradingPolicyButton); // Added the new button
+
+        // --- Add the button panel to the GridBagLayout ---
         gbc.gridx = 0;
         gbc.gridy = 5;
         gbc.gridwidth = 2;
         gbc.insets = new Insets(20, 5, 8, 5);
-        detailsPanel.add(updateScoresButton, gbc);
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(buttonPanel, gbc);
 
         gbc.gridy = 6;
-        gbc.weighty = 1.0;
-        detailsPanel.add(new JLabel(""), gbc);
+        gbc.weighty = 1.0; // Pushes content up
+        detailsPanel.add(new JLabel(""), gbc); // Empty spacer
 
         JPanel containerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         containerPanel.setBackground(mainPanelColor);
