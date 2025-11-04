@@ -88,9 +88,15 @@ public class FacultyDashboard extends JFrame {
         TAButton.addActionListener(e -> cardLayout.show(mainContentPanel, "TA"));
         logoutButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Logout successful");
-            LandingFrame landingFrame = new LandingFrame();
-            landingFrame.setVisible(true);
-            dispose();
+            for (Window w : Window.getWindows()) {
+                if (w instanceof JFrame) {
+                    w.dispose();
+                }
+            }
+            SwingUtilities.invokeLater(() -> {
+                LandingFrame landingFrame = new LandingFrame();
+                landingFrame.setVisible(true);
+            });
         });
 
         // Add components to the panel
