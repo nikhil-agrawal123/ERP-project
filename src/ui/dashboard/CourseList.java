@@ -13,6 +13,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
+// --- NEW IMPORTS ---
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class CourseList extends JFrame {
 
@@ -212,7 +216,7 @@ public class CourseList extends JFrame {
         // Hardcoded examples
         JPanel tile1 = createCourseTilePanel("CSE121", "Discrete Mathematics", "4", "Mandatory (Core)", "Dr. Alan Turing");
         JPanel tile2 = createCourseTilePanel("CSE201", "Advanced Programming", "4", "Mandatory (Core)", "Dr. Ada Lovelace");
-        JPanel tile3 = createCourseTilePanel("CSE221", "Operating Systems", "4", "Mandatory (Core)", "Dr. Linus Torvalds");
+        JPanel tile3 = createCourseTilePanel("CSE231", "Operating Systems", "4", "Mandatory (Core)", "Dr. Linus Torvalds");
 
         centerContentPanel.add(tile1);
         centerContentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
@@ -225,9 +229,13 @@ public class CourseList extends JFrame {
 
     /**
      * --- UPDATED METHOD ---
-     * Creates a course tile, now using our custom-drawn JLabel checkbox.
+     * Creates a course tile, now using our custom-drawn JLabel checkbox
+     * and a clickable "course details" link.
      */
     private JPanel createCourseTilePanel(String code, String name, String credits, String regType, String instructor) {
+        // Use 'this' (the JFrame) to show potential error dialogs
+        final Component parentFrame = this;
+
         JPanel tilePanel = new JPanel(new BorderLayout(15, 15));
         tilePanel.setBackground(tileBgColor);
 
@@ -237,7 +245,7 @@ public class CourseList extends JFrame {
         tilePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
 
 
-        // --- Top Panel (Code + Name) ---
+        // --- Top Panel (Code + Name + Details Link) ---
         JPanel topInfoPanel = new JPanel();
         topInfoPanel.setLayout(new BoxLayout(topInfoPanel, BoxLayout.X_AXIS));
         topInfoPanel.setOpaque(false);
@@ -254,9 +262,40 @@ public class CourseList extends JFrame {
         nameLabel.setForeground(textColor);
         nameLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
 
+        // --- NEW: Clickable "Details" Link ---
+        JLabel detailsLink = new JLabel("Check course details ↗");
+        detailsLink.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        detailsLink.setForeground(codeBgColor); // Use theme's blue color
+        detailsLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        detailsLink.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 0)); // Left padding
+
+        detailsLink.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                    try {
+                        String url = "https://techtree.iiitd.edu.in/viewDescription/filename?=" + code;
+                        Desktop.getDesktop().browse(new URI(url));
+                    } catch (IOException | URISyntaxException ex) {
+                        System.err.println("Failed to open browser: " + ex.getMessage());
+                        // Show an error message to the user
+                        JOptionPane.showMessageDialog(parentFrame,
+                                "Could not open the link. Please visit:\n" +
+                                        "https://techtree.iiitd.edu.in/viewDescription/filename?=" + code,
+                                "Browser Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
+        // --- End of New Link ---
+
+
         topInfoPanel.add(codeLabel);
         topInfoPanel.add(nameLabel);
-        topInfoPanel.add(Box.createHorizontalGlue());
+        topInfoPanel.add(detailsLink); // Add the new link
+        topInfoPanel.add(Box.createHorizontalGlue()); // Pushes everything to the left
+
 
         // --- Bottom Panel (Details) ---
         JPanel bottomInfoPanel = new JPanel();
