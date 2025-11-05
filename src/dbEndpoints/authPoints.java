@@ -128,4 +128,31 @@ public class authPoints {
         }
         return null;
     }
+    public boolean updatePasswordHash(String username, String newHash) throws SQLException {
+        // Use the correct table name from your schema: Auth.studentAuth
+        String sql = "UPDATE Auth.studentAuth SET studentPass = ? WHERE studentId = ?";
+
+        // *** IMPORTANT ***
+        // Get your database connection here, the same way you do in
+        // your other methods in this file.
+        // Example:
+        // try (Connection conn = DatabaseConnection.getConnection();
+
+        try (Connection conn = dbConnector.connect(); // <-- REPLACE THIS
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newHash);
+            pstmt.setString(2, username);
+
+            // executeUpdate() returns the number of rows affected
+            int rowsAffected = pstmt.executeUpdate();
+
+            // Return true if 1 row was updated, false otherwise
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e; // Re-throw the exception to be handled by the service layer
+        }
+    }
 }

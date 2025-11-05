@@ -622,7 +622,7 @@ public class StudentDashboard extends JFrame {
         return item;
     }
 
-    private class CircularButton extends JButton {
+    private static class CircularButton extends JButton {
 
         public CircularButton(String text) {
             super(text);
