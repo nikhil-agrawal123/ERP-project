@@ -597,11 +597,27 @@ public class StudentDashboard extends JFrame {
         item.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
         item.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
+        // --- UPDATED ACTION LISTENER ---
         item.addActionListener(e -> {
-            System.out.println("Clicked: " + text);
-            // You can add functionality here, e.g., open a new dialog
-            // if (text.equals("Manage Account")) { ... }
+            // System.out.println("Clicked: " + text); // Optional: for debugging
+
+            if (text.equals("Manage Account")) {
+                // Open the StudentProfile frame
+                // It's good practice to run Swing GUIs on the Event Dispatch Thread
+                SwingUtilities.invokeLater(() -> {
+                    StudentProfile profileFrame = new StudentProfile(rollNumber, username);
+                    profileFrame.setVisible(true);
+                });
+
+            } else if (text.equals("Notifications")) {
+                // Open the Notifications frame
+                SwingUtilities.invokeLater(() -> {
+                    Notifications notifFrame = new Notifications(rollNumber, username);
+                    notifFrame.setVisible(true);
+                });
+            }
         });
+        // --- END OF UPDATE ---
 
         return item;
     }
