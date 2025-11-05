@@ -155,7 +155,7 @@ public class StudentDashboard extends JFrame {
         JButton homeButton = createMenuButton("Dashboard Home");
         JButton registerForCourses = createMenuButton("Register For Courses");
         JButton coursesButton = createMenuButton("My Courses");
-        JButton receiptButton = createMenuButton("Fee Receipts");
+        JButton receiptButton = createMenuButton("Fee details");
         JButton logoutButton = createMenuButton("Logout");
 
         // --- THIS IS THE CORRECTED SECTION ---
@@ -178,10 +178,9 @@ public class StudentDashboard extends JFrame {
         });
 
         receiptButton.addActionListener(e -> {
-            cardLayout.show(cardHolderPanel, "RECEIPTS");
-            onlineLinkButton.setVisible(false); // Hide the button
+            Payfees feeFrame = new Payfees(rollNumber, username);
+            feeFrame.setVisible(true);
         });
-        // --- END OF CORRECTION ---
 
         logoutButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Logout Successful");
@@ -398,18 +397,11 @@ public class StudentDashboard extends JFrame {
             setForeground(textColor);
         }});
 
-        JPanel receiptPanel = new JPanel();
-        receiptPanel.setBackground(mainPanelColor);
-        receiptPanel.add(new JLabel("Fee updates are here") {{
-            setFont(new Font("Segoe UI", Font.PLAIN, 24));
-            setForeground(textColor);
-        }});
 
 
         cardHolder.add(homePanel, "HOME");
         cardHolder.add(registerPanel, "REGISTER");
         cardHolder.add(coursesPanel, "COURSES");
-        cardHolder.add(receiptPanel, "RECEIPTS");
     }
 
     private JButton createMenuButton(String text) {
