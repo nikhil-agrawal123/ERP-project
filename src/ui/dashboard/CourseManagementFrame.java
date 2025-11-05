@@ -4,13 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import databaseConfig.Connector;
+import dbClasses.facultyCourseClass;
+import middleware.facultyService;
 
 public class CourseManagementFrame extends JFrame {
 
@@ -19,6 +15,8 @@ public class CourseManagementFrame extends JFrame {
     private Color buttonColor = new Color(57, 174, 168);
     private Color linkColor = new Color(100, 180, 255);
     private Color textColor = Color.WHITE;
+    
+    private facultyService faculty = new facultyService();
 
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
@@ -55,54 +53,7 @@ public class CourseManagementFrame extends JFrame {
         courseListPanel.add(scoresTitle);
         courseListPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        List<Course> courses = new ArrayList<>();
-        Connector dbConnector = new Connector();
-
-        // --- Optimized SQL Query ---
-        String sql = """
-            SELECT 
-                c.course_title,
-                c.course_code,
-                c.credits,
-                s.department,
-                COUNT(DISTINCT e.student_id) AS student_count
-            FROM 
-                users.sections s
-            JOIN 
-                users.courses c ON s.course_code = c.course_code
-            LEFT JOIN 
-                users.enrollments e ON e.course_code = c.course_code
-            WHERE 
-                s.instructor_id = ?
-            GROUP BY 
-                c.course_title, c.course_code, c.credits, s.department
-            ORDER BY 
-                c.course_title
-            """;
-
-        try (Connection conn = dbConnector.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, "INST-CS-501");
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                String name = rs.getString("course_title");
-                String code = rs.getString("course_code");
-                int studentCount = rs.getInt("student_count");
-                int credits = rs.getInt("credits");
-                String department = rs.getString("department");
-
-                courses.add(new Course(name, code, studentCount, credits, department));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JLabel errorLabel = new JLabel("Error loading courses: " + e.getMessage());
-            errorLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-            errorLabel.setForeground(Color.RED);
-            courseListPanel.add(errorLabel);
-        }
+        List<facultyCourseClass> courses = faculty.getAllCourses("INST-CS-501");
 
         if (courses.isEmpty()) {
             JLabel noCoursesLabel = new JLabel("You are not assigned to any courses for the current term.");
@@ -111,8 +62,8 @@ public class CourseManagementFrame extends JFrame {
             courseListPanel.add(noCoursesLabel);
         }
 
-        for (Course course : courses) {
-            JLabel courseLink = new JLabel(course.getName() + " (" + course.getCode() + ")");
+        for (facultyCourseClass course : courses) {
+            JLabel courseLink = new JLabel(course.getCourseName() + " (" + course.getCourseCode() + ")");
             courseLink.setFont(new Font("Segoe UI", Font.PLAIN, 20));
             courseLink.setForeground(linkColor);
             courseLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -121,17 +72,17 @@ public class CourseManagementFrame extends JFrame {
             courseLink.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    cardLayout.show(mainContentPanel, "DETAIL_" + course.getCode());
+                    cardLayout.show(mainContentPanel, "DETAIL_" + course.getCourseCode());
                 }
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    courseLink.setText("<html><u>" + course.getName() + " (" + course.getCode() + ")</u></html>");
+                    courseLink.setText("<html><u>" + course.getCourseName() + " (" + course.getCourseCode() + ")</u></html>");
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e) {
-                    courseLink.setText(course.getName() + " (" + course.getCode() + ")");
+                    courseLink.setText(course.getCourseName() + " (" + course.getCourseCode() + ")");
                 }
             });
 
@@ -139,13 +90,13 @@ public class CourseManagementFrame extends JFrame {
             courseListPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
             JPanel detailPanel = createCourseDetailPanel(course);
-            mainContentPanel.add(detailPanel, "DETAIL_" + course.getCode());
+            mainContentPanel.add(detailPanel, "DETAIL_" + course.getCourseCode());
         }
 
         mainContentPanel.add(courseListPanel, "COURSE_LIST");
     }
 
-    private JPanel createCourseDetailPanel(Course course) {
+    private JPanel createCourseDetailPanel(facultyCourseClass course) {
         JPanel panel = new JPanel(new BorderLayout(20, 20));
         panel.setBackground(mainPanelColor);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
@@ -158,7 +109,7 @@ public class CourseManagementFrame extends JFrame {
         backButton.addActionListener(e -> cardLayout.show(mainContentPanel, "COURSE_LIST"));
         headerPanel.add(backButton, BorderLayout.WEST);
 
-        JLabel titleLabel = new JLabel("Details for " + course.getName());
+        JLabel titleLabel = new JLabel("Details for " + course.getCourseName());
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
         titleLabel.setForeground(textColor);
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -175,12 +126,12 @@ public class CourseManagementFrame extends JFrame {
         gbc.gridx = 0; gbc.gridy = 0;
         detailsPanel.add(createDetailLabel("Course Name:"), gbc);
         gbc.gridx = 1;
-        detailsPanel.add(createValueLabel(course.getName()), gbc);
+        detailsPanel.add(createValueLabel(course.getCourseName()), gbc);
 
         gbc.gridx = 0; gbc.gridy = 1;
         detailsPanel.add(createDetailLabel("Course Code:"), gbc);
         gbc.gridx = 1;
-        detailsPanel.add(createValueLabel(course.getCode()), gbc);
+        detailsPanel.add(createValueLabel(course.getCourseCode()), gbc);
 
         gbc.gridx = 0; gbc.gridy = 2;
         detailsPanel.add(createDetailLabel("Students Enrolled:"), gbc);
@@ -190,7 +141,7 @@ public class CourseManagementFrame extends JFrame {
         gbc.gridx = 0; gbc.gridy = 3;
         detailsPanel.add(createDetailLabel("Credits:"), gbc);
         gbc.gridx = 1;
-        detailsPanel.add(createValueLabel(String.valueOf(course.getCredits())), gbc);
+        detailsPanel.add(createValueLabel(String.valueOf(course.getCourseCredits())), gbc);
 
         gbc.gridx = 0; gbc.gridy = 4;
         detailsPanel.add(createDetailLabel("Department:"), gbc);
@@ -206,11 +157,9 @@ public class CourseManagementFrame extends JFrame {
         viewStudentsButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         viewStudentsButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
         viewStudentsButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(panel, "Opening student list for " + course.getCode());
-            // Example: new ViewStudentsFrame(course.getCode()).setVisible(true);
+            JOptionPane.showMessageDialog(panel, "Opening student list for " + course.getCourseCode());
         });
 
-        // --- Button 2: "Update Scores" (Existing) ---
         JButton updateScoresButton = new JButton("Update Scores");
         updateScoresButton.setBackground(buttonColor);
         updateScoresButton.setForeground(textColor);
@@ -218,7 +167,7 @@ public class CourseManagementFrame extends JFrame {
         updateScoresButton.setFocusPainted(false);
         updateScoresButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         updateScoresButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
-        updateScoresButton.addActionListener(e -> new UpdateScoresFrame(course.getCode()).setVisible(true));
+        updateScoresButton.addActionListener(e -> new UpdateScoresFrame(course.getCourseCode()).setVisible(true));
 
         // --- Button 3: "Set Grading Policy" (New) ---
         JButton setGradingPolicyButton = new JButton("Set Grading Policy");
@@ -229,8 +178,7 @@ public class CourseManagementFrame extends JFrame {
         setGradingPolicyButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         setGradingPolicyButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
         setGradingPolicyButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(panel, "Opening grading policy for " + course.getCode());
-            // Example: new GradingPolicyFrame(course.getCode()).setVisible(true);
+            JOptionPane.showMessageDialog(panel, "Opening grading policy for " + course.getCourseCode());
         });
 
         // --- Panel to hold all three buttons ---
@@ -272,25 +220,6 @@ public class CourseManagementFrame extends JFrame {
         label.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         label.setForeground(textColor);
         return label;
-    }
-
-    private static class Course {
-        private String name, code, department;
-        private int studentCount, credits;
-
-        public Course(String name, String code, int studentCount, int credits, String department) {
-            this.name = name;
-            this.code = code;
-            this.studentCount = studentCount;
-            this.credits = credits;
-            this.department = department;
-        }
-
-        public String getName() { return name; }
-        public String getCode() { return code; }
-        public int getStudentCount() { return studentCount; }
-        public int getCredits() { return credits; }
-        public String getDepartment() { return department; }
     }
 
     private JButton createMenuButton(String text) {

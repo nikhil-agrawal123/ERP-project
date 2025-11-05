@@ -9,7 +9,6 @@ import middleware.*;
 import ui.dashboard.ParentDashboard;
 import ui.landing.LandingFrame;
 // --- NEW IMPORT ---
-import ui.auth.FaceVerificationFrame;
 
 
 public class ParentLoginFrame extends JFrame {
@@ -199,16 +198,6 @@ public class ParentLoginFrame extends JFrame {
                 ParentDashboard dashboard = new ParentDashboard(username);
                 dashboard.setVisible(true);
             };
-
-            // 2. Open the verification frame, passing it the user's ID and the action
-            // We use 'username' as the uniqueId for parents
-            FaceVerificationFrame faceVerifier = new FaceVerificationFrame(
-                    username,
-                    username,
-                    onVerificationSuccess
-            );
-            faceVerifier.setVisible(true);
-            dispose(); // Close this login window
 
         } else {
             JOptionPane.showMessageDialog(this,

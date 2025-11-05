@@ -3,8 +3,8 @@ package ui.dashboard;
 import javax.swing.*;
 import ui.landing.LandingFrame;
 import java.awt.*;
-import databaseConfig.Connector;
 import java.sql.*;
+import middleware.facultyService;
 
 public class FacultyDashboard extends JFrame {
     private Color bgColor = new Color(45, 45, 45);
@@ -13,11 +13,13 @@ public class FacultyDashboard extends JFrame {
     private Color buttonColor = new Color(57, 174, 168);
     private Color textColor = Color.WHITE;
 
+    private facultyService faculty;
+
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
 
     private int numCourses = 0;
-    private String facultyID = "N/A"; // Initialize to a default
+    private String facultyID; // Initialize to a default
 
     public FacultyDashboard(String username) {
         super("Faculty Dashboard - " + username);
@@ -31,6 +33,8 @@ public class FacultyDashboard extends JFrame {
         setIconImage(image.getImage());
 
         setLayout(new BorderLayout());
+        this.faculty = new facultyService();
+        this.facultyID = faculty.facultyId(username);
 
         // --- Create and add the side menu and main content panels ---
         JPanel sideMenuPanel = createSideMenuPanel(username);
@@ -125,48 +129,14 @@ public class FacultyDashboard extends JFrame {
      */
     private void createContentCards(String username) {
 
-        String instructorQuery = "SELECT instructor_id FROM users.instructors WHERE user_id = ?";
-        String coursesQuery = "SELECT COUNT(*) AS course_count FROM users.sections WHERE instructor_id = ?";
-
-        Connector connector = new Connector();
-
-        try (Connection conn = connector.connect()) {
-
-            // Step 1: Get the facultyID using the username (user_id)
-            try (PreparedStatement psInstructors = conn.prepareStatement(instructorQuery)) {
-                psInstructors.setString(1, username);
-                try (ResultSet rsInstructors = psInstructors.executeQuery()) {
-                    if (rsInstructors.next()) {
-                        facultyID = rsInstructors.getString("instructor_id");
-                    } else {
-                        // Handle case where no faculty ID is found for this user
-                        JOptionPane.showMessageDialog(this,
-                                "Could not find faculty details for user: " + username,
-                                "Database Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
+            if(facultyID == null){
+                JOptionPane.showMessageDialog(this,
+                        "Could not find faculty details for user: " + username,
+                        "Database Error", JOptionPane.ERROR_MESSAGE);
             }
-
-            // Step 2: Use the retrieved facultyID to get the course count
-            if (!facultyID.equals("N/A")) {
-                try (PreparedStatement psCourses = conn.prepareStatement(coursesQuery)) {
-                    // Use the facultyID, not the username
-                    psCourses.setString(1, facultyID);
-                    try (ResultSet rsCourses = psCourses.executeQuery()) {
-                        if (rsCourses.next()) {
-                            // Get the count from the alias
-                            numCourses = rsCourses.getInt("course_count");
-                        }
-                    }
-                }
+            if (facultyID != null) {
+                numCourses = faculty.getFacultyCourse(facultyID);
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                    "Failed to connect to the database. Please check your connection.",
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
 
         // --- 1. Home Panel ---
         JPanel homePanel = new JPanel(new BorderLayout(20, 20));
