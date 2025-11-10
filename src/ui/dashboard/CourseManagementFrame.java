@@ -178,7 +178,7 @@ public class CourseManagementFrame extends JFrame {
         setGradingPolicyButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         setGradingPolicyButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
         setGradingPolicyButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(panel, "Opening grading policy for " + course.getCourseCode());
+            new GradingPolicyFrame(course.getCourseCode()).setVisible(true);
         });
 
         // --- Panel to hold all three buttons ---
