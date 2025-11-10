@@ -40,6 +40,7 @@ public class StudentDashboard extends JFrame {
     private CardLayout cardLayout;
     private JPopupMenu profileMenu;
     private JButton onlineLinkButton;
+    private JButton generateReportButton;
 
     public StudentDashboard(String rollNum, String username) {
         super("Student Dashboard - " + username);
@@ -107,8 +108,18 @@ public class StudentDashboard extends JFrame {
             }
         });
 
+        // --- 2. CREATED BUTTON ---
+        generateReportButton = createMenuButton("Generate Report");
+        generateReportButton.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
+        generateReportButton.addActionListener(e -> {
+            // TODO: Implement report generation logic
+            JOptionPane.showMessageDialog(StudentDashboard.this, "Report generation logic not yet implemented.");
+        });
+        // --- END ADDED BUTTON ---
+
         mainContentPanel.add(profileButton, JLayeredPane.PALETTE_LAYER);
         mainContentPanel.add(onlineLinkButton, JLayeredPane.PALETTE_LAYER); // Add the new button
+        mainContentPanel.add(generateReportButton, JLayeredPane.PALETTE_LAYER); // <<< ADDED BUTTON TO PANE
 
         mainContentPanel.addComponentListener(new ComponentAdapter() {
             @Override
@@ -130,6 +141,14 @@ public class StudentDashboard extends JFrame {
 
                 profileButton.setBounds(profileX, profileY, profileBtnSize.width, profileBtnSize.height);
                 onlineLinkButton.setBounds(linkButtonX, linkButtonY, linkBtnSize.width, linkBtnSize.height);
+
+                // --- 3. ADDED POSITIONING LOGIC ---
+                // Bottom right button
+                Dimension reportBtnSize = generateReportButton.getPreferredSize();
+                int reportX = size.width - reportBtnSize.width - padding-30;
+                int reportY = size.height - reportBtnSize.height - padding-30;
+
+                generateReportButton.setBounds(reportX, reportY, reportBtnSize.width, reportBtnSize.height);
             }
         });
 
