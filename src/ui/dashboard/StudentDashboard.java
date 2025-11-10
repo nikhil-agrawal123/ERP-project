@@ -4,31 +4,35 @@ import dbClasses.*;
 import ui.landing.LandingFrame;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
-import java.sql.*;
+import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.*;
 import java.net.URI;
 import java.awt.Desktop;
-import java.util.Map;
 
 import middleware.studentService;
 
 public class StudentDashboard extends JFrame {
 
-    private String username;private Color bgColor = new Color(45, 45, 45);
-    private Color sideMenuColor = new Color(60, 60, 60);
-    private Color mainPanelColor = new Color(50, 50, 50);
-    private Color buttonColor = new Color(57, 174, 168);
+    private String username;
 
-    private Color textColor = Color.WHITE;
+    // --- UI COLOR PALETTE FROM CSS ---
+    private Color bgColor = new Color(42, 48, 60);            // --background
+    private Color sideMenuColor = new Color(48, 54, 70);      // --sidebar-background
+    private Color mainPanelColor = new Color(42, 48, 60);       // --background
+    private Color cardColor = new Color(54, 59, 74);          // --card
+    private Color popoverColor = new Color(46, 52, 66);       // --popover
+    private Color borderColor = new Color(64, 69, 89);        // --border
+    private Color buttonColor = new Color(52, 159, 148);      // --primary / --accent
+    private Color buttonColorGlow = new Color(79, 196, 184);  // --primary-glow
+    private Color textColor = new Color(255, 255, 255);       // --foreground
+    private Color textSecondaryColor = new Color(179, 179, 179); // --muted-foreground
 
-    // --- USE THE CORRECT SERVICE CLASS ---
     private studentService enrollmentService;
 
     private double cg = 0;
@@ -39,13 +43,15 @@ public class StudentDashboard extends JFrame {
     private JPanel cardHolderPanel;
     private CardLayout cardLayout;
     private JPopupMenu profileMenu;
-    private JButton onlineLinkButton;
-    private JButton generateReportButton;
+    private RoundedButton onlineLinkButton;
+    private RoundedButton generateReportButton;
+    private List<RoundedButton> menuButtons;
 
     public StudentDashboard(String rollNum, String username) {
         super("Student Dashboard - " + username);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setSize(1280, 800);
         setLocationRelativeTo(null);
         setResizable(true);
@@ -55,8 +61,8 @@ public class StudentDashboard extends JFrame {
 
         setLayout(new BorderLayout());
 
-        // --- INITIALIZE THE SERVICE ---
         this.enrollmentService = new studentService();
+        this.menuButtons = new ArrayList<>();
 
         this.rollNumber = rollNum;
         this.username = username;
@@ -85,9 +91,7 @@ public class StudentDashboard extends JFrame {
             profileMenu.show(profileButton, x, y);
         });
 
-        onlineLinkButton = createMenuButton("Check Degree Requirements");
-        onlineLinkButton.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
-
+        onlineLinkButton = createHeaderButton("Degree Requirements");
         onlineLinkButton.addActionListener(e -> {
             try {
                 String url = "https://iiitd.ac.in/sites/default/files/docs/education/2024/2024-May-BTech(CSE)-Regulations.pdf";
@@ -108,18 +112,14 @@ public class StudentDashboard extends JFrame {
             }
         });
 
-        // --- 2. CREATED BUTTON ---
-        generateReportButton = createMenuButton("Generate Report");
-        generateReportButton.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
+        generateReportButton = createActionButton("Generate Report");
         generateReportButton.addActionListener(e -> {
-            // TODO: Implement report generation logic
             JOptionPane.showMessageDialog(StudentDashboard.this, "Report generation logic not yet implemented.");
         });
-        // --- END ADDED BUTTON ---
 
         mainContentPanel.add(profileButton, JLayeredPane.PALETTE_LAYER);
-        mainContentPanel.add(onlineLinkButton, JLayeredPane.PALETTE_LAYER); // Add the new button
-        mainContentPanel.add(generateReportButton, JLayeredPane.PALETTE_LAYER); // <<< ADDED BUTTON TO PANE
+        mainContentPanel.add(onlineLinkButton, JLayeredPane.PALETTE_LAYER);
+        mainContentPanel.add(generateReportButton, JLayeredPane.PALETTE_LAYER);
 
         mainContentPanel.addComponentListener(new ComponentAdapter() {
             @Override
@@ -128,72 +128,101 @@ public class StudentDashboard extends JFrame {
                 cardHolderPanel.setBounds(0, 0, size.width, size.height);
 
                 int padding = 20;
-                int buttonSpacing = 140;
+                int buttonSpacing = 20;
 
                 Dimension profileBtnSize = profileButton.getPreferredSize();
-                Dimension linkBtnSize = onlineLinkButton.getPreferredSize();
                 int profileX = size.width - profileBtnSize.width - padding;
                 int profileY = padding;
-
-                int linkButtonX = profileX - linkBtnSize.width - buttonSpacing;
-
-                int linkButtonY = profileY + (profileBtnSize.height - linkBtnSize.height) / 2;
-
                 profileButton.setBounds(profileX, profileY, profileBtnSize.width, profileBtnSize.height);
-                onlineLinkButton.setBounds(linkButtonX, linkButtonY, linkBtnSize.width, linkBtnSize.height);
 
-                // --- 3. ADDED POSITIONING LOGIC ---
-                // Bottom right button
+                Dimension linkBtnSize = onlineLinkButton.getPreferredSize();
+                onlineLinkButton.setBounds(
+                        profileX - linkBtnSize.width - buttonSpacing,
+                        profileY + (profileBtnSize.height - linkBtnSize.height) / 2,
+                        linkBtnSize.width, linkBtnSize.height
+                );
+
                 Dimension reportBtnSize = generateReportButton.getPreferredSize();
-                int reportX = size.width - reportBtnSize.width - padding-30;
-                int reportY = size.height - reportBtnSize.height - padding-30;
-
-                generateReportButton.setBounds(reportX, reportY, reportBtnSize.width, reportBtnSize.height);
+                generateReportButton.setBounds(
+                        size.width - reportBtnSize.width - padding - 30,
+                        size.height - reportBtnSize.height - padding - 30,
+                        reportBtnSize.width, reportBtnSize.height
+                );
             }
         });
 
-        // This method now calls the service
         createContentCards(cardHolderPanel, this.rollNumber, username);
 
         cardLayout.show(cardHolderPanel, "HOME");
+        if (!menuButtons.isEmpty()) {
+            setActiveButton(menuButtons.get(0));
+        }
     }
 
     private JPanel createSideMenuPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(sideMenuColor);
-        panel.setPreferredSize(new Dimension(220, 0));
+        // --- MODIFIED LINE ---
+        panel.setPreferredSize(new Dimension(300, 0)); // Increased width
         panel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
         JLabel menuTitle = new JLabel("Navigation");
-        menuTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        menuTitle.setFont(new Font("Segoe UI", Font.BOLD, 30));
         menuTitle.setForeground(textColor);
-        menuTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
+        menuTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        // --- MODIFIED LINE ---
+        menuTitle.setBorder(BorderFactory.createEmptyBorder(0, 25, 10, 25)); // Added right padding
 
-        JButton homeButton = createMenuButton("Dashboard Home");
-        JButton registerForCourses = createMenuButton("Register For Courses");
-        JButton coursesButton = createMenuButton("My Courses");
-        JButton receiptButton = createMenuButton("Fee details");
-        JButton logoutButton = createMenuButton("Logout");
+        RoundedButton homeButton = createSideMenuButton("Dashboard Home");
+        RoundedButton coursesButton = createSideMenuButton("My Courses");
+        RoundedButton registerForCourses = createSideMenuButton("Register For Courses");
+        RoundedButton receiptButton = createSideMenuButton("Fee details");
+        // --- Create a custom button for Logout with the darkest background ---
+// This is your --background color (220 18% 20%)
+        Color logoutBg = bgColor;
 
-        // --- THIS IS THE CORRECTED SECTION ---
+        RoundedButton logoutButton = new RoundedButton(
+                "\u21AA   Logout",
+                logoutBg,       // Normal background
+                logoutBg,       // Hover background (same as normal)
+                logoutBg,       // Pressed background (same as normal)
+                logoutBg,       // Active background (same as normal)
+                8               // Arc
+        );
+
+// --- We must re-apply the styling from createSideMenuButton ---
+        logoutButton.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        logoutButton.setForeground(textColor); // Set text to WHITE
+        logoutButton.setHorizontalAlignment(SwingConstants.LEFT);
+        logoutButton.setPreferredSize(new Dimension(Integer.MAX_VALUE, 60));
+        logoutButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        logoutButton.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25));
+        logoutButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        menuButtons.add(homeButton);
+        menuButtons.add(coursesButton);
+        menuButtons.add(registerForCourses);
+        menuButtons.add(receiptButton);
+
         homeButton.addActionListener(e -> {
             cardLayout.show(cardHolderPanel, "HOME");
-            onlineLinkButton.setVisible(true); // Show the button
+            onlineLinkButton.setVisible(true);
+            generateReportButton.setVisible(true);
+            setActiveButton(homeButton);
+        });
+
+        coursesButton.addActionListener(e -> {
+            cardLayout.show(cardHolderPanel, "COURSES");
+            onlineLinkButton.setVisible(false);
+            generateReportButton.setVisible(false);
+            setActiveButton(coursesButton);
         });
 
         registerForCourses.addActionListener(e -> {
             CourseList courseListFrame = new CourseList(rollNumber, username);
             courseListFrame.setVisible(true);
-
-            // Close the current dashboard window
             dispose();
-        });
-
-        coursesButton.addActionListener(e -> {
-            cardLayout.show(cardHolderPanel, "COURSES");
-            onlineLinkButton.setVisible(false); // Hide the button
         });
 
         receiptButton.addActionListener(e -> {
@@ -208,30 +237,108 @@ public class StudentDashboard extends JFrame {
             dispose();
         });
 
+        logoutButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         panel.add(menuTitle);
+
+        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+        JSeparator navSeparator = new JSeparator(SwingConstants.HORIZONTAL);
+        navSeparator.setForeground(borderColor);
+        navSeparator.setBackground(sideMenuColor);
+        navSeparator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+
+        // --- MODIFIED BLOCK: WRAP SEPARATOR FOR ALIGNMENT ---
+        Box separatorWrapper = Box.createHorizontalBox();
+        separatorWrapper.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25)); // Match button padding
+        separatorWrapper.add(navSeparator);
+        separatorWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(separatorWrapper);
+        // --- END MODIFIED BLOCK ---
+
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+
         panel.add(homeButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(coursesButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(registerForCourses);
-        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(receiptButton);
 
         panel.add(Box.createVerticalGlue());
         panel.add(logoutButton);
 
+        // --- ADD THIS LINE to push the button up from the bottom ---
+        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+
         return panel;
     }
 
-    private void createContentCards(JPanel cardHolder, String rollNum, String username) {
+    private RoundedButton createSideMenuButton(String text) {
+        RoundedButton button = new RoundedButton(
+                text,
+                sideMenuColor,
+                borderColor,
+                buttonColor.darker(),
+                buttonColor,
+                8
+        );
+        button.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        button.setForeground(textSecondaryColor);
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setPreferredSize(new Dimension(Integer.MAX_VALUE, 60));
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        button.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25));
+        button.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return button;
+    }
 
+    private void setActiveButton(RoundedButton activeButton) {
+        for (RoundedButton button : menuButtons) {
+            button.setActive(false);
+            button.setForeground(textSecondaryColor);
+        }
+        activeButton.setActive(true);
+        activeButton.setForeground(textColor);
+    }
+
+    private RoundedButton createHeaderButton(String text) {
+        RoundedButton button = new RoundedButton(
+                text,
+                sideMenuColor,
+                borderColor,
+                borderColor.darker(),
+                8
+        );
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setForeground(textColor);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        button.setPreferredSize(null);
+        return button;
+    }
+
+    private RoundedButton createActionButton(String text) {
+        RoundedButton button = new RoundedButton(
+                text,
+                buttonColor,      // Gradient Start (--primary)
+                buttonColorGlow,  // Gradient End (--primary-glow)
+                8                 // Arc radius
+        );
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setForeground(textColor);
+        button.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
+        button.setPreferredSize(null);
+        return button;
+    }
+
+
+    private void createContentCards(JPanel cardHolder, String rollNum, String username) {
         StudentCgCredits dashboardData = enrollmentService.getCgData(rollNum);
 
         if (dashboardData != null) {
             this.credits = dashboardData.getCredits();
-            this.cg = dashboardData.getCg() / dashboardData.getCredits();
+            this.cg = dashboardData.getCredits() > 0 ? (dashboardData.getCg() / dashboardData.getCredits()) : 0.0;
         } else {
-            // Handle error case
             this.credits = 0;
             this.cg = 0.0;
             JOptionPane.showMessageDialog(this, "Could not fetch student CGPA data.", "Database Error", JOptionPane.ERROR_MESSAGE);
@@ -240,238 +347,163 @@ public class StudentDashboard extends JFrame {
         // --- HOME PANEL ---
         JPanel homePanel = new JPanel(new BorderLayout(20, 20));
         homePanel.setBackground(mainPanelColor);
-        homePanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        homePanel.setBorder(BorderFactory.createEmptyBorder(20, 35, 40, 40));
+
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
         titlePanel.setBackground(mainPanelColor);
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+
         JLabel welcomeLabel = new JLabel("Welcome, " + username);
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
         welcomeLabel.setForeground(textColor);
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         JLabel rollLabel = new JLabel("Student Roll no.: " + this.rollNumber);
         rollLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        rollLabel.setForeground(textColor);
+        rollLabel.setForeground(textSecondaryColor);
         rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         titlePanel.add(welcomeLabel);
-        titlePanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        titlePanel.add(Box.createRigidArea(new Dimension(0, 5)));
         titlePanel.add(rollLabel);
+
+        titlePanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        JSeparator titleSeparator = new JSeparator(SwingConstants.HORIZONTAL);
+        titleSeparator.setForeground(borderColor);
+        titleSeparator.setBackground(mainPanelColor);
+        titleSeparator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+        titlePanel.add(titleSeparator);
+
         homePanel.add(titlePanel, BorderLayout.NORTH);
 
-        // 1. Main content area now uses BorderLayout to stack top and bottom panels
-        // --- GAP INCREASED from 20 to 40 ---
-        JPanel centerContentPanel = new JPanel(new BorderLayout(0, 40)); // 40px vertical gap
+        JPanel centerContentPanel = new JPanel(new GridBagLayout());
         centerContentPanel.setBackground(mainPanelColor);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(15, 15, 15, 15); // Gap between components
 
-        // 2. Create TOP panel for Stats and Appointments
-        JPanel topPanel = new JPanel(new GridLayout(1, 2, 40, 0)); // 1 row, 2 cols, 40px h-gap
-        topPanel.setBackground(mainPanelColor);
-
-        // 3. Create Stats Panel (for the left side of topPanel)
-        JPanel statsPanel = new JPanel();
-        statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.X_AXIS));
-        statsPanel.setBackground(mainPanelColor);
-        JPanel cgpaBox = createStatBox("Current CGPA", "" + this.cg);
+        // --- ROW 1: STATS BOXES ---
+        // 1. Create the stat boxes first
+        JPanel cgpaBox = createStatBox("Current CGPA", String.format("%.2f", this.cg));
         JPanel creditsBox = createStatBox("Credits Earned", "" + this.credits);
-        statsPanel.add(Box.createHorizontalGlue());
-        statsPanel.add(cgpaBox);
-        statsPanel.add(Box.createRigidArea(new Dimension(50, 0)));
-        statsPanel.add(creditsBox);
-        statsPanel.add(Box.createHorizontalGlue());
 
-        // 4. Create Appointments Panel (for the right side of topPanel)
+        // 2. Create a new panel to hold them
+        JPanel statBoxHolder = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        statBoxHolder.setOpaque(false);
+        statBoxHolder.add(cgpaBox);
+        statBoxHolder.add(Box.createRigidArea(new Dimension(25, 0))); // Gap between boxes
+        statBoxHolder.add(creditsBox);
+
+        // 3. Configure GBC for the holder panel
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0; // Don't let the holder grow horizontally
+        gbc.weighty = 0; // Don't let the holder grow vertically
+        gbc.fill = GridBagConstraints.NONE; // Do not fill space
+        gbc.anchor = GridBagConstraints.NORTHWEST; // Pin it to the top-left
+        centerContentPanel.add(statBoxHolder, gbc);
+
+        // 4. Add a spacer panel to fill the remaining horizontal space
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0; // This spacer takes ALL extra width
+        JPanel spacer = new JPanel();
+        spacer.setOpaque(false);
+        centerContentPanel.add(spacer, gbc);
+
+        // --- ROW 2: APPOINTMENTS BOX ---
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0; // Don't let it take horizontal space
+        gbc.weighty = 0; // Don't let it take vertical space
+        gbc.gridwidth = 2; // It can span 2 columns
+        gbc.fill = GridBagConstraints.NONE; // Do not stretch
+        gbc.anchor = GridBagConstraints.NORTHWEST; // Pin to top-left
         JPanel appointmentsPanel = createAppointmentsPanel();
+        centerContentPanel.add(appointmentsPanel, gbc);
 
-        // 5. Add Stats and Appointments to the TOP panel
-        topPanel.add(statsPanel);
-        topPanel.add(appointmentsPanel);
+        // --- ROW 3: LINK BOXES (MODIFIED FOR 50/50 SPLIT) ---
+        // 1. Configure GBC for the *entire row*
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2; // The row panel spans BOTH columns
+        gbc.weightx = 1.0; // The row panel takes 100% of the horizontal space
+        gbc.weighty = 1.0; // The row panel takes all remaining vertical space
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
 
-        // 6. Create BOTTOM panel for the two Link lists
-        JPanel bottomPanel = new JPanel(new GridLayout(1, 2, 40, 0)); // 1 row, 2 cols, 40px h-gap
-        bottomPanel.setBackground(mainPanelColor);
+        // 2. Create a new wrapper panel that uses GridLayout
+        //    GridLayout(1, 2) forces a 1-row, 2-column layout with 50/50 width.
+        //    The '30' is the horizontal gap (15px right inset + 15px left inset from original)
+        JPanel row3Panel = new JPanel(new GridLayout(1, 2, 30, 0));
+        row3Panel.setOpaque(false);
 
-        // 7. Create "Quick Links" Panel (for the left side of bottomPanel)
-        JPanel linksPanel = new JPanel();
-        linksPanel.setLayout(new BoxLayout(linksPanel, BoxLayout.Y_AXIS));
-        linksPanel.setBackground(mainPanelColor);
-        linksPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20)); // Removed top padding
-        JLabel linksTitle = new JLabel("Quick Links");
-        // --- FONT SIZE INCREASED from 20 to 22 ---
-        linksTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        linksTitle.setForeground(textColor);
-        linksTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
-        linksTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
-        linksPanel.add(linksTitle);
-        linksPanel.add(createClickableLink("IIITD Website", "https://iiitd.ac.in/"));
-        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        linksPanel.add(createClickableLink("Course Directory", "https://techtree.iiitd.edu.in/"));
-        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        linksPanel.add(createClickableLink("Academic Dishonesty Policy", "https://www.iiitd.ac.in/academics/resources/academic-dishonesty"));
-        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        linksPanel.add(createClickableLink("Library Website", "https://library.iiitd.edu.in/"));
-        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        linksPanel.add(createClickableLink("Fee Structure", "https://www.iiitd.ac.in/admission/fees"));
-        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        linksPanel.add(Box.createVerticalGlue());
+        // 3. Create your link panels and add them to the wrapper
+        JPanel quickLinksPanel = createQuickLinksPanel();
+        JPanel minorProgramsPanel = createMinorProgramsPanel();
 
-        // 8. Create "More Resources" Panel (for the right side of bottomPanel)
-        JPanel moreLinksPanel = new JPanel();
-        moreLinksPanel.setLayout(new BoxLayout(moreLinksPanel, BoxLayout.Y_AXIS));
-        moreLinksPanel.setBackground(mainPanelColor);
-        moreLinksPanel.setBorder(BorderFactory.createEmptyBorder(0, 25, 20, 25)); // Removed top padding
-        JLabel moreLinksTitle = new JLabel("Minor Programs Offered");
-        // --- FONT SIZE INCREASED from 20 to 22 ---
-        moreLinksTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        moreLinksTitle.setForeground(textColor);
-        moreLinksTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
-        moreLinksTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
-        moreLinksPanel.add(moreLinksTitle);
-        moreLinksPanel.add(createClickableLink("Minor in Economics", "https://iiitd.ac.in/sites/default/files/docs/education/2018-July-Regulation-for-Minor-in-Economics.pdf"));
-        moreLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        moreLinksPanel.add(createClickableLink("Minor in Quantum Technologies", "https://iiitd.ac.in/sites/default/files/docs/education/2022/Minor%20in%20Quantum%20Technologies%20Aug%202022.pdf"));
-        moreLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        moreLinksPanel.add(createClickableLink("Minor in Computational Biology", "https://iiitd.ac.in/sites/default/files/docs/education/2018%20July%20Regulation%20for%20Minor%20in%20Computational%20Biology%20(CB).pdf"));
-        moreLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        moreLinksPanel.add(createClickableLink("Minor in Entrepreneurship", "https://iiitd.ac.in/sites/default/files/docs/education/2024/2024-July-Regulations%20for%20Minor%20in%20Entrepreneurship.pdf"));
-        moreLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        moreLinksPanel.add(createClickableLink("Minor in Human Centered Design", "https://iiitd.ac.in/sites/default/files/docs/education/2025/2025-January-Minor%20in%20Human%20Centered%20Design.pdf"));
-        moreLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        moreLinksPanel.add(Box.createVerticalGlue());
+        row3Panel.add(quickLinksPanel);
+        row3Panel.add(minorProgramsPanel);
 
-        // 9. Add the two link panels to the BOTTOM panel
-        bottomPanel.add(linksPanel);
-        bottomPanel.add(moreLinksPanel);
+        // 4. Add the single wrapper panel to the main GridBagLayout panel
+        centerContentPanel.add(row3Panel, gbc);
+        // --- END MODIFIED ROW 3 ---
 
-        // 10. Add the top and bottom panels to the main center panel
-        centerContentPanel.add(topPanel, BorderLayout.NORTH);
-        centerContentPanel.add(bottomPanel, BorderLayout.CENTER);
-
-        // 11. Add the main center panel to the home panel
-        homePanel.add(centerContentPanel, BorderLayout.CENTER);
-
-
-        // --- COURSES PANEL ---
-        JPanel coursesPanel = new JPanel(new BorderLayout());
-        coursesPanel.setBackground(mainPanelColor);
-        coursesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel pageTitle = new JLabel("My Registered Courses");
-        pageTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        pageTitle.setForeground(textColor);
-        pageTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
-        coursesPanel.add(pageTitle, BorderLayout.NORTH);
-
-        Map<Integer, List<StudentRegisteredCourse>> semesterData = enrollmentService.getSemesterData(username);
-
-        // --- Corrected Typo: JTabbedPane ---
-        JTabbedPane semesterTabs = new JTabbedPane();
-        semesterTabs.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        semesterTabs.setBackground(mainPanelColor);
-        semesterTabs.setForeground(textColor);
-        semesterTabs.setFocusable(false);
-
-        String[] columnNames = {"Course Code", "Course Name", "Credits", "Offered By", "Grade Point"};
-
-        // 3. Loop through semesters and build tabs
-        for (int i = 1; i < 9; i++) {
-            if (semesterData.containsKey(i)) {
-
-                // 4. Get the clean list of data objects
-                List<StudentRegisteredCourse> coursesForThisSem = semesterData.get(i);
-
-                // 5. Convert the List of objects into an Object[][] for the JTable
-                Object[][] data = new Object[coursesForThisSem.size()][5]; // 5 columns
-
-                for (int j = 0; j < coursesForThisSem.size(); j++) {
-                    StudentRegisteredCourse course = coursesForThisSem.get(j);
-
-                    data[j][0] = course.getCourseCode();
-                    data[j][1] = course.getCourseName();
-                    data[j][2] = course.getCourseCredits();
-                    data[j][3] = course.getOfferedBy();
-
-                    if (course.getGradePoint() == 0.0) {
-                        data[j][4] = "Yet to be declared";
-                    } else {
-                        data[j][4] = course.getGradePoint();
-                    }
-                }
-
-                // 6. Create the JTable and add it to a scroll pane
-                JTable semTable = createStyledTable(data, columnNames);
-                JScrollPane scrollPane = createStyledScrollPane(semTable);
-
-                // 7. Add the scroll pane (with the table) as a new tab
-                semesterTabs.addTab("Semester " + i, scrollPane);
-            }
-        }
-
-        coursesPanel.add(semesterTabs, BorderLayout.CENTER);
-
-
-        // --- OTHER PANELS (Unchanged) ---
-        JPanel registerPanel = new JPanel();
-        registerPanel.setBackground(mainPanelColor);
-        registerPanel.add(new JLabel("All courses here") {{
-            setFont(new Font("Segoe UI", Font.PLAIN, 24));
-            setForeground(textColor);
-        }});
-
-
+        JScrollPane mainScrollPane = createMainScrollPane(centerContentPanel);
+        homePanel.add(mainScrollPane, BorderLayout.CENTER);
 
         cardHolder.add(homePanel, "HOME");
-        cardHolder.add(registerPanel, "REGISTER");
+
+        // --- COURSES PANEL (NOW DELEGATED) ---
+        StudentCoursesPanel coursesPanel = new StudentCoursesPanel(
+                this.enrollmentService,
+                this.username,
+                bgColor, sideMenuColor, mainPanelColor, cardColor, popoverColor,
+                borderColor, buttonColor, buttonColorGlow, textColor, textSecondaryColor
+        );
         cardHolder.add(coursesPanel, "COURSES");
     }
 
-    private JButton createMenuButton(String text) {
-        JButton button = new JButton(text);
-        button.setBackground(buttonColor);
-        button.setForeground(textColor);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        button.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        return button;
-    }
-
+    /**
+     * Creates a styled statistic box for CGPA or Credits.
+     */
     private JPanel createStatBox(String title, String value) {
-        JPanel boxPanel = new JPanel(new BorderLayout());
-        boxPanel.setBackground(sideMenuColor);
-        boxPanel.setPreferredSize(new Dimension(250, 200));
-        boxPanel.setMaximumSize(boxPanel.getPreferredSize());
-        boxPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(buttonColor, 2, true),
-                BorderFactory.createEmptyBorder(20, 20, 20, 20)
-        ));
+        // Stat boxes now get the primary gradient background
+        RoundedPanel boxPanel = new RoundedPanel(15, buttonColor, buttonColorGlow);
+        boxPanel.setLayout(new BorderLayout(0, 10)); // 10px vertical gap
+
+        // Set your custom width and height here
+        boxPanel.setPreferredSize(new Dimension(350, 200));
+
+        // Add padding inside the border
+        boxPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
         JLabel titleLabel = new JLabel(title, SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        titleLabel.setForeground(textColor);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22)); // Increased font size
+        titleLabel.setForeground(textColor); // Changed to white
         boxPanel.add(titleLabel, BorderLayout.NORTH);
 
         JLabel valueLabel = new JLabel(value, SwingConstants.CENTER);
-        valueLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 56));
+        valueLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 72));
         valueLabel.setForeground(textColor);
         boxPanel.add(valueLabel, BorderLayout.CENTER);
 
         return boxPanel;
     }
 
-
-    // --- 2. MODIFIED createAppointmentsPanel METHOD ---
-    // Font size was increased
+    /**
+     * Creates the styled "Faculty Appointments" panel.
+     */
     private JPanel createAppointmentsPanel() {
-        JPanel appointmentsPanel = new JPanel();
+        // Other panels get the subtle borderColor
+        RoundedPanel appointmentsPanel = new RoundedPanel(15, cardColor, borderColor, 1);
+        // --- MODIFIED LINE ---
+        appointmentsPanel.setPreferredSize(new Dimension(570, 220)); // Set fixed size
         appointmentsPanel.setLayout(new BoxLayout(appointmentsPanel, BoxLayout.Y_AXIS));
-        appointmentsPanel.setBackground(mainPanelColor);
-        appointmentsPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
+        appointmentsPanel.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
 
         JLabel titleLabel = new JLabel("Faculty Appointments", SwingConstants.LEFT);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         titleLabel.setForeground(textColor);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
@@ -482,21 +514,20 @@ public class StudentDashboard extends JFrame {
         appointmentDetails.add("Prof. Ada Lovelace - 2025-10-22 at 02:30 PM");
         appointmentDetails.add("Dr. Grace Hopper - 2025-10-25 at 09:00 AM");
 
+
         if (appointmentDetails.isEmpty()) {
             JLabel noAppointmentsLabel = new JLabel("No appointments scheduled.");
-            // --- FONT SIZE INCREASED ---
-            noAppointmentsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-            noAppointmentsLabel.setForeground(textColor);
+            noAppointmentsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            noAppointmentsLabel.setForeground(textSecondaryColor);
             noAppointmentsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             appointmentsPanel.add(noAppointmentsLabel);
         } else {
             for (String appointment : appointmentDetails) {
-                JLabel appointmentLabel = new JLabel("\u2022 " + appointment);
-                // --- FONT SIZE INCREASED ---
-                appointmentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-                appointmentLabel.setForeground(textColor);
+                JLabel appointmentLabel = new JLabel(appointment);
+                appointmentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                appointmentLabel.setForeground(textSecondaryColor);
                 appointmentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-                appointmentLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+                appointmentLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
                 appointmentsPanel.add(appointmentLabel);
             }
         }
@@ -505,16 +536,68 @@ public class StudentDashboard extends JFrame {
         return appointmentsPanel;
     }
 
-    // --- 3. MODIFIED createClickableLink METHOD ---
-    // Removed underline (HTML) and set color/font size directly
-    private JLabel createClickableLink(String text, String url) {
-        // No HTML needed. Just create a normal JLabel.
-        JLabel linkLabel = new JLabel(text);
+    /**
+     * Creates the "Quick Links" panel for the bottom row.
+     */
+    private JPanel createQuickLinksPanel() {
+        RoundedPanel linksPanel = new RoundedPanel(15, cardColor, borderColor, 1);
+        linksPanel.setLayout(new BoxLayout(linksPanel, BoxLayout.Y_AXIS));
+        linksPanel.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
 
-        // Set the text color to your 'green' buttonColor
+        JLabel linksTitle = new JLabel("Quick Links");
+        linksTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        linksTitle.setForeground(textColor);
+        linksTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        linksTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        linksPanel.add(linksTitle);
+
+        linksPanel.add(createClickableLink("IIITD Website", "https://iiitd.ac.in/"));
+        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        linksPanel.add(createClickableLink("Course Directory", "https://techtree.iiitd.edu.in/"));
+        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        linksPanel.add(createClickableLink("Academic Dishonesty Policy", "https://www.iiitd.ac.in/academics/resources/academic-dishonesty"));
+        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        linksPanel.add(createClickableLink("Library Website", "https://library.iiitd.ac.in/"));
+        linksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        linksPanel.add(createClickableLink("Fee Structure", "https://www.iiitd.ac.in/admission/fees"));
+        linksPanel.add(Box.createVerticalGlue());
+
+        return linksPanel;
+    }
+
+    /**
+     * Creates the "Minor Programs Offered" panel for the bottom row.
+     */
+    private JPanel createMinorProgramsPanel() {
+        RoundedPanel minorLinksPanel = new RoundedPanel(15, cardColor, borderColor, 1);
+        minorLinksPanel.setLayout(new BoxLayout(minorLinksPanel, BoxLayout.Y_AXIS));
+        minorLinksPanel.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
+
+        JLabel moreLinksTitle = new JLabel("Minor Programs Offered");
+        moreLinksTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        moreLinksTitle.setForeground(textColor);
+        moreLinksTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        moreLinksTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        minorLinksPanel.add(moreLinksTitle);
+
+        minorLinksPanel.add(createClickableLink("Minor in Economics", "https://iiitd.ac.in/sites/default/files/docs/education/2018-July-Regulation-for-Minor-in-Economics.pdf"));
+        minorLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        minorLinksPanel.add(createClickableLink("Minor in Quantum Technologies", "https://iiitd.ac.in/sites/default/files/docs/education/2022/Minor%20in%20Quantum%20Technologies%20Aug%202022.pdf"));
+        minorLinksPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        minorLinksPanel.add(createClickableLink("Minor in Computational Biology", "https://iiitd.ac.in/sites/default/files/docs/education/2018%20July%20Regulation%20for%20Minor%20in%20Computational%20Biology%20(CB).pdf"));
+        minorLinksPanel.add(Box.createVerticalGlue());
+        minorLinksPanel.add(createClickableLink("Minor in Entrepreneurship", "https://iiitd.ac.in/sites/default/files/docs/education/2024/2024-July-Regulations%20for%20Minor%20in%20Entrepreneurship.pdf"));
+        minorLinksPanel.add(Box.createVerticalGlue());//
+        minorLinksPanel.add(createClickableLink("Minor in Human Centered Design", "https://iiitd.ac.in/sites/default/files/docs/education/2025/2025-January-Minor%20in%20Human%20Centered%20Design.pdf"));
+        minorLinksPanel.add(Box.createVerticalGlue());
+        return minorLinksPanel;
+    }
+
+
+    private JLabel createClickableLink(String text, String url) {
+        JLabel linkLabel = new JLabel(text);
         linkLabel.setForeground(buttonColor);
-        // --- FONT SIZE INCREASED ---
-        linkLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        linkLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         linkLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -540,13 +623,11 @@ public class StudentDashboard extends JFrame {
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                // On hover, set the color to a darker shade of green
                 linkLabel.setForeground(buttonColor.darker());
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                // When mouse leaves, set it back to the original green
                 linkLabel.setForeground(buttonColor);
             }
         });
@@ -554,105 +635,362 @@ public class StudentDashboard extends JFrame {
         return linkLabel;
     }
 
-    private JTable createStyledTable(Object[][] data, String[] columnNames) {
-        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        JTable table = new JTable(model);
-        table.setBackground(mainPanelColor);
-        table.setForeground(textColor);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.setRowHeight(28);
-        table.setGridColor(sideMenuColor.brighter());
-        table.setFillsViewportHeight(true);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(buttonColor.darker());
-        table.setSelectionForeground(textColor);
-        table.getTableHeader().setBackground(sideMenuColor);
-        table.getTableHeader().setForeground(buttonColor);
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
-        table.getTableHeader().setBorder(BorderFactory.createLineBorder(sideMenuColor));
-        table.getTableHeader().setReorderingAllowed(false);
-
-        // Center align header text
-        ((DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer())
-                .setHorizontalAlignment(JLabel.CENTER);
-
-        // Center align text in all cells
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-
-        return table;
-    }
-
-    private JScrollPane createStyledScrollPane(Component view) {
+    private JScrollPane createMainScrollPane(Component view) {
         JScrollPane scrollPane = new JScrollPane(view);
-        scrollPane.setBorder(BorderFactory.createLineBorder(sideMenuColor));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(mainPanelColor);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+        scrollPane.setBackground(mainPanelColor);
+
+        // Hide both scrollbars permanently
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        scrollPane.getVerticalScrollBar().setUI(new StyledScrollBarUI());
+        scrollPane.getHorizontalScrollBar().setUI(new StyledScrollBarUI());
+
         return scrollPane;
     }
-
     private void createProfileMenu() {
         profileMenu = new JPopupMenu();
-        profileMenu.setBackground(new Color(70, 70, 70));
-        profileMenu.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
+        profileMenu.setBackground(popoverColor);
+        profileMenu.setBorder(BorderFactory.createLineBorder(bgColor));
         profileMenu.add(createMenuItem("Manage Account"));
         profileMenu.add(createMenuItem("Notifications"));
     }
 
     private JMenuItem createMenuItem(String text) {
         JMenuItem item = new JMenuItem(text);
-        item.setBackground(new Color(70, 70, 70));
+        item.setBackground(popoverColor);
         item.setForeground(textColor);
         item.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        item.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        item.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         item.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // --- UPDATED ACTION LISTENER ---
-        item.addActionListener(e -> {
-            // System.out.println("Clicked: " + text); // Optional: for debugging
+        item.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                item.setBackground(buttonColor);
+                item.setForeground(textColor);
+            }
 
+            public void mouseExited(MouseEvent e) {
+                item.setBackground(popoverColor);
+                item.setForeground(textColor);
+            }
+        });
+
+        item.addActionListener(e -> {
             if (text.equals("Manage Account")) {
-                // Open the StudentProfile frame
-                // It's good practice to run Swing GUIs on the Event Dispatch Thread
                 SwingUtilities.invokeLater(() -> {
                     StudentProfile profileFrame = new StudentProfile(rollNumber, username);
                     profileFrame.setVisible(true);
                 });
 
             } else if (text.equals("Notifications")) {
-                // Open the Notifications frame
                 SwingUtilities.invokeLater(() -> {
                     Notifications notifFrame = new Notifications(rollNumber, username);
                     notifFrame.setVisible(true);
                 });
             }
         });
-        // --- END OF UPDATE ---
-
         return item;
     }
 
+    // --- INNER CLASSES ---
+
+    /**
+     * A custom "smooth" button with rounded corners and multiple states.
+     * This version supports both solid colors and gradients.
+     */
+    private class RoundedButton extends JButton {
+
+        // Colors for solid-fill buttons
+        private Color normalColor;
+        private Color hoverColor;
+        private Color pressedColor;
+        private Color activeColor;
+
+        // Colors for gradient-fill buttons
+        private Color gradientStartColor;
+        private Color gradientEndColor;
+
+        private int arc;
+        private boolean useGradient = false;
+        private boolean isHovered = false;
+        private boolean isActive = false;
+        private boolean activeIsGradient = false; // Flag to check if active state should be gradient
+
+        /**
+         * Constructor for SOLID color buttons (like the side menu).
+         */
+        public RoundedButton(String text, Color normal, Color hover, Color pressed, Color active, int arc) {
+            super(text);
+            this.normalColor = normal;
+            this.hoverColor = hover;
+            this.pressedColor = pressed;
+            this.activeColor = active;
+            this.arc = arc;
+            this.useGradient = false;
+            setFont(new Font("Segoe UI", Font.BOLD, 14));
+            setForeground(Color.WHITE);
+            setProperties();
+        }
+
+        /**
+         * Constructor for SOLID color buttons (like the header button).
+         */
+        public RoundedButton(String text, Color normal, Color hover, Color pressed, int arc) {
+            this(text, normal, hover, pressed, normal, arc);
+            this.useGradient = false;
+        }
+
+        /**
+         * Constructor for GRADIENT color buttons (for createActionButton).
+         */
+        public RoundedButton(String text, Color gradStart, Color gradEnd, int arc) {
+            super(text);
+            this.gradientStartColor = gradStart;
+            this.gradientEndColor = gradEnd;
+            this.pressedColor = gradStart.darker();
+            this.normalColor = gradStart; // Fallback
+            this.hoverColor = gradStart; // Fallback
+            this.activeColor = gradStart; // Fallback
+            this.arc = arc;
+            this.useGradient = true; // This is a gradient button
+            setFont(new Font("Segoe UI", Font.BOLD, 14));
+            setForeground(Color.WHITE);
+            setProperties();
+        }
+
+        /**
+         * Constructor for TAB-STYLE buttons (Solid when normal, Gradient when active).
+         */
+        public RoundedButton(String text, Color normal, Color hover, Color pressed, Color gradStart, Color gradEnd, int arc) {
+            this(text, normal, hover, pressed, normal, arc); // Call solid constructor
+            this.gradientStartColor = gradStart;
+            this.gradientEndColor = gradEnd;
+            this.activeIsGradient = true; // Set the flag
+        }
+
+
+        private void setProperties() {
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    isHovered = true;
+                    repaint();
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    isHovered = false;
+                    repaint();
+                }
+            });
+        }
+
+        public void setActive(boolean active) {
+            this.isActive = active;
+            repaint();
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            Dimension size = super.getPreferredSize();
+            if (getBorder() != null) {
+                Insets insets = getBorder().getBorderInsets(this);
+                size.width += insets.left + insets.right;
+                size.height += insets.top + insets.bottom;
+            }
+            return size;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            if (getModel().isPressed()) {
+                // 1. Pressed State (always solid)
+                g2.setColor(pressedColor);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+
+            } else if (isActive) {
+                // 2. Active State
+                if (activeIsGradient) {
+                    // Draw gradient for active state (semester tabs)
+                    GradientPaint gp = new GradientPaint(
+                            0, getHeight(), gradientStartColor,
+                            getWidth(), 0, gradientEndColor
+                    );
+                    g2.setPaint(gp);
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+                } else {
+                    // Draw solid color for active state (side menu)
+                    g2.setColor(activeColor);
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+                }
+
+            } else if (useGradient) {
+                // 3. Gradient Button (Normal or Hover)
+                Color start = gradientStartColor;
+                Color end = gradientEndColor;
+
+                if (isHovered) {
+                    start = gradientStartColor.darker();
+                    end = gradientEndColor.darker();
+                }
+
+                GradientPaint gp = new GradientPaint(
+                        0, getHeight(), start,
+                        getWidth(), 0, end
+                );
+                g2.setPaint(gp);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+
+            } else {
+                // 4. Solid Button (Normal or Hover)
+                Color color = isHovered ? hoverColor : normalColor;
+                g2.setColor(color);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+            }
+
+            super.paintComponent(g2);
+            g2.dispose();
+        }
+    }
+
+
+    /**
+     * A JPanel with rounded corners and a border.
+     */
+    private class RoundedPanel extends JPanel {
+        private int cornerRadius;
+        private Color backgroundColor;
+        private Color borderColor;
+        private int borderThickness;
+
+        private boolean useGradient = false;
+        private Color gradientStartColor;
+        private Color gradientEndColor;
+
+        /**
+         * Constructor for SOLID color panels (with border)
+         */
+        public RoundedPanel(int radius, Color bgColor, Color borderColor, int borderThickness) {
+            super();
+            this.cornerRadius = radius;
+            this.backgroundColor = bgColor;
+            this.borderColor = borderColor;
+            this.borderThickness = borderThickness;
+            this.useGradient = false;
+            setOpaque(false);
+        }
+
+        /**
+         * Constructor for GRADIENT color panels (no border)
+         */
+        public RoundedPanel(int radius, Color gradStart, Color gradEnd) {
+            super();
+            this.cornerRadius = radius;
+            this.gradientStartColor = gradStart;
+            this.gradientEndColor = gradEnd;
+            this.useGradient = true;
+            this.borderThickness = 0; // Gradients don't have a border in this design
+            this.borderColor = gradStart; // Fallback
+            this.backgroundColor = gradStart; // Fallback
+            setOpaque(false);
+        }
+
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            if (useGradient) {
+                // 1. Fill with Gradient
+                GradientPaint gp = new GradientPaint(
+                        0, getHeight(), gradientStartColor,
+                        getWidth(), 0, gradientEndColor
+                );
+                g2.setPaint(gp);
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
+
+            } else {
+                // 2. Fill with Solid Color
+                g2.setColor(backgroundColor);
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
+
+                // 3. Draw Border (only if solid and borderThickness > 0)
+                if (borderThickness > 0) {
+                    g2.setColor(this.borderColor);
+                    g2.setStroke(new BasicStroke(this.borderThickness));
+                    float halfStroke = this.borderThickness / 2.0f;
+                    g2.draw(new RoundRectangle2D.Float(
+                            halfStroke,
+                            halfStroke,
+                            getWidth() - this.borderThickness,
+                            getHeight() - this.borderThickness,
+                            cornerRadius,
+                            cornerRadius
+                    ));
+                }
+            }
+            g2.dispose();
+        }
+    }
+
+    /**
+     * Inner class for a custom styled scrollbar.
+     */
+    private class StyledScrollBarUI extends BasicScrollBarUI {
+        @Override
+        protected void configureScrollBarColors() {
+            this.thumbColor = buttonColor;
+            this.trackColor = cardColor;
+        }
+
+        @Override
+        protected JButton createDecreaseButton(int orientation) {
+            return createZeroButton();
+        }
+
+        @Override
+        protected JButton createIncreaseButton(int orientation) {
+            return createZeroButton();
+        }
+
+
+        private JButton createZeroButton() {
+            JButton jbutton = new JButton();
+            jbutton.setPreferredSize(new Dimension(0, 0));
+            jbutton.setMinimumSize(new Dimension(0, 0));
+            jbutton.setMaximumSize(new Dimension(0, 0));
+            return jbutton;
+        }
+    }
+
+    /**
+     * Inner class for the circular profile button.
+     */
     private static class CircularButton extends JButton {
 
         public CircularButton(String text) {
             super(text);
-
             Dimension size = new Dimension(40, 40);
             setPreferredSize(size);
             setMaximumSize(size);
             setMinimumSize(size);
 
-            setBackground(Color.WHITE);
-            setForeground(Color.BLACK);
+            setBackground(new Color(52, 159, 148)); // buttonColor
+            setForeground(new Color(255, 255, 255)); // textColor
             setFont(new Font("Segoe UI", Font.BOLD, 18));
             setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -671,22 +1009,14 @@ public class StudentDashboard extends JFrame {
             } else {
                 g2.setColor(getBackground());
             }
-
             g2.fillOval(0, 0, getWidth(), getHeight());
-
-            super.paintComponent(g);
-
+            super.paintComponent(g2);
             g2.dispose();
         }
 
-
         @Override
         protected void paintBorder(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(Color.GRAY);
-            g2.drawOval(0, 0, getWidth() - 1, getHeight() - 1);
-            g2.dispose();
+            // No border
         }
 
         @Override
@@ -694,7 +1024,6 @@ public class StudentDashboard extends JFrame {
             int radius = getWidth() / 2;
             int centerX = getWidth() / 2;
             int centerY = getHeight() / 2;
-
             return (Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)) <= Math.pow(radius, 2);
         }
     }
