@@ -1,4 +1,4 @@
-package ui.dashboard;
+package ui.StudentFrame;
 
 import javax.swing.*;
 import java.awt.*;

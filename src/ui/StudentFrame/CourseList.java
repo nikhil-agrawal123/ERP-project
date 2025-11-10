@@ -1,7 +1,6 @@
-package ui.dashboard;
+package ui.StudentFrame;
 
-import dbClasses.StudentRegisteredCourse;
-import middleware.studentService;
+
 import ui.dashboard.StudentDashboard;
 
 import javax.swing.*;

@@ -1,4 +1,4 @@
-package ui.dashboard;
+package ui.dashboard.FacultyFrame;
 
 /**
  * A simple model class to hold one component of a grading policy.

@@ -1,4 +1,4 @@
-package ui.dashboard;
+package ui.StudentFrame;
 
 import dbClasses.StudentRegisteredCourse;
 import middleware.studentService;

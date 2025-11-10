@@ -1,4 +1,4 @@
-package ui.dashboard;
+package ui.dashboard.FacultyFrame;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,9 +1,13 @@
 package ui.dashboard;
 
 import javax.swing.*;
+
+import ui.dashboard.FacultyFrame.facultyCourseList;
+import ui.dashboard.FacultyFrame.MyCoursesFrame;
+import ui.dashboard.FacultyFrame.TAStats;
 import ui.landing.LandingFrame;
 import java.awt.*;
-import java.sql.*;
+
 import middleware.facultyService;
 
 public class FacultyDashboard extends JFrame {
@@ -90,7 +94,7 @@ public class FacultyDashboard extends JFrame {
         });
 
         scoresButton.addActionListener(e -> {
-            CourseManagementFrame courseFrame = new CourseManagementFrame(username);
+            facultyCourseList courseFrame = new facultyCourseList(username);
             courseFrame.setVisible(true);
         });
 

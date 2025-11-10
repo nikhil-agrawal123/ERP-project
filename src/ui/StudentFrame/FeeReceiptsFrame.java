@@ -1,4 +1,4 @@
-package ui.dashboard;
+package ui.StudentFrame;
 
 import javax.swing.*;
 import javax.swing.border.Border; // Import the Border class
@@ -6,10 +6,6 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class FeeReceiptsFrame extends JFrame {
 

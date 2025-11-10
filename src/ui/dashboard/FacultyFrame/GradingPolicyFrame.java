@@ -1,14 +1,16 @@
-package ui.dashboard;
+package ui.dashboard.FacultyFrame;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
+
+/*
+  NOTE:
+  - This file DOES NOT declare a GradingComponent class. It uses the existing
+    ui.dashboard.FacultyFrame.GradingComponent model (the one you posted earlier).
+  - Keep GradingPolicyService in this file (or remove it if you already have it elsewhere).
+*/
 
 public class GradingPolicyFrame extends JFrame {
 
@@ -37,8 +39,8 @@ public class GradingPolicyFrame extends JFrame {
     private JPanel mainCardPanel;
 
     // --- Components for VIEW card ---
-    private JList<GradingComponent> viewList; // Replaced JTable
-    private DefaultListModel<GradingComponent> viewListModel; // Replaced TableModel
+    private JList<GradingComponent> viewList;
+    private DefaultListModel<GradingComponent> viewListModel;
     private JLabel totalLabelView;
 
     // --- Components for EDIT card ---
@@ -55,7 +57,7 @@ public class GradingPolicyFrame extends JFrame {
 
         // --- Frame Setup ---
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1080, 1080); // As requested
+        setSize(800, 700); // Adjusted size
         setLocationRelativeTo(null);
         getContentPane().setBackground(bgColor);
         setLayout(new BorderLayout(10, 10));
@@ -70,6 +72,7 @@ public class GradingPolicyFrame extends JFrame {
         // --- Main Card Panel ---
         cardLayout = new CardLayout();
         mainCardPanel = new JPanel(cardLayout);
+        mainCardPanel.setOpaque(false);
         mainCardPanel.add(createViewPanel(), "VIEW");
         mainCardPanel.add(createEditPanel(), "EDIT");
 
@@ -79,128 +82,71 @@ public class GradingPolicyFrame extends JFrame {
         cardLayout.show(mainCardPanel, "VIEW");
     }
 
-    /**
-     * Creates the "View Mode" panel with the non-editable table.
-     */
-    /**
-     * Creates the "View Mode" panel with the non-editable table.
-     */
     private JPanel createViewPanel() {
         JPanel panel = new JPanel(new BorderLayout(20, 20));
         panel.setBackground(mainPanelColor);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 40, 40));
 
-        // --- Table ---
         // --- List (replaces Table) ---
         viewListModel = new DefaultListModel<>();
         viewList = new JList<>(viewListModel);
         viewList.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         viewList.setBackground(mainPanelColor); // Make background blend in
-
-        // Apply the same aesthetic renderer as the edit panel
         viewList.setCellRenderer(new GradingComponentRenderer());
         viewList.setFixedCellHeight(60);
 
-        // --- Make the list "Read-Only" ---
+        // Make read-only selection
         viewList.setSelectionModel(new DefaultListSelectionModel() {
             @Override
-            public void setSelectionInterval(int index0, int index1) {
-                // Do nothing to prevent selection
-            }
+            public void setSelectionInterval(int index0, int index1) { /* no-op */ }
             @Override
-            public void addSelectionInterval(int index0, int index1) {
-                // Do nothing
-            }
+            public void addSelectionInterval(int index0, int index1) { /* no-op */ }
         });
-        viewList.setFocusable(false); // Don't allow keyboard focus
+        viewList.setFocusable(false);
 
         JScrollPane scrollPane = new JScrollPane(viewList);
         scrollPane.setBorder(BorderFactory.createLineBorder(sideMenuColor, 2));
         scrollPane.getViewport().setBackground(mainPanelColor);
 
-        // --- [START] --- New Wrapper Logic ---
+        JPanel listPanel = new JPanel();
+        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+        listPanel.setOpaque(false);
+        listPanel.add(createHeaderPanel());
+        listPanel.add(scrollPane);
 
-        // This wrapper panel will control the table's height
-        JPanel tableWrapper = new JPanel(new BorderLayout());
-        tableWrapper.setOpaque(false); // Make it transparent
-        tableWrapper.add(scrollPane, BorderLayout.NORTH);
-
-        // This wrapper will push everything up
-        JPanel contentWrapper = new JPanel(new BorderLayout());
-        contentWrapper.setOpaque(false);
-
-        // --- Create the bottom panel FIRST ---
         JPanel bottomPanel = new JPanel(new BorderLayout(10, 10));
         bottomPanel.setOpaque(false);
-        // Add some padding above the buttons
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
 
         totalLabelView = new JLabel();
         totalLabelView.setFont(new Font("Segoe UI", Font.BOLD, 22));
         bottomPanel.add(totalLabelView, BorderLayout.WEST);
 
-        // --- Edit Button ---
-        RoundedButton editButton = new RoundedButton("Edit Policy", buttonColor, buttonHoverColor, buttonPressedColor);
+        JButton editButton = new JButton("Edit Policy");
         editButton.setFont(new Font("Segoe UI", Font.BOLD, 18));
         editButton.setPreferredSize(new Dimension(180, 50));
         editButton.addActionListener(e -> {
-            // Load fresh data into the edit list before switching
             loadDataIntoEditList();
             cardLayout.show(mainCardPanel, "EDIT");
         });
 
-        JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0)); // Align button right
+        JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         buttonWrapper.setOpaque(false);
         buttonWrapper.add(editButton);
         bottomPanel.add(buttonWrapper, BorderLayout.EAST);
 
-        // --- Create a vertical stacking panel ---
-        JPanel verticalStackPanel = new JPanel();
-        verticalStackPanel.setLayout(new BoxLayout(verticalStackPanel, BoxLayout.Y_AXIS));
-        verticalStackPanel.setOpaque(false);
+        panel.add(listPanel, BorderLayout.CENTER);
+        panel.add(bottomPanel, BorderLayout.SOUTH);
 
-        verticalStackPanel.add(createHeaderPanel());
-
-        // Add tableWrapper (table)
-        tableWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
-        verticalStackPanel.add(tableWrapper);
-
-        // Add bottomPanel (button)
-        bottomPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        verticalStackPanel.add(bottomPanel);
-
-        // Add this stack to the NORTH of the contentWrapper
-        contentWrapper.add(verticalStackPanel, BorderLayout.NORTH);
-
-        // Add a spacer to fill all remaining space below the buttons
-        JPanel spacer = new JPanel();
-        spacer.setOpaque(false);
-        contentWrapper.add(spacer, BorderLayout.CENTER);
-
-        // Add this new wrapper to the main panel's center
-        panel.add(contentWrapper, BorderLayout.CENTER);
-
-        // --- [END] --- New Wrapper Logic ---
-
-        // We no longer add bottomPanel to panel.SOUTH
-
-        // Load data into the table
         loadDataIntoViewList();
         return panel;
     }
 
-    /**
-     * Creates the "Edit Mode" panel with the list and controls.
-     */
-    /**
-     * Creates the "Edit Mode" panel with the list and controls.
-     */
     private JPanel createEditPanel() {
         JPanel panel = new JPanel(new BorderLayout(20, 20));
         panel.setBackground(mainPanelColor);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 40, 40));
 
-        // --- Main Edit List ---
         editListModel = new DefaultListModel<>();
         editList = new JList<>(editListModel);
         editList.setFont(new Font("Segoe UI", Font.PLAIN, 18));
@@ -208,131 +154,85 @@ public class GradingPolicyFrame extends JFrame {
         editList.setForeground(textColor);
         editList.setSelectionBackground(buttonColor);
         editList.setSelectionForeground(Color.BLACK);
-        editList.setCellRenderer(new GradingComponentRenderer()); // Custom renderer
+        editList.setCellRenderer(new GradingComponentRenderer());
         editList.setFixedCellHeight(60);
 
         JScrollPane scrollPane = new JScrollPane(editList);
         scrollPane.setBorder(BorderFactory.createLineBorder(sideMenuColor, 2));
 
-        // --- [START] --- New Wrapper Logic ---
+        JPanel listPanel = new JPanel();
+        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+        listPanel.setOpaque(false);
+        listPanel.add(createHeaderPanel());
+        listPanel.add(scrollPane);
 
-        // This panel will wrap the list and buttons, pushing them to the top
-        JPanel contentWrapper = new JPanel(new BorderLayout());
-        contentWrapper.setOpaque(false);
-
-        // --- Create the bottom panel FIRST ---
         JPanel bottomPanel = new JPanel(new BorderLayout(10, 10));
         bottomPanel.setOpaque(false);
-        // Add some padding above the buttons
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
 
         totalLabelEdit = new JLabel();
         totalLabelEdit.setFont(new Font("Segoe UI", Font.BOLD, 22));
         bottomPanel.add(totalLabelEdit, BorderLayout.WEST);
 
-        // Button wrapper for Save/Cancel
         JPanel saveCancelPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         saveCancelPanel.setOpaque(false);
 
-        RoundedButton saveButton = new RoundedButton("Save Changes", buttonColor, buttonHoverColor, buttonPressedColor);
+        JButton saveButton = new JButton("Save Changes");
         saveButton.setFont(new Font("Segoe UI", Font.BOLD, 18));
         saveButton.setPreferredSize(new Dimension(180, 50));
         saveButton.addActionListener(e -> savePolicy());
         saveCancelPanel.add(saveButton);
 
-        RoundedButton cancelButton = new RoundedButton("Cancel", sideMenuColor, sideMenuColor.brighter(), sideMenuColor.darker());
+        JButton cancelButton = new JButton("Cancel");
         cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 18));
         cancelButton.setPreferredSize(new Dimension(130, 50));
-        cancelButton.addActionListener(e -> cardLayout.show(mainCardPanel, "VIEW")); // Just switch back
+        cancelButton.addActionListener(e -> cardLayout.show(mainCardPanel, "VIEW"));
         saveCancelPanel.add(cancelButton);
 
         bottomPanel.add(saveCancelPanel, BorderLayout.EAST);
 
-        // --- Create a vertical stacking panel ---
-        // This holds the list and the buttons together
-        JPanel verticalStackPanel = new JPanel();
-        verticalStackPanel.setLayout(new BoxLayout(verticalStackPanel, BoxLayout.Y_AXIS));
-        verticalStackPanel.setOpaque(false);
-
-        verticalStackPanel.add(createHeaderPanel());
-
-        // Add scrollPane (list)
-        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-        verticalStackPanel.add(scrollPane);
-
-        // Add bottomPanel (buttons)
-        bottomPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        verticalStackPanel.add(bottomPanel);
-
-        // Add this stack to the NORTH of the contentWrapper
-        contentWrapper.add(verticalStackPanel, BorderLayout.NORTH);
-
-        // Add a spacer to fill all remaining space below the buttons
-        JPanel spacer = new JPanel();
-        spacer.setOpaque(false);
-        contentWrapper.add(spacer, BorderLayout.CENTER);
-
-        // Add this new wrapper to the main panel's center
-        panel.add(contentWrapper, BorderLayout.CENTER);
-
-        // --- [END] --- New Wrapper Logic ---
-
-
-        // --- Top Button Panel (Add, Edit, Remove) ---
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         controlsPanel.setOpaque(false);
 
-        RoundedButton addButton = new RoundedButton("Add Component", buttonColor, buttonHoverColor, buttonPressedColor);
+        JButton addButton = new JButton("Add Component");
         addButton.setPreferredSize(new Dimension(180, 45));
         addButton.addActionListener(e -> addComponent());
         controlsPanel.add(addButton);
 
-        RoundedButton editButton = new RoundedButton("Edit Selected", buttonColor, buttonHoverColor, buttonPressedColor);
+        JButton editButton = new JButton("Edit Selected");
         editButton.setPreferredSize(new Dimension(180, 45));
         editButton.addActionListener(e -> editComponent());
         controlsPanel.add(editButton);
 
-        RoundedButton removeButton = new RoundedButton("Remove Selected", dangerColor, dangerHoverColor, dangerPressedColor);
+        JButton removeButton = new JButton("Remove Selected");
         removeButton.setPreferredSize(new Dimension(180, 45));
         removeButton.addActionListener(e -> removeComponent());
         controlsPanel.add(removeButton);
 
         panel.add(controlsPanel, BorderLayout.NORTH);
-
-        // We no longer add bottomPanel to panel.SOUTH
+        panel.add(listPanel, BorderLayout.CENTER);
+        panel.add(bottomPanel, BorderLayout.SOUTH);
 
         return panel;
     }
 
-    // --- Data and UI Logic ---
-
-    /**
-     * Clears and loads data from 'policyComponents' list into the VIEW table.
-     */
     private void loadDataIntoViewList() {
-        viewListModel.clear(); // Clear existing items
+        viewListModel.clear();
         for (GradingComponent comp : policyComponents) {
             viewListModel.addElement(comp);
         }
         updateTotalLabel(totalLabelView);
     }
 
-    /**
-     * Clears and loads data from 'policyComponents' list into the EDIT list.
-     */
     private void loadDataIntoEditList() {
         editListModel.clear();
         for (GradingComponent comp : policyComponents) {
-            editListModel.addElement(new GradingComponent(comp.getName(), comp.getPercentage())); // Add copies
+            editListModel.addElement(new GradingComponent(comp.getName(), comp.getPercentage()));
         }
         updateTotalLabel(totalLabelEdit);
     }
 
-    /**
-     * Handles adding a new component in Edit Mode.
-     */
     private void addComponent() {
-        // Use a custom panel for the dialog
         JTextField nameField = new JTextField();
         JSpinner percentSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 100, 1));
 
@@ -358,9 +258,6 @@ public class GradingPolicyFrame extends JFrame {
         }
     }
 
-    /**
-     * Handles editing a selected component in Edit Mode.
-     */
     private void editComponent() {
         GradingComponent selected = editList.getSelectedValue();
         if (selected == null) {
@@ -368,7 +265,6 @@ public class GradingPolicyFrame extends JFrame {
             return;
         }
 
-        // Use a custom panel for the dialog, pre-filled with values
         JTextField nameField = new JTextField(selected.getName());
         JSpinner percentSpinner = new JSpinner(new SpinnerNumberModel(selected.getPercentage(), 0, 100, 1));
 
@@ -389,31 +285,23 @@ public class GradingPolicyFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "Name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            // Update the selected item
             selected.setName(name);
             selected.setPercentage(percent);
-            editList.repaint(); // Tell the list to redraw
+            editList.repaint();
             updateTotalLabel(totalLabelEdit);
         }
     }
 
-    /**
-     * Handles removing a selected component in Edit Mode.
-     */
     private void removeComponent() {
         GradingComponent selected = editList.getSelectedValue();
         if (selected == null) {
             JOptionPane.showMessageDialog(this, "Please select a component to remove.", "No Selection", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         editListModel.removeElement(selected);
         updateTotalLabel(totalLabelEdit);
     }
 
-    /**
-     * Saves the new policy from the Edit List.
-     */
     private void savePolicy() {
         int total = getTotalFromEditList();
         if (total != 100) {
@@ -422,29 +310,19 @@ public class GradingPolicyFrame extends JFrame {
             );
             return;
         }
-
-        // Create a new list from the editListModel
         List<GradingComponent> newPolicy = new ArrayList<>();
         for (int i = 0; i < editListModel.getSize(); i++) {
             newPolicy.add(editListModel.getElementAt(i));
         }
-
-        // "Save" to our main list and the mock service
         this.policyComponents = newPolicy;
         GradingPolicyService.savePolicy(courseCode, this.policyComponents);
 
-        // Refresh the read-only table
         loadDataIntoViewList();
-
-        // Switch back to View Mode
         cardLayout.show(mainCardPanel, "VIEW");
 
         JOptionPane.showMessageDialog(this, "Policy saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    /**
-     * Helper to get the total from the EDIT list.
-     */
     private int getTotalFromEditList() {
         int total = 0;
         for (int i = 0; i < editListModel.getSize(); i++) {
@@ -453,9 +331,6 @@ public class GradingPolicyFrame extends JFrame {
         return total;
     }
 
-    /**
-     * Helper to get the total from the VIEW table.
-     */
     private int getTotalFromTable() {
         int total = 0;
         for (GradingComponent comp : policyComponents) {
@@ -464,9 +339,6 @@ public class GradingPolicyFrame extends JFrame {
         return total;
     }
 
-    /**
-     * Updates the specified total label (for either view or edit).
-     */
     private void updateTotalLabel(JLabel label) {
         int total;
         if (label == totalLabelView) {
@@ -474,7 +346,6 @@ public class GradingPolicyFrame extends JFrame {
         } else {
             total = getTotalFromEditList();
         }
-
         label.setText("TOTAL: " + total + "%");
         if (total == 100) {
             label.setForeground(buttonColor);
@@ -483,60 +354,20 @@ public class GradingPolicyFrame extends JFrame {
         }
     }
 
-    /**
-     * Styles the JTable with the app's dark theme.
-     */
-    private void styleTable(JTable table) {
-        table.setBackground(mainPanelColor);
-        table.setForeground(textColor);
-        table.setFont(tableFont);
-        table.setGridColor(sideMenuColor);
-        table.setRowHeight(40);
-
-        // --- Style Header ---
-        JTableHeader header = table.getTableHeader();
-        header.setBackground(sideMenuColor);
-        header.setForeground(textColor);
-        header.setFont(tableHeaderFont);
-        header.setPreferredSize(new Dimension(100, 50));
-
-        // --- Style Cells (Center alignment) ---
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        centerRenderer.setBackground(mainPanelColor);
-        centerRenderer.setForeground(textColor);
-
-        DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
-        leftRenderer.setHorizontalAlignment(JLabel.LEFT);
-        leftRenderer.setBackground(mainPanelColor);
-        leftRenderer.setForeground(textColor);
-        leftRenderer.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0)); // Add padding
-
-        table.getColumnModel().getColumn(0).setCellRenderer(leftRenderer);
-        table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
-
-        // --- Style Selection ---
-        table.setSelectionBackground(buttonColor);
-        table.setSelectionForeground(Color.BLACK);
-    }
-
-    /**
-     * Custom renderer for the JList in Edit Mode.
-     */
     class GradingComponentRenderer extends JPanel implements ListCellRenderer<GradingComponent> {
         private JLabel nameLabel;
         private JLabel percentLabel;
 
         public GradingComponentRenderer() {
             setLayout(new BorderLayout(10, 0));
-            // Add padding for the whole row
+            setOpaque(true);
             setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
             nameLabel = new JLabel();
-            nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 18)); // Main text
+            nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
 
             percentLabel = new JLabel();
-            percentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18)); // Percentage
+            percentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
 
             add(nameLabel, BorderLayout.WEST);
             add(percentLabel, BorderLayout.EAST);
@@ -549,11 +380,9 @@ public class GradingPolicyFrame extends JFrame {
                                                       boolean isSelected,
                                                       boolean cellHasFocus) {
 
-            // Set the text for this list item
             nameLabel.setText(value.getName());
             percentLabel.setText(value.getPercentage() + "%");
 
-            // Handle selection colors
             if (isSelected) {
                 setBackground(list.getSelectionBackground());
                 nameLabel.setForeground(list.getSelectionForeground());
@@ -561,38 +390,61 @@ public class GradingPolicyFrame extends JFrame {
             } else {
                 setBackground(mainPanelColor);
                 nameLabel.setForeground(textColor);
-                percentLabel.setForeground(textColor.brighter()); // Make percentage slightly different
+                percentLabel.setForeground(textColor.brighter());
             }
 
             return this;
         }
-        /**
-         * Creates a styled header row for the component lists.
-         */
-
     }
+
     private JPanel createHeaderPanel() {
         JPanel header = new JPanel(new BorderLayout(10, 0));
-        header.setBackground(mainPanelColor); // Use main panel color to blend in
-        // Match the horizontal padding (15px) and add vertical padding
+        header.setBackground(mainPanelColor);
         header.setBorder(BorderFactory.createEmptyBorder(10, 15, 5, 15));
 
         JLabel nameHeader = new JLabel("Component Name");
-        nameHeader.setFont(new Font("Segoe UI", Font.BOLD, 20)); // Larger font
-        nameHeader.setForeground(buttonColor); // Highlight color
+        nameHeader.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        nameHeader.setForeground(buttonColor);
 
         JLabel percentHeader = new JLabel("Percentage");
-        percentHeader.setFont(new Font("Segoe UI", Font.BOLD, 20)); // Larger font
-        percentHeader.setForeground(buttonColor); // Highlight color
-        percentHeader.setHorizontalAlignment(SwingConstants.RIGHT); // Align right
+        percentHeader.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        percentHeader.setForeground(buttonColor);
+        percentHeader.setHorizontalAlignment(SwingConstants.RIGHT);
 
         header.add(nameHeader, BorderLayout.WEST);
         header.add(percentHeader, BorderLayout.EAST);
 
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
-        // Set max height to ensure it doesn't stretch
         header.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 
         return header;
+    }
+
+    // Mock service — keep or remove if you already have this class elsewhere
+    static class GradingPolicyService {
+        private static java.util.Map<String, List<GradingComponent>> policies = new java.util.HashMap<>();
+        static {
+            List<GradingComponent> policy = new ArrayList<>();
+            policy.add(new GradingComponent("Midterm Exam", 30));
+            policy.add(new GradingComponent("Final Exam", 40));
+            policy.add(new GradingComponent("Assignments (x5)", 20));
+            policy.add(new GradingComponent("Quizzes (x10)", 10));
+            policies.put("CS101", policy);
+        }
+        public static List<GradingComponent> getPolicy(String courseCode) {
+            return new ArrayList<>(policies.getOrDefault(courseCode, new ArrayList<>()));
+        }
+        public static void savePolicy(String courseCode, List<GradingComponent> policy) {
+            policies.put(courseCode, new ArrayList<>(policy));
+        }
+    }
+
+    // Main for testing
+    public static void main(String[] args) {
+        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
+        SwingUtilities.invokeLater(() -> {
+            GradingPolicyFrame frame = new GradingPolicyFrame("CS101");
+            frame.setVisible(true);
+        });
     }
 }

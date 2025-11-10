@@ -1,7 +1,6 @@
-package ui.dashboard;
+package ui.StudentFrame;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
