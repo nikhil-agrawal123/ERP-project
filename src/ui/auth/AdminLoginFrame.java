@@ -1,10 +1,16 @@
 package ui.auth;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
+
+// --- Imports from your new components package ---
+import ui.components.RoundedButton;
+import ui.components.RoundedPanel;
 
 import ui.dashboard.AdminDashboard;
 import ui.landing.LandingFrame;
@@ -17,82 +23,100 @@ public class AdminLoginFrame extends JFrame {
 
     private JTextField usernameField;
     private JPasswordField passwordField;
-    private JButton loginButton;
-    private JButton BackButton;
-    private JButton ForgotPasswordButton;
+    private RoundedButton loginButton;
+    private RoundedButton backButton;
+
     private int numTry = 3;
-    Color backgroundColor = new Color(45, 45, 45);
-    Color buttonColor = new Color(57, 174, 168);
-    Color textColor = Color.WHITE;
-    private Color textFieldBgColor = new Color(60, 60, 60);
+
+    // --- NEW UI COLOR PALETTE ---
+    private Color bgColor = new Color(41, 47, 61);        // --background: 220 18% 20%
+    private Color fgColor = new Color(255, 255, 255);     // --foreground: 0 0% 100%
+    private Color cardColor = new Color(54, 59, 74);      // --card: 220 15% 25%
+    private Color mutedFgColor = new Color(179, 179, 179);  // --muted-foreground: 0 0% 70%
+    private Color primaryColor = new Color(52, 159, 148);   // --primary: 177 51% 42%
+    private Color primaryGlowColor = new Color(79, 196, 184); // --primary-glow: 177 51% 52%
+    private Color secondaryColor = new Color(64, 69, 89);   // --secondary / --border: 220 15% 30%
+    private Color inputBgColor = new Color(41, 47, 61);     // --background (for contrast)
 
 
     public AdminLoginFrame() {
         super("Admin Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1080, 1080);
-        // This centers the window on the screen.
+        setSize(900, 700); // Modern window size
         setLocationRelativeTo(null);
         setResizable(false);
-        getContentPane().setBackground(backgroundColor);
+        getContentPane().setBackground(bgColor);
         ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
         setIconImage(image.getImage());
-        initComponents();
-        layoutComponents();
 
         this.admin = new services();
+
+        initComponents();
+        layoutComponents();
     }
 
     private void initComponents() {
+        // --- Text Fields Styling ---
+        int fieldArc = 8;
+        int fieldPadding = 12;
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 16);
+
+        Border roundedBorder = new RoundedBorder(fieldArc, 1, secondaryColor);
+        Border paddingBorder = BorderFactory.createEmptyBorder(fieldPadding, fieldPadding, fieldPadding, fieldPadding);
+
         usernameField = new JTextField(20);
+        usernameField.setBackground(inputBgColor);
+        usernameField.setForeground(fgColor);
+        usernameField.setCaretColor(fgColor);
+        usernameField.setFont(fieldFont);
+        usernameField.setBorder(BorderFactory.createCompoundBorder(roundedBorder, paddingBorder));
+
         passwordField = new JPasswordField(20);
-        JTextField[] textFields = {usernameField, passwordField};
+        passwordField.setBackground(inputBgColor);
+        passwordField.setForeground(fgColor);
+        passwordField.setCaretColor(fgColor);
+        passwordField.setFont(fieldFont);
+        passwordField.setBorder(BorderFactory.createCompoundBorder(roundedBorder, paddingBorder));
 
-        for (JTextField field : textFields) {
-            field.setBackground(textFieldBgColor);
-            field.setForeground(textColor);
-            field.setCaretColor(textColor);
-            field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        }
-        loginButton = new JButton("Login");
-        BackButton = new JButton("Back");
-        ForgotPasswordButton = new JButton("Forgot Password");
-        JButton[] buttons = {loginButton, BackButton, ForgotPasswordButton};
-        for (JButton button : buttons) {
-            button.setBackground(buttonColor);
-            button.setForeground(textColor);
-            button.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            button.setFocusPainted(false);
-            button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Padding
-        }
-        loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(numTry > 0){
-                    handleLoginAttempt();
-                }else{
-                    handleLock();
-                }
+
+        // --- Button Styling (using RoundedButton) ---
+        loginButton = new RoundedButton(
+                "Login",
+                primaryColor.darker(),       // Gradient Start
+                primaryGlowColor,   // Gradient End
+                8                   // Arc
+        );
+        loginButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        loginButton.setForeground(fgColor);
+        loginButton.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
+
+        backButton = new RoundedButton(
+                "Back",
+                secondaryColor,         // Normal
+                secondaryColor.brighter(), // Hover
+                secondaryColor.darker(),  // Pressed
+                8                         // Arc
+        );
+        backButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        backButton.setForeground(fgColor);
+        backButton.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
+
+        // --- Action Listeners ---
+        loginButton.addActionListener(e -> {
+            if(numTry > 0){
+                handleLoginAttempt();
+            }else{
+                handleLock();
             }
         });
 
-        BackButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                LandingFrame landingFrame = new LandingFrame();
-                landingFrame.setVisible(true);
-                dispose();
-            }
+        backButton.addActionListener(e -> {
+            LandingFrame landingFrame = new LandingFrame();
+            landingFrame.setVisible(true);
+            dispose();
         });
 
-        ForgotPasswordButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ForgetPassword forgetPassword = new ForgetPassword("admin");
-                forgetPassword.setVisible(true);
-                dispose();
-            }
-        });
+        // "Forget Password" button removed to match new UI
     }
 
 
@@ -100,73 +124,79 @@ public class AdminLoginFrame extends JFrame {
      * Sets the layout manager and adds all components to the frame.
      */
     private void layoutComponents() {
-        // We use a GridBagLayout for a clean, form-like structure.
+        // Use GridBagLayout on the JFrame to center the card panel
         setLayout(new GridBagLayout());
+
+        // --- The Main Card Panel (using RoundedPanel) ---
+        RoundedPanel cardPanel = new RoundedPanel(15, cardColor, cardColor, 0);
+        cardPanel.setLayout(new GridBagLayout());
+        cardPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+
+        add(cardPanel, new GridBagConstraints()); // Center the card
+
+        // --- Layout INSIDE the cardPanel ---
         GridBagConstraints gbc = new GridBagConstraints();
-
-        // Insets add padding around components.
-        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        // Title Label
-        JLabel titleLabel = new JLabel("Welcome to Admin Login");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(textColor);
         gbc.gridx = 0;
+        gbc.gridwidth = 2; // Make all components span 2 columns
+
+        // 1. Title
+        JLabel titleLabel = new JLabel("Admin Login");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        titleLabel.setForeground(fgColor);
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         gbc.gridy = 0;
-        gbc.gridwidth = 2; // Make the title span two columns.
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(titleLabel, gbc);
+        gbc.insets = new Insets(0, 0, 5, 0);
+        cardPanel.add(titleLabel, gbc);
 
-        // --- Username Row ---
-        JLabel userLabel = new JLabel("Username:");
-        userLabel.setForeground(textColor); // MODIFIED: Set text color
-        userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        gbc.gridwidth = 1;
-        gbc.anchor = GridBagConstraints.LINE_END;
-        gbc.gridx = 0;
+        // 2. Subtitle
+        JLabel subtitleLabel = new JLabel("Enter your credentials to access the ERP system");
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        subtitleLabel.setForeground(mutedFgColor);
+        subtitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         gbc.gridy = 1;
-        add(userLabel, gbc);
-        gbc.anchor = GridBagConstraints.LINE_START;
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        add(usernameField, gbc);
+        gbc.insets = new Insets(0, 0, 30, 0);
+        cardPanel.add(subtitleLabel, gbc);
 
-        // --- Password Row ---
-        JLabel passLabel = new JLabel("Password:");
-        passLabel.setForeground(textColor); // MODIFIED: Set text color
-        passLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        gbc.anchor = GridBagConstraints.LINE_END;
-        gbc.gridx = 0;
+        // 3. "Username" Label
+        JLabel userLabel = new JLabel("Username");
+        userLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        userLabel.setForeground(fgColor);
         gbc.gridy = 2;
-        add(passLabel, gbc);
+        gbc.insets = new Insets(0, 0, 8, 0);
+        cardPanel.add(userLabel, gbc);
 
-        gbc.anchor = GridBagConstraints.LINE_START;
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        add(passwordField, gbc);
-
-        // --- Login Button ---
-        gbc.gridx = 0;
+        // 4. Username Field
         gbc.gridy = 3;
-        gbc.gridwidth = 2; // Span two columns.
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(loginButton, gbc);
+        gbc.insets = new Insets(0, 0, 20, 0);
+        cardPanel.add(usernameField, gbc);
 
-        // --- Back Button ----
-        gbc.gridx = 0;
+        // 5. "Password" Label
+        JLabel passLabel = new JLabel("Password");
+        passLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        passLabel.setForeground(fgColor);
         gbc.gridy = 4;
-        gbc.gridwidth = 1;
-        add(BackButton, gbc);
+        gbc.insets = new Insets(0, 0, 8, 0);
+        cardPanel.add(passLabel, gbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 4;
-        add(ForgotPasswordButton, gbc);
+        // 6. Password Field
+        gbc.gridy = 5;
+        gbc.insets = new Insets(0, 0, 30, 0);
+        cardPanel.add(passwordField, gbc);
+
+        // 7. Button Panel
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        buttonPanel.setOpaque(false);
+        buttonPanel.add(loginButton);
+        buttonPanel.add(backButton);
+
+        gbc.gridy = 6;
+        gbc.insets = new Insets(0, 0, 0, 0); // No bottom padding after buttons
+        cardPanel.add(buttonPanel, gbc);
     }
 
     /**
      * This method is called when the login button is clicked.
-     * For now, it's a placeholder to show the UI is interactive.
      */
     private void handleLoginAttempt() {
         String username = usernameField.getText();
@@ -181,19 +211,19 @@ public class AdminLoginFrame extends JFrame {
         }
 
         boolean login = admin.adminLogin(username,password);
-            if (login) {
-                AdminDashboard dashboard = new AdminDashboard(username, username);
-                dashboard.setVisible(true);
-                dispose();
-            } else {
-                // Password does NOT match the hash
-                JOptionPane.showMessageDialog(this,
-                        "Incorrect username or password.",
-                        "Login Failed",
-                        JOptionPane.ERROR_MESSAGE);
-                numTry -= 1;
-            }
+        if (login) {
+            AdminDashboard dashboard = new AdminDashboard(username, username);
+            dashboard.setVisible(true);
+            dispose();
+        } else {
+            // Password does NOT match the hash
+            JOptionPane.showMessageDialog(this,
+                    "Incorrect username or password.",
+                    "Login Failed",
+                    JOptionPane.ERROR_MESSAGE);
+            numTry -= 1;
         }
+    }
 
     public void handleLock() {
         loginButton.setEnabled(false);
@@ -205,18 +235,56 @@ public class AdminLoginFrame extends JFrame {
                 "Auth Error",
                 JOptionPane.ERROR_MESSAGE);
 
-        Timer lockoutTimer = new Timer(30000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e ) {
-                numTry = 3;
-                loginButton.setEnabled(true);
-                usernameField.setEnabled(true);
-                passwordField.setEnabled(true);
-                setTitle("Student Login");
-            }
+        Timer lockoutTimer = new Timer(30000, e -> {
+            numTry = 3;
+            loginButton.setEnabled(true);
+            usernameField.setEnabled(true);
+            passwordField.setEnabled(true);
+            setTitle("Admin Login");
         });
 
         lockoutTimer.setRepeats(false);
         lockoutTimer.start();
+    }
+
+    /**
+     * A custom Border class for rounded text fields.
+     */
+    private static class RoundedBorder implements Border {
+        private int radius;
+        private int thickness;
+        private Color color;
+
+        public RoundedBorder(int radius, int thickness, Color color) {
+            this.radius = radius;
+            this.thickness = thickness;
+            this.color = color;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(color);
+            g2.setStroke(new BasicStroke(thickness));
+            g2.draw(new RoundRectangle2D.Float(
+                    x + thickness / 2.0f,
+                    y + thickness / 2.0f,
+                    width - thickness,
+                    height - thickness,
+                    radius, radius
+            ));
+            g2.dispose();
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(thickness, thickness, thickness, thickness);
+        }
+
+        @Override
+        public boolean isBorderOpaque() {
+            return true;
+        }
     }
 }
