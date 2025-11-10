@@ -1,4 +1,4 @@
-package ui.dashboard.FacultyFrame;
+package ui.FacultyFrame;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.LinkedHashMap; // Use LinkedHashMap to maintain semester order
 
-import dbClasses.facultyCourseClass; // Assuming this class is available
 import middleware.facultyService;
 
 public class facultyCourseList extends JFrame {

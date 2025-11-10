@@ -1,4 +1,4 @@
-package ui.dashboard.FacultyFrame;
+package ui.FacultyFrame;
 
 /**
  * A unified model class for a Course.

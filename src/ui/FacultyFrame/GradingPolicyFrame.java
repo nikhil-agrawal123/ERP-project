@@ -1,4 +1,4 @@
-package ui.dashboard.FacultyFrame;
+package ui.FacultyFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,7 +8,7 @@ import java.util.List;
 /*
   NOTE:
   - This file DOES NOT declare a GradingComponent class. It uses the existing
-    ui.dashboard.FacultyFrame.GradingComponent model (the one you posted earlier).
+    ui.FacultyFrame.GradingComponent model (the one you posted earlier).
   - Keep GradingPolicyService in this file (or remove it if you already have it elsewhere).
 */
 

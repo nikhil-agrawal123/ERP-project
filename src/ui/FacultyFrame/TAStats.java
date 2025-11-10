@@ -1,4 +1,4 @@
-package ui.dashboard.FacultyFrame;
+package ui.FacultyFrame;
 
 import javax.swing.*;
 import javax.swing.border.Border;

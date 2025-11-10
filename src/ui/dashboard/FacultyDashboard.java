@@ -2,9 +2,9 @@ package ui.dashboard;
 
 import javax.swing.*;
 
-import ui.dashboard.FacultyFrame.facultyCourseList;
-import ui.dashboard.FacultyFrame.MyCoursesFrame;
-import ui.dashboard.FacultyFrame.TAStats;
+import ui.FacultyFrame.facultyCourseList;
+import ui.FacultyFrame.MyCoursesFrame;
+import ui.FacultyFrame.TAStats;
 import ui.landing.LandingFrame;
 import java.awt.*;
 
