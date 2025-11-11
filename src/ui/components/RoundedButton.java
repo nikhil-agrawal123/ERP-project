@@ -175,4 +175,36 @@ public class RoundedButton extends JButton {
         super.paintComponent(g2);
         g2.dispose();
     }
+    // --- ADD THESE METHODS TO YOUR RoundedButton.java FILE ---
+
+    /**
+     * Manually sets the colors for a solid button.
+     */
+    public void setColors(Color normal, Color hover, Color pressed, Color active) {
+        this.normalColor = normal;
+        this.hoverColor = hover;
+        this.pressedColor = pressed;
+        this.activeColor = active;
+        this.useGradient = false;
+        repaint();
+    }
+
+    /**
+     * Manually sets the colors for a gradient button.
+     */
+    public void setGradient(Color gradStart, Color gradEnd) {
+        this.gradientStartColor = gradStart;
+        this.gradientEndColor = gradEnd;
+        this.pressedColor = gradStart.darker();
+        this.useGradient = true;
+        repaint();
+    }
+
+    /**
+     * Disables the gradient fill.
+     */
+    public void removeGradient() {
+        this.useGradient = false;
+        repaint();
+    }
 }
