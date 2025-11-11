@@ -1,7 +1,7 @@
 package ui.FacultyFrame;
 
 /**
- * A simple model class to hold one component of a grading policy.
+ * Model class to hold information about a single grading component.
  */
 public class GradingComponent {
     private String name;
@@ -12,14 +12,27 @@ public class GradingComponent {
         this.percentage = percentage;
     }
 
-    // --- Getters and Setters ---
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public int getPercentage() { return percentage; }
-    public void setPercentage(int percentage) { this.percentage = percentage; }
+    // --- Getters ---
+    public String getName() {
+        return name;
+    }
 
+    public int getPercentage() {
+        return percentage;
+    }
+
+    // --- Setters ---
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPercentage(int percentage) {
+        this.percentage = percentage;
+    }
+
+    // Used by JList if no renderer is set
     @Override
     public String toString() {
-        return name + ": " + percentage + "%";
+        return name + " (" + percentage + "%)";
     }
 }

@@ -364,7 +364,6 @@ public class FacultyCoursesPanel extends JPanel {
         setGradingPolicyButton.setBorder(buttonBorder);
         setGradingPolicyButton.addActionListener(e ->
         {
-            // --- MODIFIED --- Pass the correct course code
             GradingPolicyFrame gradingPolicyFrame = new GradingPolicyFrame(course.getCourseCode());
             gradingPolicyFrame.setVisible(true);
         });
