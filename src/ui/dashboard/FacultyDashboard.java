@@ -1,6 +1,7 @@
 package ui.dashboard;
 
 // --- Imports from StudentDashboard ---
+import ui.FacultyFrame.FacultyCoursesPanel; // Make sure this import is correct
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import ui.landing.LandingFrame;
@@ -15,8 +16,7 @@ import java.awt.RenderingHints;
 import java.awt.event.*;
 
 // --- Original Imports from FacultyDashboard ---
-import ui.FacultyFrame.facultyCourseList;
-import ui.FacultyFrame.MyCoursesFrame;
+// import ui.FacultyFrame.MyCoursesFrame; // No longer needed
 import ui.FacultyFrame.TAStats;
 import middleware.facultyService;
 
@@ -144,7 +144,6 @@ public class FacultyDashboard extends JFrame {
 
         // Create navigation buttons using the new style
         RoundedButton homeButton = createSideMenuButton("Dashboard Home");
-        RoundedButton courseButton = createSideMenuButton("My Courses");
         RoundedButton scoresButton = createSideMenuButton("Enter Scores");
         RoundedButton TAButton = createSideMenuButton("TA Info");
 
@@ -163,10 +162,7 @@ public class FacultyDashboard extends JFrame {
 
         // Add to button list for active state management
         menuButtons.add(homeButton);
-        // Note: Other buttons open new frames, so they don't need active state
-        // menuButtons.add(courseButton);
-        // menuButtons.add(scoresButton);
-        // menuButtons.add(TAButton);
+        menuButtons.add(scoresButton); // <-- ***CHANGE 1 (Part A)***: Add this button to the list
 
         // --- Add Action Listeners (Original Faculty Logic) ---
         homeButton.addActionListener(e -> {
@@ -174,17 +170,16 @@ public class FacultyDashboard extends JFrame {
             setActiveButton(homeButton);
         });
 
-        courseButton.addActionListener(e -> {
-            MyCoursesFrame coursesFrame = new MyCoursesFrame(facultyID, username);
-            coursesFrame.setVisible(true);
-        });
-
+        // --- ***CHANGE 1 (Part B)***: This is the fix ---
+        // Change this listener to switch the CardLayout, not open a new frame.
         scoresButton.addActionListener(e -> {
-            facultyCourseList courseFrame = new facultyCourseList(username);
-            courseFrame.setVisible(true);
+            cardLayout.show(cardHolderPanel, "COURSES"); // Switch to the "COURSES" card
+            setActiveButton(scoresButton); // Set this button as active
         });
+        // --- End of Fix ---
 
         TAButton.addActionListener(e -> {
+            // This button opens a new window, so it is NOT added to the menuButtons list
             TAStats taFrame = new TAStats(facultyID, username);
             taFrame.setVisible(true);
         });
@@ -219,8 +214,6 @@ public class FacultyDashboard extends JFrame {
 
         panel.add(Box.createRigidArea(new Dimension(0, 15)));
         panel.add(homeButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(courseButton);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(scoresButton);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
@@ -341,7 +334,11 @@ public class FacultyDashboard extends JFrame {
 
         // --- Add all cards to the main panel ---
         cardHolder.add(homePanel, "HOME");
-        // No "COURSES" card, as buttons open new frames.
+
+        // --- ***CHANGE 2***: Create and add the courses panel here ---
+        FacultyCoursesPanel coursesPanel = new FacultyCoursesPanel(username);
+        cardHolder.add(coursesPanel, "COURSES"); // Use the same name as in the listener
+        // --- End of Fix ---
     }
 
     // ---
@@ -434,7 +431,7 @@ public class FacultyDashboard extends JFrame {
             JLabel noAppointmentsLabel = new JLabel("No appointments scheduled.");
             noAppointmentsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
             noAppointmentsLabel.setForeground(textSecondaryColor);
-            noAppointmentsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            noAppointmentsLabel.setAlignmentX(Component.LEFT_ALIGNMENT );
             appointmentsPanel.add(noAppointmentsLabel);
         } else {
             for (String appointment : appointmentDetails) {
