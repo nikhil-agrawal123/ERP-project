@@ -39,7 +39,7 @@ public class FacultyLoginFrame extends JFrame {
     public FacultyLoginFrame() {
         super("Faculty Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(900, 700); // Modern window size
+        setSize(2160, 1080); // Modern window size
         setLocationRelativeTo(null);
         setResizable(false);
         getContentPane().setBackground(bgColor);

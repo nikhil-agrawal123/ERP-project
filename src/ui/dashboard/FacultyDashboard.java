@@ -1,9 +1,9 @@
 package ui.dashboard;
 
 // --- Imports from StudentDashboard ---
-import ui.FacultyFrame.FacultyCoursesPanel; // Make sure this import is correct
-import ui.components.RoundedButton;
-import ui.components.RoundedPanel;
+import ui.FacultyFrame.FacultyCoursesPanel;
+import ui.components.RoundedButton; // <-- IMPORTED
+import ui.components.RoundedPanel;  // <-- IMPORTED
 import ui.landing.LandingFrame;
 
 import javax.swing.*;
@@ -16,7 +16,6 @@ import java.awt.RenderingHints;
 import java.awt.event.*;
 
 // --- Original Imports from FacultyDashboard ---
-// import ui.FacultyFrame.MyCoursesFrame; // No longer needed
 import ui.FacultyFrame.TAStats;
 import middleware.facultyService;
 
@@ -26,23 +25,23 @@ public class FacultyDashboard extends JFrame {
     private String facultyID;
 
     // --- UI COLOR PALETTE FROM STUDENT DASHBOARD ---
-    private Color bgColor = new Color(42, 48, 60);            // --background
-    private Color sideMenuColor = new Color(48, 54, 70);      // --sidebar-background
-    private Color mainPanelColor = new Color(42, 48, 60);       // --background
-    private Color cardColor = new Color(54, 59, 74);          // --card
-    private Color popoverColor = new Color(46, 52, 66);       // --popover
-    private Color borderColor = new Color(64, 69, 89);        // --border
-    private Color buttonColor = new Color(52, 159, 148);      // --primary / --accent
-    private Color buttonColorGlow = new Color(79, 196, 184);  // --primary-glow
-    private Color textColor = new Color(255, 255, 255);       // --foreground
+    private Color bgColor = new Color(42, 48, 60);
+    private Color sideMenuColor = new Color(48, 54, 70);
+    private Color mainPanelColor = new Color(42, 48, 60);
+    private Color cardColor = new Color(54, 59, 74);
+    private Color popoverColor = new Color(46, 52, 66);
+    private Color borderColor = new Color(64, 69, 89);
+    private Color buttonColor = new Color(52, 159, 148);
+    private Color buttonColorGlow = new Color(79, 196, 184);
+    private Color textColor = new Color(255, 255, 255);
     private Color textSecondaryColor = new Color(179, 179, 179);
-    Color logoutRedHover = new Color(190, 60, 60); // A visible red for hover
-    Color logoutRedPressed = new Color(160, 40, 40);// --muted-foreground
+    Color logoutRedHover = new Color(190, 60, 60);
+    Color logoutRedPressed = new Color(160, 40, 40);
 
     private facultyService faculty;
 
     // --- UI Components from StudentDashboard ---
-    private JLayeredPane mainContentPanel; // Changed from JPanel
+    private JLayeredPane mainContentPanel;
     private JPanel cardHolderPanel;
     private CardLayout cardLayout;
     private JPopupMenu profileMenu;
@@ -53,9 +52,9 @@ public class FacultyDashboard extends JFrame {
     public FacultyDashboard(String username) {
         super("Faculty Dashboard - " + username);
 
-        this.username = username; // Store username
+        this.username = username;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // Use extended state
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setSize(1280, 800);
         setLocationRelativeTo(null);
         setResizable(true);
@@ -66,7 +65,7 @@ public class FacultyDashboard extends JFrame {
         setLayout(new BorderLayout());
         this.faculty = new facultyService();
         this.facultyID = faculty.facultyId(username);
-        this.menuButtons = new ArrayList<>(); // Initialize list
+        this.menuButtons = new ArrayList<>();
 
         // --- Create and add the side menu ---
         JPanel sideMenuPanel = createSideMenuPanel(username);
@@ -87,7 +86,7 @@ public class FacultyDashboard extends JFrame {
         String initial = (username != null && !username.isEmpty()) ? username.substring(0, 1).toUpperCase() : "?";
         JButton profileButton = new CircularButton(initial);
 
-        createProfileMenu(); // Create the popup menu
+        createProfileMenu();
 
         profileButton.addActionListener(e -> {
             int menuWidth = profileMenu.getPreferredSize().width;
@@ -103,11 +102,9 @@ public class FacultyDashboard extends JFrame {
             @Override
             public void componentResized(ComponentEvent e) {
                 Dimension size = e.getComponent().getSize();
-                // Card holder fills the entire space
                 cardHolderPanel.setBounds(0, 0, size.width, size.height);
 
                 int padding = 20;
-                // Profile button positioned top-right
                 Dimension profileBtnSize = profileButton.getPreferredSize();
                 int profileX = size.width - profileBtnSize.width - padding;
                 int profileY = padding;
@@ -120,7 +117,6 @@ public class FacultyDashboard extends JFrame {
 
         // Show the initial "home" card
         cardLayout.show(cardHolderPanel, "HOME");
-        // Set the "Home" button as active
         if (!menuButtons.isEmpty()) {
             setActiveButton(menuButtons.get(0));
         }
@@ -133,7 +129,7 @@ public class FacultyDashboard extends JFrame {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(sideMenuColor);
-        panel.setPreferredSize(new Dimension(300, 0)); // Increased width
+        panel.setPreferredSize(new Dimension(300, 0));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
         JLabel menuTitle = new JLabel("Navigation");
@@ -162,7 +158,7 @@ public class FacultyDashboard extends JFrame {
 
         // Add to button list for active state management
         menuButtons.add(homeButton);
-        menuButtons.add(scoresButton); // <-- ***CHANGE 1 (Part A)***: Add this button to the list
+        menuButtons.add(scoresButton);
 
         // --- Add Action Listeners (Original Faculty Logic) ---
         homeButton.addActionListener(e -> {
@@ -170,23 +166,18 @@ public class FacultyDashboard extends JFrame {
             setActiveButton(homeButton);
         });
 
-        // --- ***CHANGE 1 (Part B)***: This is the fix ---
-        // Change this listener to switch the CardLayout, not open a new frame.
         scoresButton.addActionListener(e -> {
-            cardLayout.show(cardHolderPanel, "COURSES"); // Switch to the "COURSES" card
-            setActiveButton(scoresButton); // Set this button as active
+            cardLayout.show(cardHolderPanel, "COURSES");
+            setActiveButton(scoresButton);
         });
-        // --- End of Fix ---
 
         TAButton.addActionListener(e -> {
-            // This button opens a new window, so it is NOT added to the menuButtons list
             TAStats taFrame = new TAStats(facultyID, username);
             taFrame.setVisible(true);
         });
 
         logoutButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Logout successful");
-            // Dispose all windows
             for (Window w : Window.getWindows()) {
                 if (w instanceof JFrame) {
                     w.dispose();
@@ -219,9 +210,9 @@ public class FacultyDashboard extends JFrame {
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(TAButton);
 
-        panel.add(Box.createVerticalGlue()); // Pushes logout to bottom
+        panel.add(Box.createVerticalGlue());
         panel.add(logoutButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 20))); // Bottom padding
+        panel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         return panel;
     }
@@ -230,7 +221,6 @@ public class FacultyDashboard extends JFrame {
      * Creates all the content panels for the CardLayout.
      */
     private void createContentCards(JPanel cardHolder, String username) {
-        // Fetch data
         if (facultyID == null) {
             JOptionPane.showMessageDialog(this,
                     "Could not find faculty details for user: " + username,
@@ -286,9 +276,6 @@ public class FacultyDashboard extends JFrame {
         JPanel statBoxHolder = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         statBoxHolder.setOpaque(false);
         statBoxHolder.add(courseBox);
-        // Add more stat boxes here if needed
-        // statBoxHolder.add(Box.createRigidArea(new Dimension(25, 0)));
-        // statBoxHolder.add(anotherStatBox);
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -309,10 +296,10 @@ public class FacultyDashboard extends JFrame {
         // --- ROW 1: APPOINTMENTS BOX (As requested) ---
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.weightx = 1.0; // Fill horizontally
+        gbc.weightx = 1.0;
         gbc.weighty = 0;
-        gbc.gridwidth = 2; // Span both columns
-        gbc.fill = GridBagConstraints.HORIZONTAL; // Fill width, not height
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         JPanel appointmentsPanel = createAppointmentsPanel();
         centerContentPanel.add(appointmentsPanel, gbc);
@@ -321,7 +308,7 @@ public class FacultyDashboard extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.weightx = 1.0;
-        gbc.weighty = 1.0; // Takes all remaining vertical space
+        gbc.weighty = 1.0;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.BOTH;
         JPanel verticalSpacer = new JPanel();
@@ -334,28 +321,22 @@ public class FacultyDashboard extends JFrame {
 
         // --- Add all cards to the main panel ---
         cardHolder.add(homePanel, "HOME");
-
-        // --- ***CHANGE 2***: Create and add the courses panel here ---
         FacultyCoursesPanel coursesPanel = new FacultyCoursesPanel(username);
-        cardHolder.add(coursesPanel, "COURSES"); // Use the same name as in the listener
-        // --- End of Fix ---
+        cardHolder.add(coursesPanel, "COURSES");
     }
-
-    // ---
-    // --- HELPER METHODS (Copied/Adapted from StudentDashboard)
-    // ---
 
     /**
      * Creates a styled side menu button.
      */
     private RoundedButton createSideMenuButton(String text) {
+        // Use the new public RoundedButton class
         RoundedButton button = new RoundedButton(
                 text,
-                sideMenuColor,
-                borderColor,
-                buttonColor.darker(),
-                buttonColor,
-                8
+                sideMenuColor,      // normal
+                borderColor,      // hover
+                buttonColor.darker(), // pressed
+                buttonColor,      // active
+                8                 // arc
         );
         button.setFont(new Font("Segoe UI", Font.BOLD, 17));
         button.setForeground(textSecondaryColor);
@@ -383,9 +364,9 @@ public class FacultyDashboard extends JFrame {
      * Creates a styled statistic box for the dashboard.
      */
     private JPanel createStatBox(String title, String value) {
-        // Stat boxes now get the primary gradient background
+        // Use the new public RoundedPanel class
         RoundedPanel boxPanel = new RoundedPanel(15, buttonColor, buttonColorGlow);
-        boxPanel.setLayout(new BorderLayout(0, 10)); // 10px vertical gap
+        boxPanel.setLayout(new BorderLayout(0, 10));
         boxPanel.setPreferredSize(new Dimension(350, 200));
         boxPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
@@ -404,11 +385,10 @@ public class FacultyDashboard extends JFrame {
 
     /**
      * Creates the styled "Faculty Appointments" panel.
-     * (Using placeholder data from StudentDashboard)
      */
     private JPanel createAppointmentsPanel() {
+        // Use the new public RoundedPanel class
         RoundedPanel appointmentsPanel = new RoundedPanel(15, cardColor, borderColor, 1);
-        // Set a preferred width, height is flexible
         appointmentsPanel.setPreferredSize(new Dimension(570, 220));
         appointmentsPanel.setLayout(new BoxLayout(appointmentsPanel, BoxLayout.Y_AXIS));
         appointmentsPanel.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
@@ -420,18 +400,17 @@ public class FacultyDashboard extends JFrame {
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         appointmentsPanel.add(titleLabel);
 
-        // TODO: Replace with actual faculty appointment data
+        // Placeholder data
         List<String> appointmentDetails = new ArrayList<>();
         appointmentDetails.add("Student: John Doe - 2025-10-20 at 11:00 AM");
         appointmentDetails.add("Student: Jane Smith - 2025-10-22 at 02:30 PM");
         appointmentDetails.add("Student: Robert Brown - 2025-10-25 at 09:00 AM");
 
-
         if (appointmentDetails.isEmpty()) {
             JLabel noAppointmentsLabel = new JLabel("No appointments scheduled.");
             noAppointmentsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
             noAppointmentsLabel.setForeground(textSecondaryColor);
-            noAppointmentsLabel.setAlignmentX(Component.LEFT_ALIGNMENT );
+            noAppointmentsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             appointmentsPanel.add(noAppointmentsLabel);
         } else {
             for (String appointment : appointmentDetails) {
@@ -458,14 +437,10 @@ public class FacultyDashboard extends JFrame {
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
         scrollPane.setBackground(mainPanelColor);
-
-        // Hide both scrollbars permanently
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
         scrollPane.getVerticalScrollBar().setUI(new StyledScrollBarUI());
         scrollPane.getHorizontalScrollBar().setUI(new StyledScrollBarUI());
-
         return scrollPane;
     }
 
@@ -476,7 +451,6 @@ public class FacultyDashboard extends JFrame {
         profileMenu = new JPopupMenu();
         profileMenu.setBackground(popoverColor);
         profileMenu.setBorder(BorderFactory.createLineBorder(bgColor));
-        // Add faculty-specific menu items
         profileMenu.add(createMenuItem("Manage Account"));
         profileMenu.add(createMenuItem("View Preferences"));
     }
@@ -497,14 +471,12 @@ public class FacultyDashboard extends JFrame {
                 item.setBackground(buttonColor);
                 item.setForeground(textColor);
             }
-
             public void mouseExited(MouseEvent e) {
                 item.setBackground(popoverColor);
                 item.setForeground(textColor);
             }
         });
 
-        // Add placeholder actions
         item.addActionListener(e -> {
             if (text.equals("Manage Account")) {
                 JOptionPane.showMessageDialog(FacultyDashboard.this,
@@ -520,7 +492,7 @@ public class FacultyDashboard extends JFrame {
     }
 
     // ---
-    // --- INNER CLASSES (Copied from StudentDashboard)
+    // --- INNER CLASSES (Still needed)
     // ---
 
     /**
@@ -543,7 +515,6 @@ public class FacultyDashboard extends JFrame {
             return createZeroButton();
         }
 
-
         private JButton createZeroButton() {
             JButton jbutton = new JButton();
             jbutton.setPreferredSize(new Dimension(0, 0));
@@ -557,19 +528,16 @@ public class FacultyDashboard extends JFrame {
      * Inner class for the circular profile button.
      */
     private static class CircularButton extends JButton {
-
         public CircularButton(String text) {
             super(text);
             Dimension size = new Dimension(40, 40);
             setPreferredSize(size);
             setMaximumSize(size);
             setMinimumSize(size);
-
-            setBackground(new Color(52, 159, 148)); // buttonColor
-            setForeground(new Color(255, 255, 255)); // textColor
+            setBackground(new Color(52, 159, 148));
+            setForeground(new Color(255, 255, 255));
             setFont(new Font("Segoe UI", Font.BOLD, 18));
             setCursor(new Cursor(Cursor.HAND_CURSOR));
-
             setContentAreaFilled(false);
             setFocusPainted(false);
             setBorderPainted(false);
@@ -579,7 +547,6 @@ public class FacultyDashboard extends JFrame {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
             if (getModel().isArmed()) {
                 g2.setColor(getBackground().darker());
             } else {
