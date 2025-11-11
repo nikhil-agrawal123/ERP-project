@@ -33,7 +33,9 @@ public class StudentDashboard extends JFrame {
     private Color buttonColor = new Color(52, 159, 148);      // --primary / --accent
     private Color buttonColorGlow = new Color(79, 196, 184);  // --primary-glow
     private Color textColor = new Color(255, 255, 255);       // --foreground
-    private Color textSecondaryColor = new Color(179, 179, 179); // --muted-foreground
+    private Color textSecondaryColor = new Color(179, 179, 179);
+    Color logoutRedHover = new Color(190, 60, 60); // A visible red for hover
+    Color logoutRedPressed = new Color(160, 40, 40);// --muted-foreground
 
     private studentService enrollmentService;
 
@@ -187,8 +189,8 @@ public class StudentDashboard extends JFrame {
         RoundedButton logoutButton = new RoundedButton(
                 "\u21AA   Logout",
                 logoutBg,       // Normal background
-                logoutBg,       // Hover background (same as normal)
-                logoutBg,       // Pressed background (same as normal)
+                logoutRedHover,       // Hover background (same as normal)
+                logoutRedPressed,       // Pressed background (same as normal)
                 logoutBg,       // Active background (same as normal)
                 8               // Arc
         );
@@ -222,7 +224,7 @@ public class StudentDashboard extends JFrame {
         });
 
         registerForCourses.addActionListener(e -> {
-            CourseList courseListFrame = new CourseList(rollNumber, username);
+            StudentRegCourses courseListFrame = new StudentRegCourses(rollNumber, username);
             courseListFrame.setVisible(true);
             dispose();
         });
