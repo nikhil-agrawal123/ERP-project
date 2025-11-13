@@ -4,11 +4,8 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.sql.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.geom.RoundRectangle2D;
 
-// --- Imports from your new components package ---
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 
@@ -28,6 +25,7 @@ public class StudentLoginFrame extends JFrame {
     private JPasswordField passwordField;
     private RoundedButton loginButton;
     private RoundedButton backButton;
+    private RoundedButton forgetButton;
 
     // --- NEW UI COLOR PALETTE ---
     private Color bgColor = new Color(41, 47, 61);        // --background: 220 18% 20%
@@ -112,6 +110,12 @@ public class StudentLoginFrame extends JFrame {
         backButton.setForeground(fgColor);
         backButton.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
 
+        forgetButton = new RoundedButton(
+                "Forget Password",
+                primaryColor.darker(),
+                primaryGlowColor,
+                8
+        );
 
         // --- Action Listeners ---
         loginButton.addActionListener(e -> {
@@ -131,6 +135,12 @@ public class StudentLoginFrame extends JFrame {
             frame.setVisible(true);
             dispose();
         });
+
+        forgetButton.addActionListener(e -> {
+            ForgetPassword frame = new ForgetPassword("student");
+            frame.setVisible(true);
+            dispose();
+        });
     }
 
     /**
@@ -143,7 +153,6 @@ public class StudentLoginFrame extends JFrame {
         // --- The Main Card Panel (using RoundedPanel) ---
         RoundedPanel cardPanel = new RoundedPanel(15, cardColor, cardColor, 0);
         cardPanel.setLayout(new GridBagLayout());
-        // Add padding inside the card
         cardPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
         // This single constraint centers the cardPanel in the JFrame
@@ -208,6 +217,13 @@ public class StudentLoginFrame extends JFrame {
         gbc.gridy = 6;
         gbc.insets = new Insets(0, 0, 25, 0); // Bottom padding
         cardPanel.add(buttonPanel, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        JPanel buttonPanel1 = new JPanel(new GridLayout(1, 2, 10, 0));
+        buttonPanel1.setOpaque(false);
+        buttonPanel1.add(forgetButton);
+        cardPanel.add(buttonPanel1, gbc);
     }
 
 
@@ -256,7 +272,6 @@ public class StudentLoginFrame extends JFrame {
         lockoutTimer.setRepeats(false);
         lockoutTimer.start();
     }
-
 
 
     private static class RoundedBorder implements Border {

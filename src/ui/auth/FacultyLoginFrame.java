@@ -3,8 +3,6 @@ package ui.auth;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
 
@@ -25,6 +23,7 @@ public class FacultyLoginFrame extends JFrame {
     private JPasswordField passwordField;
     private RoundedButton loginButton;
     private RoundedButton backButton;
+    private RoundedButton forgetButton;
 
     // --- NEW UI COLOR PALETTE ---
     private Color bgColor = new Color(41, 47, 61);        // --background: 220 18% 20%
@@ -98,6 +97,13 @@ public class FacultyLoginFrame extends JFrame {
         backButton.setForeground(fgColor);
         backButton.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
 
+        forgetButton = new RoundedButton(
+                "Forget",
+                primaryColor.darker(),
+                primaryGlowColor,
+                8
+        );
+
         // --- Action Listeners ---
         loginButton.addActionListener(e -> {
             if(numTry > 0){
@@ -110,6 +116,12 @@ public class FacultyLoginFrame extends JFrame {
         backButton.addActionListener(e -> {
             LandingFrame landingFrame = new LandingFrame();
             landingFrame.setVisible(true);
+            dispose();
+        });
+
+        forgetButton.addActionListener(e -> {
+            ForgetPassword frame = new ForgetPassword("faculty");
+            frame.setVisible(true);
             dispose();
         });
 
@@ -189,6 +201,14 @@ public class FacultyLoginFrame extends JFrame {
         gbc.gridy = 6;
         gbc.insets = new Insets(0, 0, 0, 0); // No bottom padding after buttons
         cardPanel.add(buttonPanel, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.insets = new Insets(15, 0, 0, 0);
+        JPanel buttonPanel1 = new JPanel(new GridLayout(1, 2, 10, 0));
+        buttonPanel1.setOpaque(false);
+        buttonPanel1.add(forgetButton);
+        cardPanel.add(buttonPanel1, gbc);
     }
 
     /**
