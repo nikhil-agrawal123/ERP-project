@@ -22,14 +22,14 @@ public class ForgetPassword extends JFrame{
     private RoundedButton backButton;
 
     // --- NEW UI COLOR PALETTE ---
-    private Color bgColor = new Color(41, 47, 61);        // --background: 220 18% 20%
-    private Color fgColor = new Color(255, 255, 255);     // --foreground: 0 0% 100%
-    private Color cardColor = new Color(54, 59, 74);      // --card: 220 15% 25%
-    private Color mutedFgColor = new Color(179, 179, 179);  // --muted-foreground: 0 0% 70%
-    private Color primaryColor = new Color(52, 159, 148);   // --primary: 177 51% 42%
-    private Color primaryGlowColor = new Color(79, 196, 184); // --primary-glow: 177 51% 52%
-    private Color secondaryColor = new Color(64, 69, 89);   // --secondary / --border: 220 15% 30%
-    private Color inputBgColor = new Color(41, 47, 61);     // --background (for contrast)
+    private Color bgColor = new Color(41, 47, 61);
+    private Color fgColor = new Color(255, 255, 255);
+    private Color cardColor = new Color(54, 59, 74);
+    private Color mutedFgColor = new Color(179, 179, 179);
+    private Color primaryColor = new Color(52, 159, 148);
+    private Color primaryGlowColor = new Color(79, 196, 184);
+    private Color secondaryColor = new Color(64, 69, 89);
+    private Color inputBgColor = new Color(41, 47, 61);
 
     private boolean success = true;
     private String user;

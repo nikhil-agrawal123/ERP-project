@@ -3,7 +3,7 @@ import dbClasses.StudentCgCredits;
 import dbEndpoints.studentPoints;
 import java.sql.*;
 import java.util.*;
-import dbClasses.StudentRegisteredCourse;
+import dbClasses.*;
 
 public class studentService {
     private studentPoints student;
@@ -47,6 +47,16 @@ public class studentService {
             return new StudentCgCredits(credits, Math.round(cg*100.0)/100.0);
     }catch (SQLException e){
         e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<studentAvailableCourses> AllCourses(String sem){
+        try{
+            List<studentAvailableCourses> courses = student.AllCourses(sem);
+            return courses;
+        } catch (SQLException e){
+            e.printStackTrace();
         }
         return null;
     }

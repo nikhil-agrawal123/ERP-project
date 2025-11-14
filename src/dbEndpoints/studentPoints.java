@@ -77,5 +77,30 @@ public class studentPoints {
         }
         return allCgCredits;
     }
+
+    public List<studentAvailableCourses> AllCourses(String sem) throws SQLException {
+        List<studentAvailableCourses> allCourses = new ArrayList<>();
+
+        String sql = "SELECT * FROM USERS.courses WHERE semester =?";
+
+        try (Connection connection = connector.connect();
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, sem);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                studentAvailableCourses course = new studentAvailableCourses(
+                        rs.getString("course_code"),
+                        rs.getString("course_title"),
+                        rs.getInt("credits"),
+                        rs.getString("offeredBy"),
+                        rs.getString("semester")
+                );
+                allCourses.add(course);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return  allCourses;
+    }
 }
 

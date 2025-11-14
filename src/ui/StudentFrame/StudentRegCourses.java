@@ -1,13 +1,13 @@
 package ui.StudentFrame;
 
-// --- Imports from Dashboard for style consistency ---
-import dbClasses.StudentCgCredits; // Assuming this might be needed later
+import dbClasses.studentAvailableCourses;
 import ui.dashboard.StudentDashboard;
-import ui.components.RoundedButton; // Use the new RoundedButton
-import ui.components.RoundedPanel;  // Use the new RoundedPanel
+import ui.components.RoundedButton;
+import ui.components.RoundedPanel;
+import middleware.studentService;
+import java.util.List;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicScrollBarUI; // For styled scrollbar
 import java.awt.*;
@@ -17,10 +17,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.awt.Desktop; // For clickable links
+import java.awt.Desktop;
 
 /**
  * A refactored class for course registration, matching the StudentDashboard UI.
@@ -28,18 +26,17 @@ import java.awt.Desktop; // For clickable links
 public class StudentRegCourses extends JFrame {
 
     // --- UI COLOR PALETTE FROM StudentDashboard ---
-    private Color bgColor = new Color(42, 48, 60);            // --background
-    private Color sideMenuColor = new Color(48, 54, 70);      // --sidebar-background
-    private Color mainPanelColor = new Color(42, 48, 60);       // --background
-    private Color cardColor = new Color(54, 59, 74);          // --card
-    private Color popoverColor = new Color(46, 52, 66);       // --popover
-    private Color borderColor = new Color(64, 69, 89);        // --border
-    private Color buttonColor = new Color(52, 159, 148);      // --primary / --accent
-    private Color buttonColorGlow = new Color(79, 196, 184);  // --primary-glow
-    private Color textColor = new Color(255, 255, 255);       // --foreground
-    private Color textSecondaryColor = new Color(179, 179, 179); // --muted-foreground
+    private Color bgColor = new Color(42, 48, 60);
+    private Color mainPanelColor = new Color(42, 48, 60);
+    private Color cardColor = new Color(54, 59, 74);
+    private Color borderColor = new Color(64, 69, 89);
+    private Color buttonColor = new Color(52, 159, 148);
+    private Color buttonColorGlow = new Color(79, 196, 184);
+    private Color textColor = new Color(255, 255, 255);
+    private Color textSecondaryColor = new Color(179, 179, 179);
     private Color Buttonback = new Color(38, 44, 58);
-    private Color Buttonhover = new Color(25, 30, 40);      // --sidebar-background
+    private Color Buttonhover = new Color(25, 30, 40);
+    private studentService student;
 // --muted-foreground
 
     // --- Icons for our custom checkbox (will be styled with new colors) ---
@@ -57,9 +54,9 @@ public class StudentRegCourses extends JFrame {
         this.rollNumber = rollNumber;
         this.username = username;
 
-        // --- Create the custom checkbox icons using the NEW color palette ---
         this.uncheckedIcon = createCheckBoxIcon(false);
         this.checkedIcon = createCheckBoxIcon(true);
+        this.student = new studentService();
 
         // --- Standard Frame Setup (using new colors) ---
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -70,7 +67,6 @@ public class StudentRegCourses extends JFrame {
         getContentPane().setBackground(bgColor);
         setLayout(new BorderLayout()); // Simplified to just BorderLayout
 
-        // Set the same logo
         try {
             ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
             setIconImage(image.getImage());
@@ -113,7 +109,7 @@ public class StudentRegCourses extends JFrame {
         headerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // --- Dropdown (styled to match) ---
-        String[] semesters = {"Select Term", "Semester 1", "Semester 2"};
+        String[] semesters = {"Select Term", "Monsoon 2025"};
         JComboBox<String> termDropdown = new JComboBox<>(semesters);
         styleComboBox(termDropdown); // Apply custom styling
 
@@ -164,7 +160,7 @@ public class StudentRegCourses extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String selectedItem = (String) termDropdown.getSelectedItem();
                 centerContentPanel.removeAll();
-                if (selectedItem.equals("Semester 1") || selectedItem.equals("Semester 2")) {
+                if (selectedItem.equals("Monsoon 2025") || selectedItem.equals("Semester 2")) {
                     System.out.println("User selected: " + selectedItem);
                     loadCourses(); // Load placeholder courses
                 } else {
@@ -270,30 +266,21 @@ public class StudentRegCourses extends JFrame {
      * Populates the centerContentPanel with styled course tiles.
      */
     private void loadCourses() {
-        // Hardcoded examples
-        JPanel tile1 = createCourseTilePanel("CSE121", "Discrete Mathematics", "4", "Mandatory (Core)", "Dr. Alan Turing");
-        JPanel tile2 = createCourseTilePanel("CSE201", "Advanced Programming", "4", "Mandatory (Core)", "Dr. Ada Lovelace");
-        JPanel tile3 = createCourseTilePanel("CSE231", "Operating Systems", "4", "Mandatory (Core)", "Dr. Linus Torvalds");
-        JPanel tile4 = createCourseTilePanel("MTH101", "Calculus", "4", "Elective", "Dr. Grace Hopper");
-        JPanel tile5 = createCourseTilePanel("DES101", "Intro to Design", "2", "Elective", "Dr. Tim Berners-Lee");
 
-        centerContentPanel.add(tile1);
-        centerContentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        centerContentPanel.add(tile2);
-        centerContentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        centerContentPanel.add(tile3);
-        centerContentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        centerContentPanel.add(tile4);
-        centerContentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        centerContentPanel.add(tile5);
-        centerContentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        List<studentAvailableCourses> courses = student.AllCourses("Monsoon 2025");
+
+        courses.forEach(course -> {
+            JPanel coursePanel = createCourseTilePanel(course.getCourse_code(),course.getCourse_name(),String.valueOf(course.getCourse_credits()) ,course.getOfferedBY());
+            centerContentPanel.add(coursePanel);
+            centerContentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        });
     }
 
 
     /**
      * Creates a styled course tile using RoundedPanel.
      */
-    private JPanel createCourseTilePanel(String code, String name, String credits, String regType, String instructor) {
+    private JPanel createCourseTilePanel(String code, String name, String credits, String instructor) {
         // Use the new RoundedPanel as the base
         RoundedPanel tilePanel = new RoundedPanel(15, cardColor, borderColor, 1);
         tilePanel.setLayout(new BorderLayout(15, 10)); // Gaps
@@ -338,12 +325,9 @@ public class StudentRegCourses extends JFrame {
         bottomInfoPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0)); // Top margin
 
         JPanel creditsPanel = createDetailPanel("Credits", credits);
-        JPanel regTypePanel = createDetailPanel("Registration Type", regType);
         JPanel instructorPanel = createDetailPanel("Instructor", instructor);
 
         bottomInfoPanel.add(creditsPanel);
-        bottomInfoPanel.add(Box.createRigidArea(new Dimension(40, 0)));
-        bottomInfoPanel.add(regTypePanel);
         bottomInfoPanel.add(Box.createRigidArea(new Dimension(40, 0)));
         bottomInfoPanel.add(instructorPanel);
         bottomInfoPanel.add(Box.createHorizontalGlue()); // Push all details left
