@@ -160,11 +160,10 @@ public class StudentRegCourses extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String selectedItem = (String) termDropdown.getSelectedItem();
                 centerContentPanel.removeAll();
-                if (selectedItem.equals("Monsoon 2025") || selectedItem.equals("Semester 2")) {
+                if (!selectedItem.equals("Select Term")) {
                     System.out.println("User selected: " + selectedItem);
-                    loadCourses(); // Load placeholder courses
+                    loadCourses(selectedItem); // Load placeholder courses
                 } else {
-                    // Show a prompt or leave blank
                     showPromptCard();
                 }
                 centerContentPanel.revalidate();
@@ -174,10 +173,9 @@ public class StudentRegCourses extends JFrame {
 
         // --- Bottom Panel for Buttons ---
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        bottomPanel.setOpaque(false); // Use parent's background
+        bottomPanel.setOpaque(false);
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
 
-        // Use the gradient action button style from Dashboard
         RoundedButton registerButton = createActionButton("Register Selected Courses");
         bottomPanel.add(registerButton);
 
@@ -188,10 +186,8 @@ public class StudentRegCourses extends JFrame {
             java.util.List<String> selectedCourses = new java.util.ArrayList<>();
 
             for (Component comp : components) {
-                // Check if it's one of our course tiles (which are RoundedPanels)
                 if (comp instanceof RoundedPanel) {
                     RoundedPanel tilePanel = (RoundedPanel) comp;
-                    // Find our custom checkbox (JLabel)
                     for (Component tileComp : tilePanel.getComponents()) {
                         if (tileComp instanceof JLabel) {
                             JLabel checkBoxLabel = (JLabel) tileComp;
@@ -201,7 +197,7 @@ public class StudentRegCourses extends JFrame {
                                 String courseCode = (String) checkBoxLabel.getClientProperty("courseCode");
                                 selectedCourses.add(courseCode);
                                 selectedCount++;
-                                break; // Found the checkbox for this tile
+                                break;
                             }
                         }
                     }
@@ -265,9 +261,9 @@ public class StudentRegCourses extends JFrame {
     /**
      * Populates the centerContentPanel with styled course tiles.
      */
-    private void loadCourses() {
+    private void loadCourses(String semester) {
 
-        List<studentAvailableCourses> courses = student.AllCourses("Monsoon 2025");
+        List<studentAvailableCourses> courses = student.AllCourses(semester);
 
         courses.forEach(course -> {
             JPanel coursePanel = createCourseTilePanel(course.getCourse_code(),course.getCourse_name(),String.valueOf(course.getCourse_credits()) ,course.getOfferedBY());
