@@ -77,6 +77,9 @@ public class AddUser extends JPanel {
     /**
      * Creates the left-side navigation panel.
      */
+    /**
+     * Creates the left-side navigation panel.
+     */
     private JPanel createSideMenuPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -106,8 +109,8 @@ public class AddUser extends JPanel {
         //    same "outer" padding that the old menuTitle label had.
         JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         buttonWrapper.setOpaque(false);
-        // This border matches the old menuTitle's border for spacing
-        buttonWrapper.setBorder(BorderFactory.createEmptyBorder(0, 25, 10, 25));
+        // --- MODIFIED: Changed bottom padding from 10 to 0 ---
+        buttonWrapper.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25));
         buttonWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonWrapper.add(backButton);
 
@@ -142,7 +145,8 @@ public class AddUser extends JPanel {
 
         // --- MODIFIED: Add the buttonWrapper instead of menuTitle ---
         panel.add(buttonWrapper);
-        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+         panel.add(Box.createRigidArea(new Dimension(0, 5)));
 
         // Add Separator
         JSeparator navSeparator = new JSeparator(SwingConstants.HORIZONTAL);
@@ -154,8 +158,9 @@ public class AddUser extends JPanel {
         separatorWrapper.add(navSeparator);
         separatorWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.add(separatorWrapper);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+
         panel.add(addStudentButton);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(addFacultyButton);
@@ -166,7 +171,6 @@ public class AddUser extends JPanel {
 
         return panel;
     }
-
     /**
      * A generic factory method to create a form panel (a "card").
      *
