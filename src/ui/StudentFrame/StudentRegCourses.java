@@ -6,7 +6,6 @@ import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import middleware.studentService;
 
-import java.time.chrono.JapaneseChronology;
 import java.util.List;
 
 import javax.swing.*;
@@ -139,7 +138,6 @@ public class StudentRegCourses extends JFrame {
         centerContentPanel = new JPanel();
         centerContentPanel.setLayout(new BoxLayout(centerContentPanel, BoxLayout.Y_AXIS));
         centerContentPanel.setBackground(mainPanelColor);
-        // Add padding on the right to make room for the scrollbar without content overlap
         centerContentPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 10));
 
         JScrollPane scrollPane = new JScrollPane(centerContentPanel);
@@ -196,7 +194,6 @@ public class StudentRegCourses extends JFrame {
 
                             if (selectedProp != null && (boolean) selectedProp) {
 
-                                // --- FIX 2: Get the full object from the property ---
                                 studentAvailableCourses courseObject = (studentAvailableCourses) checkBoxLabel.getClientProperty("courseObject");
                                 selectedCourses.add(courseObject);
 
@@ -208,32 +205,46 @@ public class StudentRegCourses extends JFrame {
                 }
             }
 
+            boolean checking = false;
+
             if (selectedCount == 0) {
                 JOptionPane.showMessageDialog(this,
                         "You have not selected any courses to register.",
                         "No Courses Selected",
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
-                // Now you have a list of full objects!
                 List<String> courseNames = new java.util.ArrayList<>();
                 for (studentAvailableCourses c : selectedCourses) {
-                    courseNames.add(c.getCourse_name());
-                }
-                String courseList = String.join(", ", courseNames);
-                System.out.println("Registering: " + courseList);
+                    if(student.CheckRegister(c.getCourse_code(), username)){
+                        courseNames.add(c.getCourse_name());
+                        checking = true;
+                    }else{
+                        JOptionPane.showMessageDialog(this,
+                                "Same course can't be registered multiple times." ,
+                                "Registration unsuccessful",
+                                JOptionPane.INFORMATION_MESSAGE);
 
-                if(student.RegisterCourse(selectedCourses, username)){
-                    JOptionPane.showMessageDialog(this,
-                            "Successfully registered " + selectedCount + " course(s):\n" + courseList,
-                            "Registration Complete",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    new StudentDashboard(rollNumber, username).setVisible(true);
-                    dispose();
-                }else{
-                    JOptionPane.showMessageDialog(this,
-                            "Registration unsuccessful " + selectedCount + " course(s):\n" + courseList,
-                            "Registration unsuccessful",
-                            JOptionPane.INFORMATION_MESSAGE);
+                        break;
+                    }
+                }
+
+                if(checking){
+                    String courseList = String.join(", ", courseNames);
+                    System.out.println("Registering: " + courseList);
+
+                    if(student.RegisterCourse(selectedCourses, username)){
+                        JOptionPane.showMessageDialog(this,
+                                "Successfully registered " + selectedCount + " course(s):\n" + courseList,
+                                "Registration Complete",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        new StudentDashboard(rollNumber, username).setVisible(true);
+                        dispose();
+                    }else{
+                        JOptionPane.showMessageDialog(this,
+                                "Registration unsuccessful " + selectedCount + " course(s):\n" + courseList,
+                                "Registration unsuccessful",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
                 }
             }
         });

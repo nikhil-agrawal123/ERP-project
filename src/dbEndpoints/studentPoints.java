@@ -215,5 +215,27 @@ public class studentPoints {
             }
         }
     }
+
+    public int Check(String userid, String course){
+        String sql = """
+            SELECT COUNT(*)
+            FROM users.enrollments
+            WHERE student_id = ? AND course_code = ?
+        """;
+
+        try (Connection conn = connector.connect();
+             PreparedStatement pstm = conn.prepareStatement(sql)
+        ){
+            pstm.setString(1, userid);
+            pstm.setString(2, course);
+            ResultSet rs = pstm.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }
 

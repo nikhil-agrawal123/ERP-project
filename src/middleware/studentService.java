@@ -66,4 +66,8 @@ public class studentService {
            return student.UpdateRegisteredCourses(courses, username);
     }
 
+    public boolean CheckRegister(String username, String courseCode) {
+        return student.Check(username, courseCode) != 0;
+    }
+
 }
