@@ -5,327 +5,439 @@ import ui.components.RoundedPanel;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.plaf.basic.BasicArrowButton;
 import javax.swing.plaf.basic.BasicComboBoxUI;
-import javax.swing.plaf.basic.ComboPopup;
-import javax.swing.text.Caret;
-import javax.swing.text.DefaultCaret;
-import javax.swing.text.Position;
-import javax.swing.plaf.TextUI;
+import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.text.JTextComponent;
 
 /**
- * A JPanel that provides a UI for adding Students, Faculty, or Admins.
- * This panel is intended to be placed inside a JFrame or JDialog.
+ * A panel for adding new users (Students, Faculty, Admin).
+ * Designed to match the AdminDashboard and StudentDashboard aesthetics.
  */
 public class AddUser extends JPanel {
 
-    // --- UI Color Palette (from AdminDashboard) ---
-    private Color bgColor = new Color(42, 48, 60);
-    private Color sideMenuColor = new Color(48, 54, 70);
-    private Color mainPanelColor = new Color(42, 48, 60);
-    private Color cardColor = new Color(54, 59, 74);
-    private Color borderColor = new Color(64, 69, 89);
-    private Color buttonColor = new Color(52, 159, 148);
-    private Color buttonColorGlow = new Color(79, 196, 184);
-    private Color textColor = new Color(255, 255, 255);
+    // --- UI Color Palette (Copied from AdminDashboard) ---
+    private Color bgColor = new Color(42, 48, 60);            // --background
+    private Color sideMenuColor = new Color(48, 54, 70);      // --sidebar-background
+    private Color mainPanelColor = new Color(42, 48, 60);       // --background
+    private Color cardColor = new Color(54, 59, 74);          // --card
+    private Color popoverColor = new Color(46, 52, 66);       // --popover
+    private Color borderColor = new Color(64, 69, 89);        // --border
+    private Color buttonColor = new Color(52, 159, 148);      // --primary / --accent
+    private Color buttonColorGlow = new Color(79, 196, 184);  // --primary-glow
+    private Color textColor = new Color(255, 255, 255);       // --foreground
     private Color textSecondaryColor = new Color(179, 179, 179);
-    private Color caretColor = new Color(52, 159, 148); // Accent color for caret
-    private Color formFieldColor = new Color(42, 48, 60); // Darker background for fields
 
+    // --- Colors for Back Button (Copied from StudentRegCourses) ---
+    private Color Buttonback = new Color(38, 44, 58);
+    private Color Buttonhover = new Color(25, 30, 40);
+
+    private JLayeredPane mainLayeredPane;
     private JPanel cardHolderPanel;
     private CardLayout cardLayout;
+
+    // List to manage the active state of side-menu buttons
     private List<RoundedButton> menuButtons;
 
+    /**
+     * Constructor for the AddUser panel.
+     */
     public AddUser() {
-        // Set up the main panel
-        setLayout(new BorderLayout(0, 0));
-        setBackground(mainPanelColor);
+        super();
         this.menuButtons = new ArrayList<>();
+
+        // Set up the main panel itself
+        setLayout(new BorderLayout());
+        setBackground(bgColor);
+        // Set a preferred size for the JDialog to pack()
         setPreferredSize(new Dimension(2160, 1080));
 
-        // 1. Create the Left Menu Panel
-        JPanel leftMenuPanel = createLeftMenu();
+        // --- 1. Side Menu (WEST) ---
+        JPanel sideMenuPanel = createSideMenuPanel();
+        add(sideMenuPanel, BorderLayout.WEST);
 
-        // 2. Create the Right Content Panel
-        JPanel rightContentPanel = createRightContentPanel();
+        // --- 2. Content Panel (CENTER) ---
+        cardLayout = new CardLayout();
+        cardHolderPanel = new JPanel(cardLayout);
+        cardHolderPanel.setBackground(mainPanelColor);
+        cardHolderPanel.setOpaque(true);
 
-        // 3. Add panels to the main layout
-        add(leftMenuPanel, BorderLayout.WEST);
-        add(rightContentPanel, BorderLayout.CENTER);
+        // Add the different forms to the CardLayout
+        cardHolderPanel.add(createWelcomePanel(), "WELCOME");
+        cardHolderPanel.add(createAddStudentPanel(), "ADD_STUDENT");
+        cardHolderPanel.add(createAddFacultyPanel(), "ADD_FACULTY");
+        cardHolderPanel.add(createAddAdminPanel(), "ADD_ADMIN");
 
-        // 4. Set the first button as active by default
-        if (!menuButtons.isEmpty()) {
-            setActiveButton(menuButtons.get(0));
-        }
+        add(cardHolderPanel, BorderLayout.CENTER);
+
+        // Show the welcome panel by default
+        cardLayout.show(cardHolderPanel, "WELCOME");
     }
 
     /**
-     * Creates the left-side menu panel with navigation buttons.
+     * Creates the side navigation panel.
      */
-    private JPanel createLeftMenu() {
+    private JPanel createSideMenuPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(sideMenuColor);
-        panel.setPreferredSize(new Dimension(260, 0));
-        // Add a subtle border on the right to act as a separator
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 0, 1, borderColor),
-                BorderFactory.createEmptyBorder(20, 10, 20, 10)
-        ));
+        panel.setPreferredSize(new Dimension(300, 0)); // Match StudentDashboard width
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
-        // --- Menu Buttons ---
-        RoundedButton b1 = createMenuButton("Add Student");
-        RoundedButton b2 = createMenuButton("Add Faculty");
-        RoundedButton b3 = createMenuButton("Add Admin");
+        // --- MODIFIED ---
+        // Changed createHeaderButton to createSideMenuButton for same size
+        RoundedButton backButton = CreateBackbutton("← Back to Dashboard");
+        // Added this line to center the text
+        backButton.setHorizontalAlignment(SwingConstants.CENTER);
+        // --- END MODIFICATION ---
 
-        b1.addActionListener(e -> {
-            setActiveButton(b1);
-            cardLayout.show(cardHolderPanel, "STUDENT");
-        });
-        b2.addActionListener(e -> {
-            setActiveButton(b2);
-            cardLayout.show(cardHolderPanel, "FACULTY");
-        });
-        b3.addActionListener(e -> {
-            setActiveButton(b3);
-            cardLayout.show(cardHolderPanel, "ADMIN");
+        backButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        backButton.addActionListener(e -> {
+            // Get the top-level window (the JDialog) and dispose of it
+            Window w = SwingUtilities.getWindowAncestor(this);
+            if (w != null) {
+                w.dispose();
+            }
         });
 
-        // Add components to the panel
-        panel.add(Box.createRigidArea(new Dimension(0, 20))); // Top padding
-        panel.add(b1);
+        // --- Navigation Buttons (Styled like StudentDashboard) ---
+        RoundedButton addStudentBtn = createSideMenuButton("Add Student");
+        RoundedButton addFacultyBtn = createSideMenuButton("Add Faculty");
+        RoundedButton addAdminBtn = createSideMenuButton("Add Admin");
+
+        // Add to list for state management
+        menuButtons.add(addStudentBtn);
+        menuButtons.add(addFacultyBtn);
+        menuButtons.add(addAdminBtn);
+
+        // --- Action Listeners ---
+        addStudentBtn.addActionListener(e -> {
+            cardLayout.show(cardHolderPanel, "ADD_STUDENT");
+            setActiveButton(addStudentBtn);
+        });
+
+        addFacultyBtn.addActionListener(e -> {
+            cardLayout.show(cardHolderPanel, "ADD_FACULTY");
+            setActiveButton(addFacultyBtn);
+        });
+
+        addAdminBtn.addActionListener(e -> {
+            cardLayout.show(cardHolderPanel, "ADD_ADMIN");
+            setActiveButton(addAdminBtn);
+        });
+
+        // --- Layout Panel ---
+        panel.add(backButton);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
+
+        JSeparator navSeparator = new JSeparator(SwingConstants.HORIZONTAL);
+        navSeparator.setForeground(borderColor);
+        navSeparator.setBackground(sideMenuColor);
+        navSeparator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+
+        // Wrap separator for correct padding
+        Box separatorWrapper = Box.createHorizontalBox();
+        separatorWrapper.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15)); // Match button padding
+        separatorWrapper.add(navSeparator);
+        separatorWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(separatorWrapper);
+
+        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        panel.add(addStudentBtn);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(b2);
+        panel.add(addFacultyBtn);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(b3);
-        panel.add(Box.createVerticalGlue()); // Pushes buttons to the top
+        panel.add(addAdminBtn);
+
+        panel.add(Box.createVerticalGlue()); // Pushes all content up
 
         return panel;
     }
 
     /**
-     * Creates the right-side panel that holds the different forms (Student, Faculty, Admin).
+     * Creates a welcome/prompt panel for the center area.
      */
-    private JPanel createRightContentPanel() {
-        cardLayout = new CardLayout();
-        cardHolderPanel = new JPanel(cardLayout);
-        cardHolderPanel.setOpaque(false); // Transparent background
+    private JPanel createWelcomePanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(mainPanelColor);
+        panel.setOpaque(true);
 
-        // Create the individual form panels
-        JPanel studentForm = createFormWrapperPanel(createStudentForm(), "Add New Student");
-        JPanel facultyForm = createFormWrapperPanel(createFacultyForm(), "Add New Faculty");
-        JPanel adminForm = createFormWrapperPanel(createAdminForm(), "Add New Admin");
+        JLabel promptLabel = new JLabel("Select an action from the menu to begin.", SwingConstants.CENTER);
+        promptLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        promptLabel.setForeground(textSecondaryColor);
 
-        // Add forms to the CardLayout
-        cardHolderPanel.add(studentForm, "STUDENT");
-        cardHolderPanel.add(facultyForm, "FACULTY");
-        cardHolderPanel.add(adminForm, "ADMIN");
-
-        // Show the first form by default
-        cardLayout.show(cardHolderPanel, "STUDENT");
-
-        return cardHolderPanel;
+        panel.add(promptLabel);
+        return panel;
     }
 
-    /**
-     * Creates a wrapper for a form. This wrapper centers the form vertically and
-     * horizontally and provides padding.
-     *
-     * @param formPanel The actual form content.
-     * @param title     The title to display above the form.
-     * @return A JPanel ready to be added to the CardLayout.
-     */
-    private JPanel createFormWrapperPanel(JPanel formPanel, String title) {
-        // This panel uses GridBagLayout to center the form
-        JPanel wrapperPanel = new JPanel(new GridBagLayout());
-        wrapperPanel.setOpaque(false); // Transparent background
-        wrapperPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
-
-        // Container for title and form
-        RoundedPanel contentContainer = new RoundedPanel(15, cardColor, cardColor, 0);
-        contentContainer.setLayout(new BoxLayout(contentContainer, BoxLayout.Y_AXIS));
-        contentContainer.setPreferredSize(new Dimension(500, 0)); // Set a preferred width
-        contentContainer.setMaximumSize(new Dimension(500, 900)); // Set max width
-
-        // --- Title ---
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        titleLabel.setForeground(textColor);
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(25, 25, 20, 25));
-
-        contentContainer.add(titleLabel);
-        contentContainer.add(formPanel);
-
-        // Add the content container to the wrapper (which centers it)
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.NORTH; // Anchor to the top
-        gbc.weighty = 1.0;                     // Allow it to be pushed to the top
-        wrapperPanel.add(contentContainer, gbc);
-
-        return wrapperPanel;
-    }
-
-    // --- Form Creation Methods ---
+    // --- FORM CREATION METHODS ---
 
     /**
-     * Creates the specific form fields for adding a Student.
+     * Creates the "Add Student" form panel.
      */
-    private JPanel createStudentForm() {
-        String[] departments = {"Computer Science", "Electrical Engineering", "Mechanical Engineering", "Civil Engineering", "Biotechnology"};
-        return createBaseForm(
-                new String[]{"Full Name", "Student ID", "Email", "Password", "Department", "Semester"},
-                new JComponent[]{
-                        new StyledTextField(),
-                        new StyledTextField(),
-                        new StyledTextField(),
-                        new StyledPasswordField(),
-                        new StyledComboBox<>(departments),
-                        new StyledComboBox<>(new String[]{"1", "2", "3", "4", "5", "6", "7", "8"})
-                },
+    private JPanel createAddStudentPanel() {
+        String[] depts = {"Select Department", "CSE", "ECE", "CSD", "CSB", "CSAI", "HSS"};
+
+        // Use a generic creator method
+        return createGenericFormPanel(
+                "Add New Student",
+                "Student ID (Roll No.):",
+                depts,
                 "Add Student"
         );
     }
 
     /**
-     * Creates the specific form fields for adding a Faculty.
+     * Creates the "Add Faculty" form panel.
      */
-    private JPanel createFacultyForm() {
-        String[] departments = {"Computer Science", "Electrical Engineering", "Mechanical Engineering", "Civil Engineering", "Biotechnology"};
-        String[] designations = {"Professor", "Associate Professor", "Assistant Professor", "Lecturer"};
-        return createBaseForm(
-                new String[]{"Full Name", "Faculty ID", "Email", "Password", "Department", "Designation"},
-                new JComponent[]{
-                        new StyledTextField(),
-                        new StyledTextField(),
-                        new StyledTextField(),
-                        new StyledPasswordField(),
-                        new StyledComboBox<>(departments),
-                        new StyledComboBox<>(designations)
-                },
+    private JPanel createAddFacultyPanel() {
+        String[] depts = {"Select Department", "CSE", "ECE", "CSD", "CSB", "CSAI", "HSS", "Mathematics", "Science"};
+
+        // Use a generic creator method
+        return createGenericFormPanel(
+                "Add New Faculty",
+                "Faculty ID:",
+                depts,
                 "Add Faculty"
         );
     }
 
     /**
-     * Creates the specific form fields for adding an Admin.
+     * Creates the "Add Admin" form panel.
      */
-    private JPanel createAdminForm() {
-        return createBaseForm(
-                new String[]{"Full Name", "Admin ID", "Email", "Password"},
-                new JComponent[]{
-                        new StyledTextField(),
-                        new StyledTextField(),
-                        new StyledTextField(),
-                        new StyledPasswordField()
-                },
+    private JPanel createAddAdminPanel() {
+        String[] depts = {"Select Role", "Registrar", "Accounts", "IT Support", "HR"};
+
+        // Use a generic creator method
+        return createGenericFormPanel(
+                "Add New Admin Staff",
+                "Admin ID:",
+                depts,
                 "Add Admin"
         );
     }
 
     /**
-     * A generic method to create a form panel with labels and fields.
+     * A generic method to create a user form to avoid code duplication.
      */
-    private JPanel createBaseForm(String[] labelTexts, JComponent[] fields, String submitButtonText) {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setOpaque(false); // Transparent
-        panel.setBorder(BorderFactory.createEmptyBorder(0, 25, 25, 25));
+    private JPanel createGenericFormPanel(String title, String idLabelText, String[] departmentOptions, String buttonText) {
+        // This outer panel uses GridBagLayout to center the form panel
+        JPanel outerPanel = new JPanel(new GridBagLayout());
+        outerPanel.setBackground(mainPanelColor);
+        outerPanel.setOpaque(true);
+        outerPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+
+        // The form itself is a RoundedPanel
+        RoundedPanel formPanel = new RoundedPanel(15, cardColor, borderColor, 1);
+        formPanel.setLayout(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8); // Spacing for all components
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
 
-        // Add form fields
-        for (int i = 0; i < labelTexts.length; i++) {
-            // Label
-            JLabel label = new JLabel(labelTexts[i]);
-            label.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            label.setForeground(textSecondaryColor);
-            gbc.gridx = 0;
-            gbc.gridy = i;
-            gbc.gridwidth = 1;
-            gbc.anchor = GridBagConstraints.LINE_START;
-            panel.add(label, gbc);
+        // --- Title ---
+        JLabel titleLabel = createFormTitle(title);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(titleLabel, gbc);
 
-            // Field
-            gbc.gridx = 1;
-            gbc.gridy = i;
-            gbc.gridwidth = 2;
-            gbc.anchor = GridBagConstraints.LINE_END;
-            panel.add(fields[i], gbc);
-        }
+        // --- Separator ---
+        JSeparator titleSeparator = new JSeparator(SwingConstants.HORIZONTAL);
+        titleSeparator.setForeground(borderColor);
+        titleSeparator.setBackground(cardColor);
+        gbc.gridy = 1;
+        gbc.insets = new Insets(0, 0, 20, 0); // Less vertical padding
+        formPanel.add(titleSeparator, gbc);
+
+        // --- Reset Insets and Gridwidth ---
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridwidth = 1;
+
+        // --- Full Name ---
+        JLabel nameLabel = createFormLabel("Full Name:");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.fill = GridBagConstraints.NONE;
+        formPanel.add(nameLabel, gbc);
+
+        JTextField nameField = createFormField();
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.weightx = 1.0; // Make field take available space
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        formPanel.add(nameField, gbc);
+
+        // --- ID Field ---
+        JLabel idLabel = createFormLabel(idLabelText);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.weightx = 0.0;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.fill = GridBagConstraints.NONE;
+        formPanel.add(idLabel, gbc);
+
+        JTextField idField = createFormField();
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // --- MODIFIED ---
+        gbc.weightx = 1.0; // Added this to make the field stretch
+        // --- END MODIFICATION ---
+        formPanel.add(idField, gbc);
+
+        // --- Department/Role ---
+        JLabel deptLabel = createFormLabel("Department/Role:");
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.fill = GridBagConstraints.NONE;
+        formPanel.add(deptLabel, gbc);
+
+        JComboBox<String> deptDropdown = createFormComboBox(departmentOptions);
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // --- MODIFIED ---
+        gbc.weightx = 1.0; // Added this to make the field stretch
+        // --- END MODIFICATION ---
+        formPanel.add(deptDropdown, gbc);
 
         // --- Submit Button ---
-        RoundedButton submitButton = new RoundedButton(
-                submitButtonText,
-                buttonColor,
-                buttonColorGlow,
-                buttonColor.darker(),
-                buttonColor,
-                8
-        );
-        submitButton.setForeground(textColor);
-        submitButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        submitButton.setPreferredSize(new Dimension(0, 45)); // Taller button
+        RoundedButton submitButton = createActionButton(buttonText);
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.EAST; // Align button to the right
+        gbc.insets = new Insets(20, 10, 0, 10); // Add top margin
+        formPanel.add(submitButton, gbc);
+
         submitButton.addActionListener(e -> {
-            // Handle form submission here
-            System.out.println(submitButtonText + " button clicked.");
-            // You would normally retrieve text from fields[] here
+            // TODO: Add database logic here
+            System.out.println("--- Submitting New User ---");
+            System.out.println("Type: " + buttonText);
+            System.out.println("Name: " + nameField.getText());
+            System.out.println("ID: " + idField.getText());
+            System.out.println("Dept: " + deptDropdown.getSelectedItem());
             JOptionPane.showMessageDialog(this,
-                    "User added successfully (simulation).\nCheck console for details.",
+                    buttonText + " operation simulated.\nCheck console for details.",
                     "Success",
                     JOptionPane.INFORMATION_MESSAGE);
+
+            // Clear fields after submission
+            nameField.setText("");
+            idField.setText("");
+            deptDropdown.setSelectedIndex(0);
         });
 
-        gbc.gridx = 0;
-        gbc.gridy = labelTexts.length;
-        gbc.gridwidth = 3; // Span all 3 columns
-        gbc.insets = new Insets(20, 8, 8, 8); // Extra top margin
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel.add(submitButton, gbc);
+        // --- MODIFIED ---
+        // Changed how the formPanel is added to outerPanel
+        // This makes the form stretch horizontally (with padding) and stay at the top
+        GridBagConstraints outerGbc = new GridBagConstraints();
+        outerGbc.anchor = GridBagConstraints.NORTH; // Pin to top
+        outerGbc.fill = GridBagConstraints.HORIZONTAL; // Stretch horizontally
+        outerGbc.weightx = 1.0; // Allow horizontal stretch
+        outerGbc.weighty = 1.0; // Use remaining vertical space to push to top
+        outerGbc.insets = new Insets(0, 150, 0, 150); // Add 150px padding on left/right
+        outerPanel.add(formPanel, outerGbc);
+        // --- END MODIFICATION ---
 
-        return panel;
+        return outerPanel;
     }
 
-
-    // --- Helper Methods & Inner Classes ---
+    // --- STYLING HELPER METHODS (Copied from other classes) ---
 
     /**
-     * Helper to create styled buttons for the left menu.
+     * Creates a styled button for the side menu.
+     * (Copied from StudentDashboard)
      */
-    private RoundedButton createMenuButton(String text) {
+    private RoundedButton createSideMenuButton(String text) {
         RoundedButton button = new RoundedButton(
                 text,
-                sideMenuColor,      // Normal
-                borderColor,        // Hover
+                sideMenuColor,        // Normal
+                borderColor,          // Hover
                 buttonColor.darker(), // Pressed
-                buttonColor,        // Active
-                8                   // Arc
+                buttonColor,          // Active
+                8                     // Arc
         );
         button.setFont(new Font("Segoe UI", Font.BOLD, 17));
         button.setForeground(textSecondaryColor);
-        button.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25));
         button.setHorizontalAlignment(SwingConstants.LEFT);
-        button.setPreferredSize(new Dimension(Integer.MAX_VALUE, 50));
+        button.setPreferredSize(new Dimension(Integer.MAX_VALUE, 60));
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25));
+        button.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return button;
+    }
 
-        menuButtons.add(button); // Add to list for state management
+    private RoundedButton CreateBackbutton(String text) {
+        RoundedButton button = new RoundedButton(
+                text,
+                Buttonback, // normal
+                Buttonhover,   // hover
+                borderColor.darker(), // pressed
+                8
+        );
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setForeground(textColor);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        button.setPreferredSize(null);
         return button;
     }
 
     /**
-     * Sets the clicked button to active (gradient) and all others to inactive.
+     * Creates a styled header button (for "Back").
+     * (Copied from StudentRegCourses)
+     */
+    private RoundedButton createHeaderButton(String text) {
+        RoundedButton button = new RoundedButton(
+                text,
+                Buttonback, // normal
+                Buttonhover,   // hover
+                borderColor.darker(), // pressed
+                8
+        );
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setForeground(textColor);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        // --- Set explicit size to match StudentRegCourses ---
+        Dimension size = new Dimension(180, 40);
+        button.setPreferredSize(size);
+        button.setMaximumSize(size);
+        button.setMinimumSize(size);
+        button.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        return button;
+    }
+
+    /**
+     * Creates a styled action button (gradient background).
+     * (Copied from StudentRegCourses)
+     */
+    private RoundedButton createActionButton(String text) {
+        RoundedButton button = new RoundedButton(
+                text,
+                buttonColor,      // Gradient Start (--primary)
+                buttonColorGlow,  // Gradient End (--primary-glow)
+                8                 // Arc radius
+        );
+        button.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        button.setForeground(textColor);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // A bit smaller
+        button.setPreferredSize(null); // Let it size itself
+        return button;
+    }
+
+    /**
+     * Sets the active state for side menu buttons.
+     * (Copied from StudentDashboard)
      */
     private void setActiveButton(RoundedButton activeButton) {
         for (RoundedButton button : menuButtons) {
@@ -336,216 +448,175 @@ public class AddUser extends JPanel {
         activeButton.setForeground(textColor);
     }
 
+    // --- FORM COMPONENT STYLING ---
+
     /**
-     * A custom Border for text fields with padding and a rounded effect.
+     * Creates a styled title label for a form.
      */
-    private class StyledFieldBorder implements Border {
-        private int cornerRadius = 8;
-        private Color focusColor = buttonColor;
-        private Color defaultColor = borderColor;
-        private int thickness = 1;
+    private JLabel createFormTitle(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        label.setForeground(textColor);
+        return label;
+    }
 
-        @Override
-        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    /**
+     * Creates a styled label for a form field.
+     */
+    private JLabel createFormLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        label.setForeground(textSecondaryColor);
+        return label;
+    }
 
-            if (c.hasFocus()) {
-                g2.setColor(focusColor);
-                thickness = 2; // Thicker border on focus
-            } else {
-                g2.setColor(defaultColor);
-                thickness = 1;
+    /**
+     * Creates a styled text field for a form.
+     */
+    private JTextField createFormField() {
+        JTextField field = new JTextField();
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        field.setBackground(bgColor); // Use darkest bg
+        field.setForeground(textColor);
+        field.setCaretColor(buttonColor); // Accent caret
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(borderColor, 1),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10) // Padding
+        ));
+
+        // --- MODIFIED ---
+        // Removed fixed size to allow horizontal stretching
+        // Dimension size = new Dimension(300, 40);
+        // field.setPreferredSize(size);
+        // field.setMinimumSize(size);
+        // --- END MODIFICATION ---
+        return field;
+    }
+
+    /**
+     * Creates and styles a JComboBox for a form.
+     */
+    private JComboBox<String> createFormComboBox(String[] items) {
+        JComboBox<String> comboBox = new JComboBox<>(items);
+        styleComboBox(comboBox); // Apply the complex styling
+
+        // --- MODIFIED ---
+        // Removed fixed size to allow horizontal stretching
+        // Dimension size = new Dimension(300, 40);
+        // comboBox.setPreferredSize(size);
+        // comboBox.setMinimumSize(size);
+        // --- END MODIFICATION ---
+        return comboBox;
+    }
+
+    /**
+     * Applies modern styling to a JComboBox.
+     * (Copied from StudentRegCourses)
+     */
+    private void styleComboBox(JComboBox<String> comboBox) {
+        comboBox.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        comboBox.setForeground(textColor);
+        comboBox.setBackground(cardColor); // Dark card color
+        comboBox.setBorder(BorderFactory.createLineBorder(borderColor, 1));
+        comboBox.setFocusable(false);
+
+        // --- Custom Renderer ---
+        comboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setText(value.toString());
+                setBackground(isSelected ? buttonColor : cardColor);
+                setForeground(isSelected ? textColor : textSecondaryColor);
+                setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+                return this;
+            }
+        });
+
+        // --- Custom UI (to style arrow) ---
+        comboBox.setUI(new BasicComboBoxUI() {
+            @Override
+            protected JButton createArrowButton() {
+                // Create a button with the new theme
+                RoundedButton arrowButton = new RoundedButton("▼",
+                        buttonColor, buttonColor.brighter(), buttonColor.darker(), 8);
+                arrowButton.setForeground(textColor);
+                arrowButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                arrowButton.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+                return arrowButton;
             }
 
-            // Draw the rounded border
-            g2.setStroke(new BasicStroke(thickness));
-            g2.draw(new RoundRectangle2D.Double(x + thickness / 2.0, y + thickness / 2.0,
-                    width - thickness, height - thickness,
-                    cornerRadius, cornerRadius));
+            @Override
+            public void paintCurrentValue(Graphics g, Rectangle bounds, boolean hasFocus) {
+                // Custom painting to get padding
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                g2.setColor(cardColor);
+                g2.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+                String text = (String) comboBox.getSelectedItem();
+                FontMetrics fm = g2.getFontMetrics();
+
+                g2.setColor(textColor);
+                g2.setFont(new Font("Segoe UI", Font.BOLD, 16));
+                g2.drawString(text, bounds.x + 15, bounds.y + fm.getAscent() + (bounds.height - fm.getHeight()) / 2);
+
+                g2.dispose();
+            }
+
+
+        });
+    }
+
+    /**
+     * Inner class for a custom styled scrollbar.
+     * (Copied from StudentRegCourses)
+     */
+    private class StyledScrollBarUI extends BasicScrollBarUI {
+        @Override
+        protected void configureScrollBarColors() {
+            this.thumbColor = buttonColor;      // Accent color for the thumb
+            this.trackColor = cardColor;      // Dark card color for the track
+            this.thumbDarkShadowColor = buttonColor;
+            this.thumbHighlightColor = buttonColor;
+            this.thumbLightShadowColor = buttonColor;
+        }
+
+        @Override
+        protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(thumbColor);
+            g2.fill(new RoundRectangle2D.Float(thumbBounds.x + 2, thumbBounds.y, thumbBounds.width - 4, thumbBounds.height, 10, 10));
             g2.dispose();
         }
 
         @Override
-        public Insets getBorderInsets(Component c) {
-            // Top, Left, Bottom, Right padding
-            return new Insets(8, 12, 8, 12);
+        protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(trackColor);
+            g2.fill(trackBounds);
+            g2.dispose();
         }
 
         @Override
-        public boolean isBorderOpaque() {
-            return false;
-        }
-    }
-
-    /**
-     * A custom Caret for text fields.
-     */
-    private class StyledCaret extends DefaultCaret {
-        public StyledCaret() {
-            setBlinkRate(500);
+        protected JButton createDecreaseButton(int orientation) {
+            return createZeroButton();
         }
 
         @Override
-        protected synchronized void damage(Rectangle r) {
-            if (r == null) return;
-            // Repaint the component
-            JComponent c = getComponent();
-            if (c != null) {
-                c.repaint(r.x, r.y, r.width, r.height);
-            }
+        protected JButton createIncreaseButton(int orientation) {
+            return createZeroButton();
         }
 
-        @Override
-        public void paint(Graphics g) {
-            JComponent c = getComponent();
-            if (c == null || !isVisible()) return;
-
-            Rectangle r = c.getVisibleRect();
-            try {
-                // Cast the UI to TextUI to get the correct modelToView method
-                TextUI ui = (TextUI) c.getUI();
-                Rectangle magicCaret = ui.modelToView((JTextComponent) c, getDot(), getMarkBias());
-
-                if (magicCaret == null || (magicCaret.width == 0 && magicCaret.height == 0)) {
-                    return;
-                }
-
-                if ((r != null && r.intersects(magicCaret)) || (r == null)) {
-                    Graphics2D g2 = (Graphics2D) g.create();
-                    g2.setColor(caretColor); // Use our custom caret color
-                    g2.setStroke(new BasicStroke(2)); // Make it thicker
-                    g2.drawLine(magicCaret.x, magicCaret.y, magicCaret.x, magicCaret.y + magicCaret.height - 1);
-                    g2.dispose();
-                }
-            } catch (Exception e) {
-                // Ignore
-            }
-        }
-    }
-
-    /**
-     * A JTextField styled to match the UI theme.
-     */
-    private class StyledTextField extends JTextField {
-        public StyledTextField() {
-            super();
-            setFont(new Font("Segoe UI", Font.PLAIN, 15));
-            setBackground(formFieldColor);
-            setForeground(textColor);
-            setOpaque(true);
-            setBorder(new StyledFieldBorder());
-            setCaret(new StyledCaret());
-            // Set padding
-            setMargin(new Insets(5, 10, 5, 10));
-        }
-    }
-
-    /**
-     * A JPasswordField styled to match the UI theme.
-     */
-    private class StyledPasswordField extends JPasswordField {
-        public StyledPasswordField() {
-            super();
-            setFont(new Font("Segoe UI", Font.PLAIN, 15));
-            setBackground(formFieldColor);
-            setForeground(textColor);
-            setOpaque(true);
-            setBorder(new StyledFieldBorder());
-            setCaret(new StyledCaret());
-            setMargin(new Insets(5, 10, 5, 10));
-        }
-    }
-
-    /**
-     * A JComboBox styled to match the UI theme.
-     */
-    private class StyledComboBox<E> extends JComboBox<E> {
-        public StyledComboBox(E[] items) {
-            super(items);
-            setBackground(formFieldColor);
-            setForeground(textColor);
-            setFont(new Font("Segoe UI", Font.PLAIN, 15));
-            setUI(new CustomComboBoxUI());
-            setBorder(new StyledFieldBorder());
-        }
-
-        private class CustomComboBoxUI extends BasicComboBoxUI {
-            @Override
-            protected JButton createArrowButton() {
-                // Create a custom arrow button
-                BasicArrowButton arrowButton = new BasicArrowButton(
-                        BasicArrowButton.SOUTH,
-                        formFieldColor, // background
-                        formFieldColor, // shadow
-                        buttonColor,    // dark shadow (arrow color)
-                        formFieldColor  // highlight
-                );
-                arrowButton.setBorder(BorderFactory.createEmptyBorder());
-                arrowButton.setOpaque(true);
-                arrowButton.setBackground(formFieldColor);
-                return arrowButton;
-            }
-
-             @Override
-             // --- THIS IS THE FULLY CORRECTED METHOD ---
-             public void paintCurrentValue(Graphics g, Rectangle bounds, boolean hasFocus) {
-                 // 1. Get the generic-aware renderer from the JComboBox
-                 ListCellRenderer<? super E> renderer = comboBox.getRenderer();
-
-                 // 2. Get the component, casting listBox to raw JList to bridge generic gap
-                 Component c = renderer.getListCellRendererComponent(
-                         (JList) listBox, // <-- This cast is the fix
-                         (E) comboBox.getSelectedItem(),
-                         -1,
-                         false,
-                         false
-                 );
-
-                 c.setBackground(formFieldColor);
-                 c.setForeground(textColor);
-                 c.setFont(comboBox.getFont());
-                 c.setComponentOrientation(comboBox.getComponentOrientation());
-
-                 // Set bounds for painting
-                 bounds.x += 5;
-                 bounds.width -= 5;
-
-                 // Paint the component
-                 SwingUtilities.paintComponent(g, c, comboBox, bounds);
-             }
-
-            @Override
-            protected ListCellRenderer<Object> createRenderer() {
-                return new DefaultListCellRenderer() {
-                    @Override
-                    public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                        setBackground(isSelected ? buttonColor : formFieldColor);
-                        setForeground(isSelected ? textColor : textSecondaryColor);
-                        setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                        setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-                        return this;
-                    }
-                };
-            }
-
-            @Override
-            protected ComboPopup createPopup() {
-                ComboPopup popup = super.createPopup();
-                popup.getList().setBackground(formFieldColor);
-                popup.getList().setSelectionBackground(buttonColor);
-                popup.getList().setSelectionForeground(textColor);
-                popup.getList().setBorder(BorderFactory.createLineBorder(borderColor, 1));
-                return popup;
-            }
-
-            @Override
-            public void paint(Graphics g, JComponent c) {
-                // Override paint to ensure the background is set correctly
-                c.setBackground(formFieldColor);
-                super.paint(g, c);
-            }
+        private JButton createZeroButton() {
+            JButton jbutton = new JButton();
+            jbutton.setPreferredSize(new Dimension(0, 0));
+            jbutton.setMinimumSize(new Dimension(0, 0));
+            jbutton.setMaximumSize(new Dimension(0, 0));
+            return jbutton;
         }
     }
 }

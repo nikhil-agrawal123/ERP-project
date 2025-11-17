@@ -1,6 +1,7 @@
 package ui.dashboard;
 
 import ui.AdminFrame.AddUser;
+import ui.AdminFrame.RemoveUser;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import ui.landing.LandingFrame;
@@ -274,10 +275,16 @@ public class AdminDashboard extends JFrame {
             }
         });
 
-        JPanel manageUsersCard = createFunctionCard("Manage Users");
-        manageUsersCard.addMouseListener(new MouseAdapter() {
+        JPanel removeUsersCard = createFunctionCard("Remove Users");
+        removeUsersCard.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                createPlaceholderFrame("Manage Users");
+                // Open the new RemoveUser frame
+                SwingUtilities.invokeLater(() -> {
+                    RemoveUser removeUserFrame = new RemoveUser(adminID, username);
+                    removeUserFrame.setVisible(true);
+                });
+                // Optionally, you can dispose the admin dashboard
+                // dispose();
             }
         });
 
@@ -300,7 +307,7 @@ public class AdminDashboard extends JFrame {
 
         // Add cards to the new grid panel
         cardGridPanel.add(addUserCard);
-        cardGridPanel.add(manageUsersCard);
+        cardGridPanel.add(removeUsersCard);
         cardGridPanel.add(manageCoursesCard);
         cardGridPanel.add(maintenanceCard);
         // cardGridPanel.add(logoutCard); // Removed
