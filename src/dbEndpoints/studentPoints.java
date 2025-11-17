@@ -64,7 +64,7 @@ public class studentPoints {
                 "JOIN users.courses c ON g.course_code = c.course_code " +
                 "WHERE g.student_roll_no = ?";
         try (Connection connection = connector.connect();
-        PreparedStatement pstmt = connection.prepareStatement(sql)) {
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -100,7 +100,95 @@ public class studentPoints {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return  allCourses;
+        return allCourses;
+    }
+
+    public boolean UpdateRegisteredCourses(List<studentAvailableCourses> selectedCourses, String studentId) {
+
+        String studentName = "";
+        int sem = 0;
+        String nameSql = "SELECT full_name FROM users.students WHERE user_id = ?";
+
+        try (Connection conn = connector.connect();
+             PreparedStatement namePstmt = conn.prepareStatement(nameSql)) {
+
+            namePstmt.setString(1, studentId);
+            try (ResultSet rs = namePstmt.executeQuery()) {
+                if (rs.next()) {
+                    studentName = rs.getString("full_name");
+                } else {
+                    throw new SQLException("Student not found: " + studentId);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false; // Failed to get the student's name
+        }
+
+        String Semsql = "SELECT MAX(semester) FROM users.enrollments WHERE student_id = ?";
+        try (Connection conn = connector.connect();
+            PreparedStatement pstm = conn.prepareStatement(Semsql)
+        ){
+            pstm.setString(1, studentId);
+            ResultSet rs = pstm.executeQuery();
+            if(rs.next()){
+                sem = rs.getInt(1);
+            }
+
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        String sql = "INSERT INTO users.enrollments " +
+                "(student_id, student_name, course_code, course_name, course_credits, semester, completion) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        Connection conn = null;
+        try {
+            conn = connector.connect();
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                for (studentAvailableCourses course : selectedCourses) {
+                    pstmt.setString(1, studentId);
+                    pstmt.setString(2, studentName);
+                    pstmt.setString(3, course.getCourse_code());
+                    pstmt.setString(4, course.getCourse_name());
+                    pstmt.setInt(5, course.getCourse_credits());
+                    pstmt.setInt(6, sem);
+                    pstmt.setBoolean(7, false);
+
+                    pstmt.addBatch();
+                }
+
+                pstmt.executeBatch();
+
+                conn.commit();
+
+                return true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback(); // If anything fails, roll back all changes
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true); // Restore default behavior
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
 

@@ -6,15 +6,13 @@ import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import middleware.studentService;
 import java.util.List;
+import middleware.studentService;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicScrollBarUI; // For styled scrollbar
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.net.URI;
@@ -37,7 +35,6 @@ public class StudentRegCourses extends JFrame {
     private Color Buttonback = new Color(38, 44, 58);
     private Color Buttonhover = new Color(25, 30, 40);
     private studentService student;
-// --muted-foreground
 
     // --- Icons for our custom checkbox (will be styled with new colors) ---
     private ImageIcon uncheckedIcon;
@@ -109,7 +106,7 @@ public class StudentRegCourses extends JFrame {
         headerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // --- Dropdown (styled to match) ---
-        String[] semesters = {"Select Term", "Monsoon 2025"};
+        String[] semesters = {"Select Term" ,"Monsoon 2025"};
         JComboBox<String> termDropdown = new JComboBox<>(semesters);
         styleComboBox(termDropdown); // Apply custom styling
 
@@ -183,19 +180,25 @@ public class StudentRegCourses extends JFrame {
             System.out.println("Register button clicked. Registering selected courses:");
             Component[] components = centerContentPanel.getComponents();
             int selectedCount = 0;
-            java.util.List<String> selectedCourses = new java.util.ArrayList<>();
+
+            // --- FIX 1: Change the list type to match your data class ---
+            java.util.List<studentAvailableCourses> selectedCourses = new java.util.ArrayList<>();
 
             for (Component comp : components) {
                 if (comp instanceof RoundedPanel) {
                     RoundedPanel tilePanel = (RoundedPanel) comp;
+                    // Find the checkbox (it's a JLabel with an icon)
                     for (Component tileComp : tilePanel.getComponents()) {
-                        if (tileComp instanceof JLabel) {
+                        if (tileComp instanceof JLabel && ((JLabel) tileComp).getIcon() != null) {
                             JLabel checkBoxLabel = (JLabel) tileComp;
                             Object selectedProp = checkBoxLabel.getClientProperty("selected");
 
                             if (selectedProp != null && (boolean) selectedProp) {
-                                String courseCode = (String) checkBoxLabel.getClientProperty("courseCode");
-                                selectedCourses.add(courseCode);
+
+                                // --- FIX 2: Get the full object from the property ---
+                                studentAvailableCourses courseObject = (studentAvailableCourses) checkBoxLabel.getClientProperty("courseObject");
+                                selectedCourses.add(courseObject);
+
                                 selectedCount++;
                                 break;
                             }
@@ -210,17 +213,27 @@ public class StudentRegCourses extends JFrame {
                         "No Courses Selected",
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
-                // ---
-                // TODO: Add your registration logic here
-                // Example: studentService.registerCourses(rollNumber, selectedCourses);
-                // ---
-                String courseList = String.join(", ", selectedCourses);
+                // Now you have a list of full objects!
+                List<String> courseNames = new java.util.ArrayList<>();
+                for (studentAvailableCourses c : selectedCourses) {
+                    courseNames.add(c.getCourse_name());
+                }
+                String courseList = String.join(", ", courseNames);
                 System.out.println("Registering: " + courseList);
 
-                JOptionPane.showMessageDialog(this,
-                        "Successfully registered " + selectedCount + " course(s):\n" + courseList,
-                        "Registration Complete",
-                        JOptionPane.INFORMATION_MESSAGE);
+                if(student.RegisterCourse(selectedCourses, username)){
+                    JOptionPane.showMessageDialog(this,
+                            "Successfully registered " + selectedCount + " course(s):\n" + courseList,
+                            "Registration Complete",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    new StudentDashboard(rollNumber, username).setVisible(true);
+                    dispose();
+                }else{
+                    JOptionPane.showMessageDialog(this,
+                            "Registration unsuccessful " + selectedCount + " course(s):\n" + courseList,
+                            "Registration unsuccessful",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
             }
         });
 
@@ -266,7 +279,7 @@ public class StudentRegCourses extends JFrame {
         List<studentAvailableCourses> courses = student.AllCourses(semester);
 
         courses.forEach(course -> {
-            JPanel coursePanel = createCourseTilePanel(course.getCourse_code(),course.getCourse_name(),String.valueOf(course.getCourse_credits()) ,course.getOfferedBY());
+            JPanel coursePanel = createCourseTilePanel(course);
             centerContentPanel.add(coursePanel);
             centerContentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
         });
@@ -276,7 +289,7 @@ public class StudentRegCourses extends JFrame {
     /**
      * Creates a styled course tile using RoundedPanel.
      */
-    private JPanel createCourseTilePanel(String code, String name, String credits, String instructor) {
+    private JPanel createCourseTilePanel(studentAvailableCourses course) { // <-- FIX 1: Change parameter
         // Use the new RoundedPanel as the base
         RoundedPanel tilePanel = new RoundedPanel(15, cardColor, borderColor, 1);
         tilePanel.setLayout(new BorderLayout(15, 10)); // Gaps
@@ -284,6 +297,11 @@ public class StudentRegCourses extends JFrame {
         tilePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160)); // Fixed height
         tilePanel.setMinimumSize(new Dimension(800, 160)); // Min size
 
+        // --- Get data from the object ---
+        String code = course.getCourse_code();
+        String name = course.getCourse_name();
+        String credits = String.valueOf(course.getCourse_credits());
+        String instructor = course.getOfferedBY();
 
         // --- Top Panel (Code + Name + Details Link) ---
         JPanel topInfoPanel = new JPanel();
@@ -333,8 +351,11 @@ public class StudentRegCourses extends JFrame {
         JLabel checkBoxLabel = new JLabel();
         checkBoxLabel.setIcon(uncheckedIcon); // Set default state
         checkBoxLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // --- FIX 2: Store the full object ---
         checkBoxLabel.putClientProperty("selected", false);
-        checkBoxLabel.putClientProperty("courseCode", code);
+        checkBoxLabel.putClientProperty("courseObject", course); // <-- This is the key change
+
         // Add padding to make it a larger click target
         checkBoxLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 10));
 
@@ -355,7 +376,6 @@ public class StudentRegCourses extends JFrame {
 
         return tilePanel;
     }
-
 
     /**
      * Programmatically draws an icon for our custom checkbox, using the new theme.

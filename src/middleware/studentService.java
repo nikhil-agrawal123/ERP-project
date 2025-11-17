@@ -60,4 +60,9 @@ public class studentService {
         }
         return null;
     }
+
+    public boolean RegisterCourse(List<studentAvailableCourses> courses, String username) {
+           return student.UpdateRegisteredCourses(courses, username);
+    }
+
 }

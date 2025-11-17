@@ -401,10 +401,10 @@ public class StudentDashboard extends JFrame {
         // 3. Configure GBC for the holder panel
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.weightx = 0; // Don't let the holder grow horizontally
-        gbc.weighty = 0; // Don't let the holder grow vertically
-        gbc.fill = GridBagConstraints.NONE; // Do not fill space
-        gbc.anchor = GridBagConstraints.NORTHWEST; // Pin it to the top-left
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
         centerContentPanel.add(statBoxHolder, gbc);
 
         // 4. Add a spacer panel to fill the remaining horizontal space
