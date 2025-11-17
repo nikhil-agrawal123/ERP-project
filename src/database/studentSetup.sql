@@ -246,3 +246,8 @@ ALTER TABLE sections
             REFERENCES `instructors` (`instructor_id`);
 
 ALTER TABLE sections ADD INDEX `fk_sections_instructor_id_idx` (`instructor_id` ASC);
+
+SELECT
+    s.semester, s.section_id, s.course_code
+FROM users.sections s
+WHERE s.semester = 'Monsoon 2025';

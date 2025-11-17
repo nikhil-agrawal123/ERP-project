@@ -54,11 +54,12 @@ public class studentService {
     public List<studentAvailableCourses> AllCourses(String sem){
         try{
             List<studentAvailableCourses> courses = student.AllCourses(sem);
+            System.out.println("Loaded courses count 23232: " + courses.size());
             return courses;
         } catch (SQLException e){
             e.printStackTrace();
         }
-        return null;
+        return new ArrayList<>();
     }
 
     public boolean RegisterCourse(List<studentAvailableCourses> courses, String username) {

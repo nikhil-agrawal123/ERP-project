@@ -5,8 +5,9 @@ import ui.dashboard.StudentDashboard;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import middleware.studentService;
+
+import java.time.chrono.JapaneseChronology;
 import java.util.List;
-import middleware.studentService;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxUI;
@@ -277,7 +278,7 @@ public class StudentRegCourses extends JFrame {
     private void loadCourses(String semester) {
 
         List<studentAvailableCourses> courses = student.AllCourses(semester);
-
+        System.out.println("Loaded courses count: " + courses.size());
         courses.forEach(course -> {
             JPanel coursePanel = createCourseTilePanel(course);
             centerContentPanel.add(coursePanel);
@@ -292,6 +293,7 @@ public class StudentRegCourses extends JFrame {
     private JPanel createCourseTilePanel(studentAvailableCourses course) { // <-- FIX 1: Change parameter
         // Use the new RoundedPanel as the base
         RoundedPanel tilePanel = new RoundedPanel(15, cardColor, borderColor, 1);
+        tilePanel.setPreferredSize(new Dimension(1000, 160));
         tilePanel.setLayout(new BorderLayout(15, 10)); // Gaps
         tilePanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25)); // Padding
         tilePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160)); // Fixed height
@@ -302,6 +304,8 @@ public class StudentRegCourses extends JFrame {
         String name = course.getCourse_name();
         String credits = String.valueOf(course.getCourse_credits());
         String instructor = course.getOfferedBY();
+        int strength = course.getCapacity();
+        int currentRegis = course.getEnrolledCount();
 
         // --- Top Panel (Code + Name + Details Link) ---
         JPanel topInfoPanel = new JPanel();
@@ -340,11 +344,17 @@ public class StudentRegCourses extends JFrame {
 
         JPanel creditsPanel = createDetailPanel("Credits", credits);
         JPanel instructorPanel = createDetailPanel("Instructor", instructor);
+        JPanel capacityPanel = createDetailPanel("Capacity", String.valueOf(strength));
+        JPanel enrolledPanel = createDetailPanel("Enrolled", String.valueOf(currentRegis    ));
 
         bottomInfoPanel.add(creditsPanel);
         bottomInfoPanel.add(Box.createRigidArea(new Dimension(40, 0)));
         bottomInfoPanel.add(instructorPanel);
         bottomInfoPanel.add(Box.createHorizontalGlue()); // Push all details left
+        bottomInfoPanel.add(capacityPanel);
+        bottomInfoPanel.add(Box.createHorizontalGlue());
+        bottomInfoPanel.add(enrolledPanel);
+        bottomInfoPanel.add(Box.createHorizontalGlue());
 
 
         // --- Custom Checkbox (JLabel) ---
