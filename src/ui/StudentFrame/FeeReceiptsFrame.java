@@ -1,10 +1,8 @@
 package ui.StudentFrame;
 
-import ui.components.RoundedButton;
-import ui.components.RoundedPanel;
+import ui.components.*;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -28,8 +26,8 @@ public class FeeReceiptsFrame extends JFrame {
     private Color textColor = new Color(255, 255, 255);       // --foreground
     private Color textSecondaryColor = new Color(179, 179, 179);
     private Color downloadHoverColor = new Color(38, 44, 58);
-    private Color Buttonback = new Color(35, 42, 55);
-    private Color Buttonhover = new Color(25, 30, 40);// --muted-foreground
+
+    private HeaderButton headerButton;
 
     public FeeReceiptsFrame(String rollNumber, String username) {
         super("Fee Receipts - " + username);
@@ -57,7 +55,7 @@ public class FeeReceiptsFrame extends JFrame {
         titlePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
 
         // --- Create Back Button ---
-        RoundedButton backButton = createHeaderButton("← Back");
+        RoundedButton backButton = headerButton.createHeaderButton("← Back");
         backButton.addActionListener(e -> {
             dispose(); // Close this window
         });
@@ -167,19 +165,6 @@ public class FeeReceiptsFrame extends JFrame {
         scrollPane.getVerticalScrollBar().setUI(new StyledScrollBarUI());
         scrollPane.getHorizontalScrollBar().setUI(new StyledScrollBarUI());
         return scrollPane;
-    }
-
-    // --- Helper Methods (from StudentDashboard) ---
-    private RoundedButton createHeaderButton(String text) {
-        RoundedButton button = new RoundedButton(
-                text, Buttonback, // normal
-                Buttonhover,   // hover
-                Buttonhover.darker(), 8);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        button.setForeground(textColor);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        button.setPreferredSize(null);
-        return button;
     }
 
     private RoundedButton createActionButton(String text) {
