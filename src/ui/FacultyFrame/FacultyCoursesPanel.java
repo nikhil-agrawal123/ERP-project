@@ -32,11 +32,8 @@ public class FacultyCoursesPanel extends JPanel {
     private JPanel mainContentPanel;
 
     // --- UI Color Palette (DEFINED INTERNALLY) ---
-    private Color bgColor = new Color(42, 48, 60);
-    private Color sideMenuColor = new Color(48, 54, 70);
     private Color mainPanelColor = new Color(42, 48, 60);
     private Color cardColor = new Color(54, 59, 74);
-    private Color popoverColor = new Color(46, 52, 66);
     private Color borderColor = new Color(64, 69, 89);
     private Color buttonColor = new Color(52, 159, 148);
     private Color buttonColorGlow = new Color(79, 196, 184);
@@ -58,9 +55,9 @@ public class FacultyCoursesPanel extends JPanel {
         spring2025.add(new facultyCourseClass("CS-101", "Intro to Programming", 4, "CSE", 150));
         List<facultyCourseClass> fall2024 = new ArrayList<>();
         fall2024.add(new facultyCourseClass("CS-450", "Database Systems", 4, "CSE", 60));
-        semesterCourses.put("Fall 2025", fall2025);
-        semesterCourses.put("Spring 2025", spring2025);
-        semesterCourses.put("Fall 2024", fall2024);
+        semesterCourses.put("Monsoon 2025", fall2025);
+        semesterCourses.put("Winter 2024", spring2025);
+        semesterCourses.put("Monsoon 2024", fall2024);
 
         // --- Configure this JPanel ---
         setLayout(new BorderLayout());
