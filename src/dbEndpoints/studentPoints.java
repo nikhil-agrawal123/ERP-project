@@ -124,7 +124,6 @@ public class studentPoints {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println("Loaded courses count 32: " + allCourses.size());
         return allCourses;
     }
 

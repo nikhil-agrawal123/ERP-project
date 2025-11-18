@@ -289,7 +289,6 @@ public class StudentRegCourses extends JFrame {
     private void loadCourses(String semester) {
 
         List<studentAvailableCourses> courses = student.AllCourses(semester);
-        System.out.println("Loaded courses count: " + courses.size());
         courses.forEach(course -> {
             JPanel coursePanel = createCourseTilePanel(course);
             centerContentPanel.add(coursePanel);

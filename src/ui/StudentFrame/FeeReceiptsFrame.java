@@ -33,6 +33,7 @@ public class FeeReceiptsFrame extends JFrame {
         super("Fee Receipts - " + username);
         this.rollNumber = rollNumber;
         this.username = username;
+        this.headerButton = new HeaderButton();
 
         // --- Frame Setup ---
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
