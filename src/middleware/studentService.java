@@ -58,11 +58,15 @@ public class studentService {
         } catch (SQLException e){
             e.printStackTrace();
         }
-        return null;
+        return new ArrayList<>();
     }
 
     public boolean RegisterCourse(List<studentAvailableCourses> courses, String username) {
            return student.UpdateRegisteredCourses(courses, username);
+    }
+
+    public boolean CheckRegister(String username, String courseCode) {
+        return student.Check(username, courseCode) != 0;
     }
 
 }

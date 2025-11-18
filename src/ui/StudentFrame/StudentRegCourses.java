@@ -5,8 +5,8 @@ import ui.dashboard.StudentDashboard;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import middleware.studentService;
+
 import java.util.List;
-import middleware.studentService;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxUI;
@@ -138,7 +138,6 @@ public class StudentRegCourses extends JFrame {
         centerContentPanel = new JPanel();
         centerContentPanel.setLayout(new BoxLayout(centerContentPanel, BoxLayout.Y_AXIS));
         centerContentPanel.setBackground(mainPanelColor);
-        // Add padding on the right to make room for the scrollbar without content overlap
         centerContentPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 10));
 
         JScrollPane scrollPane = new JScrollPane(centerContentPanel);
@@ -195,7 +194,6 @@ public class StudentRegCourses extends JFrame {
 
                             if (selectedProp != null && (boolean) selectedProp) {
 
-                                // --- FIX 2: Get the full object from the property ---
                                 studentAvailableCourses courseObject = (studentAvailableCourses) checkBoxLabel.getClientProperty("courseObject");
                                 selectedCourses.add(courseObject);
 
@@ -207,32 +205,46 @@ public class StudentRegCourses extends JFrame {
                 }
             }
 
+            boolean checking = false;
+
             if (selectedCount == 0) {
                 JOptionPane.showMessageDialog(this,
                         "You have not selected any courses to register.",
                         "No Courses Selected",
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
-                // Now you have a list of full objects!
                 List<String> courseNames = new java.util.ArrayList<>();
                 for (studentAvailableCourses c : selectedCourses) {
-                    courseNames.add(c.getCourse_name());
-                }
-                String courseList = String.join(", ", courseNames);
-                System.out.println("Registering: " + courseList);
+                    if(student.CheckRegister(c.getCourse_code(), username)){
+                        courseNames.add(c.getCourse_name());
+                        checking = true;
+                    }else{
+                        JOptionPane.showMessageDialog(this,
+                                "Same course can't be registered multiple times." ,
+                                "Registration unsuccessful",
+                                JOptionPane.INFORMATION_MESSAGE);
 
-                if(student.RegisterCourse(selectedCourses, username)){
-                    JOptionPane.showMessageDialog(this,
-                            "Successfully registered " + selectedCount + " course(s):\n" + courseList,
-                            "Registration Complete",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    new StudentDashboard(rollNumber, username).setVisible(true);
-                    dispose();
-                }else{
-                    JOptionPane.showMessageDialog(this,
-                            "Registration unsuccessful " + selectedCount + " course(s):\n" + courseList,
-                            "Registration unsuccessful",
-                            JOptionPane.INFORMATION_MESSAGE);
+                        break;
+                    }
+                }
+
+                if(checking){
+                    String courseList = String.join(", ", courseNames);
+                    System.out.println("Registering: " + courseList);
+
+                    if(student.RegisterCourse(selectedCourses, username)){
+                        JOptionPane.showMessageDialog(this,
+                                "Successfully registered " + selectedCount + " course(s):\n" + courseList,
+                                "Registration Complete",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        new StudentDashboard(rollNumber, username).setVisible(true);
+                        dispose();
+                    }else{
+                        JOptionPane.showMessageDialog(this,
+                                "Registration unsuccessful " + selectedCount + " course(s):\n" + courseList,
+                                "Registration unsuccessful",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
                 }
             }
         });
@@ -277,7 +289,6 @@ public class StudentRegCourses extends JFrame {
     private void loadCourses(String semester) {
 
         List<studentAvailableCourses> courses = student.AllCourses(semester);
-
         courses.forEach(course -> {
             JPanel coursePanel = createCourseTilePanel(course);
             centerContentPanel.add(coursePanel);
@@ -292,6 +303,7 @@ public class StudentRegCourses extends JFrame {
     private JPanel createCourseTilePanel(studentAvailableCourses course) { // <-- FIX 1: Change parameter
         // Use the new RoundedPanel as the base
         RoundedPanel tilePanel = new RoundedPanel(15, cardColor, borderColor, 1);
+        tilePanel.setPreferredSize(new Dimension(1000, 160));
         tilePanel.setLayout(new BorderLayout(15, 10)); // Gaps
         tilePanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25)); // Padding
         tilePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160)); // Fixed height
@@ -302,6 +314,8 @@ public class StudentRegCourses extends JFrame {
         String name = course.getCourse_name();
         String credits = String.valueOf(course.getCourse_credits());
         String instructor = course.getOfferedBY();
+        int strength = course.getCapacity();
+        int currentRegis = course.getEnrolledCount();
 
         // --- Top Panel (Code + Name + Details Link) ---
         JPanel topInfoPanel = new JPanel();
@@ -340,11 +354,17 @@ public class StudentRegCourses extends JFrame {
 
         JPanel creditsPanel = createDetailPanel("Credits", credits);
         JPanel instructorPanel = createDetailPanel("Instructor", instructor);
+        JPanel capacityPanel = createDetailPanel("Capacity", String.valueOf(strength));
+        JPanel enrolledPanel = createDetailPanel("Enrolled", String.valueOf(currentRegis    ));
 
         bottomInfoPanel.add(creditsPanel);
         bottomInfoPanel.add(Box.createRigidArea(new Dimension(40, 0)));
         bottomInfoPanel.add(instructorPanel);
         bottomInfoPanel.add(Box.createHorizontalGlue()); // Push all details left
+        bottomInfoPanel.add(capacityPanel);
+        bottomInfoPanel.add(Box.createHorizontalGlue());
+        bottomInfoPanel.add(enrolledPanel);
+        bottomInfoPanel.add(Box.createHorizontalGlue());
 
 
         // --- Custom Checkbox (JLabel) ---

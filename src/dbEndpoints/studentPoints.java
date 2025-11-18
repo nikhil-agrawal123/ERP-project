@@ -78,22 +78,46 @@ public class studentPoints {
         return allCgCredits;
     }
 
-    public List<studentAvailableCourses> AllCourses(String sem) throws SQLException {
+    public List<studentAvailableCourses> AllCourses(String sem) throws  SQLException {
         List<studentAvailableCourses> allCourses = new ArrayList<>();
 
-        String sql = "SELECT * FROM USERS.courses WHERE semester =?";
+        // --- THIS IS THE CORRECTED QUERY ---
+        // It now JOINS sections, courses, and instructors to get all the data
+        // and filters by the semester in the 'sections' table (s.semester).
+        String sql = """
+            SELECT 
+                s.semester,
+                c.course_code, 
+                c.course_title, 
+                c.credits, 
+                c.offeredBy,
+                s.capacity,
+                (SELECT COUNT(*) FROM users.enrollments e WHERE e.section_id = s.section_id) AS enrolled_count
+            FROM 
+                users.sections s
+            JOIN 
+                users.courses c ON s.course_code = c.course_code
+            WHERE 
+                s.semester = ?
+        """;
 
         try (Connection connection = connector.connect();
              PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
             pstmt.setString(1, sem);
             ResultSet rs = pstmt.executeQuery();
+
             while (rs.next()) {
+                // --- THIS IS THE CORRECTED CONSTRUCTOR ---
+                // It now passes all 8 arguments required by your data class
                 studentAvailableCourses course = new studentAvailableCourses(
                         rs.getString("course_code"),
                         rs.getString("course_title"),
                         rs.getInt("credits"),
                         rs.getString("offeredBy"),
-                        rs.getString("semester")
+                        rs.getString("semester"),
+                        rs.getInt("capacity"),
+                        rs.getInt("enrolled_count")
                 );
                 allCourses.add(course);
             }
@@ -189,6 +213,28 @@ public class studentPoints {
                 }
             }
         }
+    }
+
+    public int Check(String userid, String course){
+        String sql = """
+            SELECT COUNT(*)
+            FROM users.enrollments
+            WHERE student_id = ? AND course_code = ?
+        """;
+
+        try (Connection conn = connector.connect();
+             PreparedStatement pstm = conn.prepareStatement(sql)
+        ){
+            pstm.setString(1, userid);
+            pstm.setString(2, course);
+            ResultSet rs = pstm.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return 0;
     }
 }
 

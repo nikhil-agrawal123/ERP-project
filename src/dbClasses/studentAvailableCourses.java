@@ -6,13 +6,17 @@ public class studentAvailableCourses {
     private int course_credits;
     private String offeredBY;
     private String semester;
+    private int capacity;
+    private int enrolledCount;
 
-    public studentAvailableCourses(String course_code, String course_name, int course_credits, String offeredBY, String semester){
+    public studentAvailableCourses(String course_code, String course_name, int course_credits, String offeredBY, String semester, int capacity, int enrolledCount) {
         this.course_code = course_code;
         this.course_name = course_name;
         this.course_credits = course_credits;
         this.offeredBY = offeredBY;
         this.semester = semester;
+        this.capacity = capacity;
+        this.enrolledCount = enrolledCount;
     }
 
     public String getCourse_code(){
@@ -29,5 +33,11 @@ public class studentAvailableCourses {
     }
     public String getSemester(){
         return semester;
+    }
+    public int getCapacity(){
+        return capacity;
+    }
+    public int getEnrolledCount(){
+        return enrolledCount;
     }
 }

@@ -2,6 +2,8 @@ package ui.StudentFrame;
 
 import dbClasses.StudentRegisteredCourse;
 import middleware.studentService;
+import ui.components.*;
+import ui.service.PdfExportService;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
@@ -14,6 +16,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.io.File;
 
 public class StudentCoursesPanel extends JPanel {
 
@@ -33,10 +36,16 @@ public class StudentCoursesPanel extends JPanel {
     private Color textColor;
     private Color textSecondaryColor;
 
+    // --- Restored HeaderButton dependency ---
+    private HeaderButton headerButton;
+
+    private PdfExportService pdfExportService;
+    private Map<Integer, List<StudentRegisteredCourse>> semesterData;
+
     public StudentCoursesPanel(studentService enrollmentService, String username,
-                          Color bgColor, Color sideMenuColor, Color mainPanelColor, Color cardColor,
-                          Color popoverColor, Color borderColor, Color buttonColor,
-                          Color buttonColorGlow, Color textColor, Color textSecondaryColor) {
+                               Color bgColor, Color sideMenuColor, Color mainPanelColor, Color cardColor,
+                               Color popoverColor, Color borderColor, Color buttonColor,
+                               Color buttonColorGlow, Color textColor, Color textSecondaryColor) {
 
         // Assign fields
         this.enrollmentService = enrollmentService;
@@ -52,18 +61,28 @@ public class StudentCoursesPanel extends JPanel {
         this.textColor = textColor;
         this.textSecondaryColor = textSecondaryColor;
 
+        // --- Initialize the external HeaderButton component ---
+        this.headerButton = new HeaderButton();
+
+        this.pdfExportService = new PdfExportService();
+        this.semesterData = enrollmentService.getSemesterData(username);
+
         // --- Configure this JPanel ---
         setLayout(new BorderLayout(0, 15)); // 15px v-gap
         setBackground(mainPanelColor);
         setBorder(BorderFactory.createEmptyBorder(20, 40, 40, 40)); // Added more horizontal padding
 
-        // 1. Title and Subtitle Panel
+        // --- 1. Top Header Container (Holds Title & Button) ---
+        JPanel topHeaderContainer = new JPanel(new BorderLayout());
+        topHeaderContainer.setOpaque(false);
+
+        // 1a. Title and Subtitle Panel (Left Side)
         JPanel coursesTitlePanel = new JPanel();
         coursesTitlePanel.setLayout(new BoxLayout(coursesTitlePanel, BoxLayout.Y_AXIS));
         coursesTitlePanel.setOpaque(false);
 
         JLabel pageTitle = new JLabel("My Registered Courses");
-        pageTitle.setFont(new Font("Segoe UI", Font.BOLD, 32)); // Increased font size
+        pageTitle.setFont(new Font("Segoe UI", Font.BOLD, 32));
         pageTitle.setForeground(textColor);
         pageTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -76,7 +95,22 @@ public class StudentCoursesPanel extends JPanel {
         coursesTitlePanel.add(Box.createRigidArea(new Dimension(0, 5)));
         coursesTitlePanel.add(pageSubtitle);
 
-        add(coursesTitlePanel, BorderLayout.NORTH);
+        // Add title to the WEST (Left)
+        topHeaderContainer.add(coursesTitlePanel, BorderLayout.CENTER);
+
+        // 1b. Export Button (Right Side) - Using External Class
+        RoundedButton exportPdf = headerButton.createHeaderButton("Export to PDF");
+        exportPdf.addActionListener(e -> handleExportPdf());
+
+        JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 10)); // Align Right with some padding
+        buttonWrapper.setOpaque(false);
+        buttonWrapper.add(exportPdf);
+
+        // Add button to the EAST (Right)
+        topHeaderContainer.add(buttonWrapper, BorderLayout.EAST);
+
+        // Add the complete header container to the main panel
+        add(topHeaderContainer, BorderLayout.NORTH);
 
         // 2. Main Content Area (Tabs + Table Cards)
         JPanel mainCoursesContentPanel = new JPanel(new BorderLayout(0, 15)); // 15px gap between tabs and table
@@ -96,7 +130,7 @@ public class StudentCoursesPanel extends JPanel {
         mainCoursesContentPanel.add(semesterCardPanel, BorderLayout.CENTER);
 
         List<TabButton> semesterTabButtons = new ArrayList<>();
-        Map<Integer, List<StudentRegisteredCourse>> semesterData = enrollmentService.getSemesterData(username);
+        // Map<Integer, List<StudentRegisteredCourse>> semesterData is already fetched in constructor
         String[] columnNames = {"Course Code", "Course Name", "Credits", "Offered By", "Grade Point"};
         String firstAvailableSem = "";
 
@@ -150,7 +184,36 @@ public class StudentCoursesPanel extends JPanel {
         }
     }
 
-    // --- Helper Methods (Moved from StudentDashboard) ---
+    // --- Helper Methods ---
+
+    private void handleExportPdf() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save Report as PDF");
+        fileChooser.setSelectedFile(new File(username + "_Course_Report.pdf"));
+
+        int userSelection = fileChooser.showSaveDialog(this);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            if (!fileToSave.getAbsolutePath().endsWith(".pdf")) {
+                fileToSave = new File(fileToSave.getAbsolutePath() + ".pdf");
+            }
+
+            boolean success = pdfExportService.exportStudentReport(this.semesterData, this.username, fileToSave);
+
+            if (success) {
+                JOptionPane.showMessageDialog(this,
+                        "Report exported successfully to:\n" + fileToSave.getAbsolutePath(),
+                        "Export Successful",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Failed to export report. See console for errors.",
+                        "Export Failed",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
 
     /**
      * Sets the active state for the custom semester tabs.
@@ -211,11 +274,8 @@ public class StudentCoursesPanel extends JPanel {
         return scrollPane;
     }
 
-    // --- Inner Classes (Moved from StudentDashboard or Duplicated) ---
+    // --- Inner Classes ---
 
-    /**
-     * A custom button for the semester tabs.
-     */
     private class TabButton extends JButton {
         private boolean isActive = false;
         private boolean isHovered = false;
@@ -228,10 +288,8 @@ public class StudentCoursesPanel extends JPanel {
             setBorderPainted(false);
             setFont(new Font("Segoe UI", Font.BOLD, 16));
             setCursor(new Cursor(Cursor.HAND_CURSOR));
-            // Add padding to the button
             setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-            // Set initial text color
             setForeground(textSecondaryColor);
 
             addMouseListener(new MouseAdapter() {
@@ -239,7 +297,7 @@ public class StudentCoursesPanel extends JPanel {
                 public void mouseEntered(MouseEvent e) {
                     isHovered = true;
                     if (!isActive) {
-                        setForeground(textColor); // Brighten text on hover
+                        setForeground(textColor);
                     }
                     repaint();
                 }
@@ -248,7 +306,7 @@ public class StudentCoursesPanel extends JPanel {
                 public void mouseExited(MouseEvent e) {
                     isHovered = false;
                     if (!isActive) {
-                        setForeground(textSecondaryColor); // Dim text on exit
+                        setForeground(textSecondaryColor);
                     }
                     repaint();
                 }
@@ -267,13 +325,13 @@ public class StudentCoursesPanel extends JPanel {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             if (isActive) {
-                g2.setColor(buttonColorGlow); // Darker active background
+                g2.setColor(buttonColorGlow);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
             } else if (isHovered) {
-                g2.setColor(borderColor); // Subtle hover
+                g2.setColor(borderColor);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
             } else {
-                g2.setColor(cardColor); // Transparent (same as parent)
+                g2.setColor(cardColor);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
             }
 
@@ -282,41 +340,34 @@ public class StudentCoursesPanel extends JPanel {
         }
     }
 
-    /**
-     * Custom renderer for table headers to ensure left-alignment and padding.
-     */
     private class LeftAlignedHeaderRenderer extends DefaultTableCellRenderer {
         public LeftAlignedHeaderRenderer() {
             setHorizontalAlignment(JLabel.LEFT);
             setBackground(cardColor);
-            setForeground(textSecondaryColor); // Muted gray text
+            setForeground(textSecondaryColor);
             setFont(new Font("Segoe UI", Font.BOLD, 16));
-            setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20)); // Padding
+            setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
         }
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            // Ensure background and border are set correctly
             setBackground(cardColor);
             setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(0, 0, 2, 0, borderColor), // Bottom line
-                    BorderFactory.createEmptyBorder(10, 20, 10, 20) // Padding
+                    BorderFactory.createMatteBorder(0, 0, 2, 0, borderColor),
+                    BorderFactory.createEmptyBorder(10, 20, 10, 20)
             ));
             return this;
         }
     }
 
-    /**
-     * Custom renderer for table cells to ensure left-alignment and padding.
-     */
     private class LeftAlignedCellRenderer extends DefaultTableCellRenderer {
         public LeftAlignedCellRenderer() {
             setHorizontalAlignment(JLabel.LEFT);
             setBackground(cardColor);
-            setForeground(textColor); // White text
+            setForeground(textColor);
             setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20)); // Padding
+            setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
         }
 
         @Override
@@ -333,9 +384,6 @@ public class StudentCoursesPanel extends JPanel {
         }
     }
 
-    /**
-     * A JPanel with rounded corners and a border. (Duplicated from StudentDashboard)
-     */
     private class RoundedPanel extends JPanel {
         private int cornerRadius;
         private Color backgroundColor;
@@ -345,9 +393,6 @@ public class StudentCoursesPanel extends JPanel {
         private Color gradientStartColor;
         private Color gradientEndColor;
 
-        /**
-         * Constructor for SOLID color panels (with border)
-         */
         public RoundedPanel(int radius, Color bgColor, Color borderColor, int borderThickness) {
             super();
             this.cornerRadius = radius;
@@ -358,9 +403,6 @@ public class StudentCoursesPanel extends JPanel {
             setOpaque(false);
         }
 
-        /**
-         * Constructor for GRADIENT color panels (no border)
-         */
         public RoundedPanel(int radius, Color gradStart, Color gradEnd) {
             super();
             this.cornerRadius = radius;
@@ -409,9 +451,6 @@ public class StudentCoursesPanel extends JPanel {
         }
     }
 
-    /**
-     * Inner class for a custom styled scrollbar. (Duplicated from StudentDashboard)
-     */
     private class StyledScrollBarUI extends BasicScrollBarUI {
         @Override
         protected void configureScrollBarColors() {
