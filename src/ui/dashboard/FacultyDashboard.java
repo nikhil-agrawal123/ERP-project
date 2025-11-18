@@ -140,7 +140,7 @@ public class FacultyDashboard extends JFrame {
 
         // Create navigation buttons using the new style
         RoundedButton homeButton = createSideMenuButton("Dashboard Home");
-        RoundedButton scoresButton = createSideMenuButton("Enter Scores");
+        RoundedButton scoresButton = createSideMenuButton("My Courses");
         RoundedButton TAButton = createSideMenuButton("TA Info");
 
         // Special logout button
