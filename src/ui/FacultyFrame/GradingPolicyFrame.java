@@ -14,7 +14,6 @@ public class GradingPolicyFrame extends JFrame {
 
     // --- NEW: Updated UI Color Palette ---
     private Color bgColor = new Color(42, 48, 60);
-    private Color mainPanelColor = new Color(42, 48, 60);
     private Color cardColor = new Color(54, 59, 74);
     private Color borderColor = new Color(64, 69, 89);
     private Color buttonColor = new Color(52, 159, 148);

@@ -132,12 +132,6 @@ public class authPoints {
         // Use the correct table name from your schema: Auth.studentAuth
         String sql = "UPDATE Auth.studentAuth SET studentPass = ? WHERE studentId = ?";
 
-        // *** IMPORTANT ***
-        // Get your database connection here, the same way you do in
-        // your other methods in this file.
-        // Example:
-        // try (Connection conn = DatabaseConnection.getConnection();
-
         try (Connection conn = dbConnector.connect(); // <-- REPLACE THIS
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
