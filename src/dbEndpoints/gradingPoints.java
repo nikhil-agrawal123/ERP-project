@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class gradingPoints {
-    private Connector connector;
+    private final Connector connector;
 
     public gradingPoints() {
         this.connector = new Connector();
@@ -40,23 +40,57 @@ public class gradingPoints {
 
     public boolean savePolicyJson(String courseCode, String courseName, String instructorId, String semester, String jsonPolicy) {
 
-        String insertSql = """
-            INSERT INTO users.gradingpolicy 
-            (course_code, course_name, instructor_id, semester, grading_policy)
-            VALUES (?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE grading_policy = VALUES(grading_policy)
-        """;
+        // 1. CHECK: Does a policy already exist for this combination?
+        String checkSql = "SELECT policy_id FROM users.gradingpolicy WHERE course_code = ? AND instructor_id = ? AND semester = ?";
+
+        boolean exists = false;
 
         try (Connection conn = connector.connect();
-             PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
+             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
 
-            pstmt.setString(1, courseCode);
-            pstmt.setString(2, courseName);
-            pstmt.setString(3, instructorId);
-            pstmt.setString(4, semester);
-            pstmt.setString(5, jsonPolicy);
+            checkStmt.setString(1, courseCode);
+            checkStmt.setString(2, instructorId);
+            checkStmt.setString(3, semester);
 
-            pstmt.executeUpdate();
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next()) {
+                    exists = true;
+                }
+            }
+
+            // 2. ACT: Update or Insert based on the check
+            if (exists) {
+                // --- UPDATE EXISTING ---
+                String updateSql = """
+                     UPDATE users.gradingpolicy 
+                     SET grading_policy = ?, course_name = ?
+                     WHERE course_code = ? AND instructor_id = ? AND semester = ?
+                 """;
+                try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                    updateStmt.setString(1, jsonPolicy);
+                    updateStmt.setString(2, courseName); // Update name just in case
+                    updateStmt.setString(3, courseCode);
+                    updateStmt.setString(4, instructorId);
+                    updateStmt.setString(5, semester);
+                    updateStmt.executeUpdate();
+                }
+            } else {
+                // --- INSERT NEW ---
+                String insertSql = """
+                     INSERT INTO users.gradingpolicy 
+                     (course_code, course_name, instructor_id, semester, grading_policy)
+                     VALUES (?, ?, ?, ?, ?)
+                 """;
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setString(1, courseCode);
+                    insertStmt.setString(2, courseName);
+                    insertStmt.setString(3, instructorId);
+                    insertStmt.setString(4, semester);
+                    insertStmt.setString(5, jsonPolicy);
+                    insertStmt.executeUpdate();
+                }
+            }
+
             return true;
 
         } catch (SQLException e) {
