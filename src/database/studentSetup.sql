@@ -251,3 +251,15 @@ SELECT
     s.semester, s.section_id, s.course_code
 FROM users.sections s
 WHERE s.semester = 'Monsoon 2025';
+
+CREATE TABLE `gradingPolicy` (
+    `policy_id` int auto_increment,
+    `course_code` varchar(50) not null ,
+    `course_name` varchar(100) not null ,
+    `instructor` varchar(100) not null ,
+    `semester` varchar(50) not null ,
+    `grading_policy` json not null,
+    PRIMARY KEY (`policy_id`)
+) ENGINE = InnoDB;
+
+alter table gradingpolicy rename column instructor to instructor_id;
