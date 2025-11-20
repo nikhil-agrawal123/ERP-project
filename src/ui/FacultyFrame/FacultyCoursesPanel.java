@@ -163,7 +163,7 @@ public class FacultyCoursesPanel extends JPanel {
 
         // 5. Set the default active tab
         if (!semesterTabButtons.isEmpty()) {
-            setActiveSemesterTab(semesterTabButtons.get(0), semesterTabButtons);
+            setActiveSemesterTab(semesterTabButtons.getFirst(), semesterTabButtons);
             semesterCardLayout.show(semesterCardPanel, firstAvailableSem);
         }
 
