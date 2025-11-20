@@ -1,9 +1,11 @@
 package ui.FacultyFrame;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +15,7 @@ import middleware.gradingService;
 
 public class GradingPolicyFrame extends JFrame {
 
-    // --- NEW: Updated UI Color Palette ---
+    // --- UI Color Palette ---
     private Color bgColor = new Color(42, 48, 60);
     private Color cardColor = new Color(54, 59, 74);
     private Color borderColor = new Color(64, 69, 89);
@@ -23,9 +25,8 @@ public class GradingPolicyFrame extends JFrame {
     private Color dangerHoverColor = new Color(240, 100, 100);
     private Color textColor = Color.WHITE;
     private Color textSecondaryColor = new Color(179, 179, 179);
-    // --- End of Palette ---
 
-    // Fields to store context
+    // Fields
     private String courseCode;
     private String courseName;
     private String instructorId;
@@ -45,13 +46,6 @@ public class GradingPolicyFrame extends JFrame {
     private DefaultListModel<GradingComponent> editListModel;
     private JLabel totalLabelEdit;
 
-    /**
-     * Updated Constructor to take explicit details instead of sectionId.
-     * @param courseCode   e.g., "CS101"
-     * @param courseName   e.g., "Intro to Programming"
-     * @param instructorId e.g., "emp101"
-     * @param semester     e.g., "Fall 2025"
-     */
     public GradingPolicyFrame(String courseCode, String courseName, String instructorId, String semester) {
         super("Grading Policy - " + courseName);
 
@@ -61,11 +55,8 @@ public class GradingPolicyFrame extends JFrame {
         this.semester = semester;
 
         this.gradingService = new gradingService();
-
-        // Load data using the new service method
         this.policyComponents = gradingService.getPolicy(courseCode, instructorId, semester);
 
-        // --- Frame Setup ---
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(1200, 800);
         setLocationRelativeTo(null);
@@ -184,6 +175,7 @@ public class GradingPolicyFrame extends JFrame {
         listContainer.add(createHeaderPanel(), BorderLayout.NORTH);
         listContainer.add(scrollPane, BorderLayout.CENTER);
 
+        // --- Bottom Panel (Save/Cancel) ---
         JPanel bottomPanel = new JPanel(new BorderLayout(10, 10));
         bottomPanel.setOpaque(false);
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(20, 5, 0, 5));
@@ -195,71 +187,56 @@ public class GradingPolicyFrame extends JFrame {
         JPanel saveCancelPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         saveCancelPanel.setOpaque(false);
 
-        RoundedButton saveButton = new RoundedButton(
-                "Save Changes",
-                buttonColor,
-                buttonColorGlow,
-                10
-        );
+        RoundedButton saveButton = new RoundedButton("Save Changes", buttonColor, buttonColorGlow, 10);
         saveButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
         saveButton.setForeground(Color.WHITE);
         saveButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
         saveButton.addActionListener(e -> savePolicy());
-        saveCancelPanel.add(saveButton);
 
-        RoundedButton cancelButton = new RoundedButton(
-                "Cancel",
-                borderColor,
-                borderColor.brighter(),
-                10
-        );
+        RoundedButton cancelButton = new RoundedButton("Cancel", borderColor, borderColor.brighter(), 10);
         cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
         cancelButton.setForeground(Color.WHITE);
         cancelButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
         cancelButton.addActionListener(e -> cardLayout.show(mainCardPanel, "VIEW"));
-        saveCancelPanel.add(cancelButton);
 
+        saveCancelPanel.add(saveButton);
+        saveCancelPanel.add(cancelButton);
         bottomPanel.add(saveCancelPanel, BorderLayout.EAST);
 
+        // --- Top Controls Panel ---
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         controlsPanel.setOpaque(false);
         controlsPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
 
-        RoundedButton addButton = new RoundedButton(
-                "Add Component",
-                buttonColor,
-                buttonColorGlow,
-                10
-        );
-        addButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        addButton.setForeground(Color.WHITE);
-        addButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        // Standard Action Buttons
+        RoundedButton addButton = new RoundedButton("Add", buttonColor, buttonColorGlow, 10);
+        styleControlButton(addButton);
         addButton.addActionListener(e -> addComponent());
-        controlsPanel.add(addButton);
 
-        RoundedButton editButton = new RoundedButton(
-                "Edit Selected",
-                borderColor,
-                borderColor.brighter(),
-                10
-        );
-        editButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        editButton.setForeground(Color.WHITE);
-        editButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        RoundedButton editButton = new RoundedButton("Edit", borderColor, borderColor.brighter(), 10);
+        styleControlButton(editButton);
         editButton.addActionListener(e -> editComponent());
-        controlsPanel.add(editButton);
 
-        RoundedButton removeButton = new RoundedButton(
-                "Remove Selected",
-                dangerColor,
-                dangerHoverColor,
-                10
-        );
-        removeButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        removeButton.setForeground(Color.WHITE);
-        removeButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        RoundedButton removeButton = new RoundedButton("Remove", dangerColor, dangerHoverColor, 10);
+        styleControlButton(removeButton);
         removeButton.addActionListener(e -> removeComponent());
+
+        // --- NEW: Import/Export Buttons ---
+        // We use a separator color or just the border color for "Tools"
+        RoundedButton importButton = new RoundedButton("Import CSV", borderColor, borderColor.brighter(), 10);
+        styleControlButton(importButton);
+        importButton.addActionListener(e -> importPolicyFromCsv());
+
+        RoundedButton exportButton = new RoundedButton("Export CSV", borderColor, borderColor.brighter(), 10);
+        styleControlButton(exportButton);
+        exportButton.addActionListener(e -> exportPolicyToCsv());
+
+        controlsPanel.add(addButton);
+        controlsPanel.add(editButton);
         controlsPanel.add(removeButton);
+        controlsPanel.add(Box.createHorizontalStrut(20)); // Spacer
+        controlsPanel.add(importButton);
+        controlsPanel.add(exportButton);
 
         panel.add(controlsPanel, BorderLayout.NORTH);
         panel.add(listContainer, BorderLayout.CENTER);
@@ -267,6 +244,15 @@ public class GradingPolicyFrame extends JFrame {
 
         return panel;
     }
+
+    // Helper to style the small control buttons consistently
+    private void styleControlButton(RoundedButton btn) {
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setForeground(Color.WHITE);
+        btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+    }
+
+    // --- Data Loading Methods ---
 
     private void loadDataIntoViewList() {
         viewListModel.clear();
@@ -283,6 +269,94 @@ public class GradingPolicyFrame extends JFrame {
         }
         updateTotalLabel(totalLabelEdit);
     }
+
+    // --- CSV Import/Export Methods ---
+
+    private void importPolicyFromCsv() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Import Grading Policy (CSV)");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("CSV Files", "csv"));
+
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                String line;
+                List<GradingComponent> importedComponents = new ArrayList<>();
+
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.split(",");
+                    if (parts.length >= 2) {
+                        String name = parts[0].trim();
+                        String percentStr = parts[1].trim();
+
+                        // Skip Header if present
+                        if (name.equalsIgnoreCase("Component Name") || name.equalsIgnoreCase("Name")) {
+                            continue;
+                        }
+
+                        try {
+                            int percent = Integer.parseInt(percentStr);
+                            importedComponents.add(new GradingComponent(name, percent));
+                        } catch (NumberFormatException ex) {
+                            System.err.println("Skipping invalid line: " + line);
+                        }
+                    }
+                }
+
+                if (!importedComponents.isEmpty()) {
+                    editListModel.clear();
+                    for (GradingComponent c : importedComponents) {
+                        editListModel.addElement(c);
+                    }
+                    updateTotalLabel(totalLabelEdit);
+                    JOptionPane.showMessageDialog(this, "Policy imported successfully!", "Import Complete", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "No valid data found in the CSV file.", "Import Error", JOptionPane.WARNING_MESSAGE);
+                }
+
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error reading file: " + e.getMessage(), "Import Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void exportPolicyToCsv() {
+        if (editListModel.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "The policy list is empty. Nothing to export.", "Export Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Export Grading Policy");
+        fileChooser.setSelectedFile(new File(courseCode + "_grading_policy.csv"));
+        fileChooser.setFileFilter(new FileNameExtensionFilter("CSV Files", "csv"));
+
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            // Ensure .csv extension
+            if (!file.getName().toLowerCase().endsWith(".csv")) {
+                file = new File(file.getParentFile(), file.getName() + ".csv");
+            }
+
+            try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
+                // Write Header
+                writer.println("Component Name,Percentage");
+
+                // Write Data
+                for (int i = 0; i < editListModel.size(); i++) {
+                    GradingComponent comp = editListModel.getElementAt(i);
+                    writer.println(comp.getName() + "," + comp.getPercentage());
+                }
+
+                JOptionPane.showMessageDialog(this, "Policy exported successfully!", "Export Complete", JOptionPane.INFORMATION_MESSAGE);
+
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error writing file: " + e.getMessage(), "Export Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // --- CRUD Methods ---
 
     private void addComponent() {
         JTextField nameField = new JTextField();
@@ -384,8 +458,6 @@ public class GradingPolicyFrame extends JFrame {
         }
         this.policyComponents = newPolicy;
 
-        // --- SAVE TO DATABASE VIA SERVICE (UPDATED) ---
-        // Now passes the direct parameters
         boolean success = gradingService.savePolicy(courseCode, courseName, instructorId, semester, this.policyComponents);
 
         if (success) {
@@ -542,17 +614,9 @@ public class GradingPolicyFrame extends JFrame {
         }
     }
 
-
-    // Main for testing
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) {}
-
-        SwingUtilities.invokeLater(() -> {
-            // Updated sample usage for testing
-            GradingPolicyFrame frame = new GradingPolicyFrame("CS101", "Intro to Programming", "inst1", "Fall 2025");
-            frame.setVisible(true);
-        });
     }
 }
