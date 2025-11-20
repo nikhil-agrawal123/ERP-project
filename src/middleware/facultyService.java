@@ -1,5 +1,6 @@
 package middleware;
 
+import dbClasses.EnrolledStudent;
 import dbEndpoints.facultyPoints;
 import dbClasses.facultyCourseClass;
 import java.util.List;
@@ -21,5 +22,9 @@ public class facultyService {
 
     public List<facultyCourseClass> getAllCourses(String facultyId){
         return faculty.getAllCourses(facultyId);
+    }
+
+    public List<EnrolledStudent> getClassList(String courseCode, String Semester){
+        return faculty.getEnrolledStudents(courseCode, Semester);
     }
 }

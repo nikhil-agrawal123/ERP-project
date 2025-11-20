@@ -166,6 +166,8 @@ public class UpdateScoresFrame extends JFrame {
         scoresTable.setFillsViewportHeight(true);
         scoresTable.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
 
+        // Style Header
+        // Style Header
         JTableHeader header = scoresTable.getTableHeader();
         header.setBackground(cardColor);
         header.setForeground(textSecondaryColor);

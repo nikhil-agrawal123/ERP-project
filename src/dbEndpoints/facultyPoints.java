@@ -5,10 +5,11 @@ import databaseConfig.Connector;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import dbClasses.facultyCourseClass;
+import dbClasses.*;
 
 public class facultyPoints {
 
@@ -98,4 +99,42 @@ public class facultyPoints {
         return  courses;
     }
 
+    public List<EnrolledStudent> getEnrolledStudents(String courseCode, String semester) {
+        List<EnrolledStudent> studentList = new ArrayList<>();
+
+        // We join 3 tables:
+        // 1. sections (to filter by course and semester)
+        // 2. enrollments (to link sections to students)
+        // 3. students (to get the student details)
+        String sql = """
+            SELECT DISTINCT st.full_name, st.student_roll_no, st.student_email
+            FROM users.sections sec
+            JOIN users.enrollments e ON sec.section_id = e.section_id
+            JOIN users.students st ON e.student_id = st.user_id
+            WHERE sec.course_code = ? AND sec.semester = ?
+            ORDER BY st.student_roll_no
+        """;
+
+        try (Connection conn = connector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, courseCode);
+            pstmt.setString(2, semester);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                studentList.add(new EnrolledStudent(
+                        rs.getString("full_name"),
+                        rs.getString("student_roll_no"),
+                        rs.getString("student_email")
+                ));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return studentList;
+    }
 }
