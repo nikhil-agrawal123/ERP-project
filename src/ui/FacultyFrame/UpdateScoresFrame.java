@@ -10,9 +10,11 @@ import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 import java.io.BufferedWriter;
 import java.io.File;
+
+
+
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -23,7 +25,6 @@ import ui.components.RoundedPanel;
 // --- Middleware & Data ---
 import middleware.gradingService;
 import middleware.facultyService;
-import ui.FacultyFrame.GradingComponent;
 import dbClasses.EnrolledStudent;
 
 public class UpdateScoresFrame extends JFrame {
