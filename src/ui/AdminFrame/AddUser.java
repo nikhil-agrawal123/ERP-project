@@ -223,11 +223,15 @@ public class AddUser extends JPanel {
     /**
      * A generic method to create a user form to avoid code duplication.
      */
+    /**
+     * A generic method to create a user form to avoid code duplication.
+     */
     private JPanel createGenericFormPanel(String title, String idLabelText, String[] departmentOptions, String buttonText) {
-        // This outer panel uses GridBagLayout to center the form panel
+        // This outer panel uses GridBagLayout to center/stretch the form panel
         JPanel outerPanel = new JPanel(new GridBagLayout());
         outerPanel.setBackground(mainPanelColor);
         outerPanel.setOpaque(true);
+        // Retain generous padding for the whole form area
         outerPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
         // The form itself is a RoundedPanel
@@ -287,9 +291,7 @@ public class AddUser extends JPanel {
         gbc.gridx = 1;
         gbc.gridy = 3;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        // --- MODIFIED ---
         gbc.weightx = 1.0; // Added this to make the field stretch
-        // --- END MODIFICATION ---
         formPanel.add(idField, gbc);
 
         // --- Department/Role ---
@@ -304,18 +306,25 @@ public class AddUser extends JPanel {
         gbc.gridx = 1;
         gbc.gridy = 4;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        // --- MODIFIED ---
         gbc.weightx = 1.0; // Added this to make the field stretch
-        // --- END MODIFICATION ---
         formPanel.add(deptDropdown, gbc);
+
+        // **IMPORTANT:** Add vertical glue/spacer to push all previous components to the top
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        gbc.weighty = 1.0; // This component takes up all remaining vertical space
+        gbc.fill = GridBagConstraints.VERTICAL;
+        formPanel.add(Box.createVerticalGlue(), gbc);
 
         // --- Submit Button ---
         RoundedButton submitButton = createActionButton(buttonText);
         gbc.gridx = 1;
-        gbc.gridy = 5;
+        gbc.gridy = 6; // Move to the row after the glue
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.EAST; // Align button to the right
         gbc.insets = new Insets(20, 10, 0, 10); // Add top margin
+        gbc.weighty = 0.0; // Reset weighty
         formPanel.add(submitButton, gbc);
 
         submitButton.addActionListener(e -> {
@@ -336,21 +345,18 @@ public class AddUser extends JPanel {
             deptDropdown.setSelectedIndex(0);
         });
 
-        // --- MODIFIED ---
-        // Changed how the formPanel is added to outerPanel
-        // This makes the form stretch horizontally (with padding) and stay at the top
+        // --- MODIFIED CODE FOR FULL-SCREEN STRETCH ---
         GridBagConstraints outerGbc = new GridBagConstraints();
-        outerGbc.anchor = GridBagConstraints.NORTH; // Pin to top
-        outerGbc.fill = GridBagConstraints.HORIZONTAL; // Stretch horizontally
-        outerGbc.weightx = 1.0; // Allow horizontal stretch
-        outerGbc.weighty = 1.0; // Use remaining vertical space to push to top
+        outerGbc.anchor = GridBagConstraints.NORTHWEST; // Anchor to top-left (less important since it's stretching)
+        outerGbc.fill = GridBagConstraints.BOTH; // <--- **KEY CHANGE**: Fill in both directions
+        outerGbc.weightx = 1.0; // <--- **KEY CHANGE**: Allow horizontal stretch
+        outerGbc.weighty = 1.0; // <--- **KEY CHANGE**: Allow vertical stretch
         outerGbc.insets = new Insets(0, 150, 0, 150); // Add 150px padding on left/right
         outerPanel.add(formPanel, outerGbc);
         // --- END MODIFICATION ---
 
         return outerPanel;
     }
-
     // --- STYLING HELPER METHODS (Copied from other classes) ---
 
     /**

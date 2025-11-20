@@ -2,6 +2,7 @@ package ui.dashboard;
 
 import ui.AdminFrame.AddUser;
 import ui.AdminFrame.AdminManageCourses;
+import ui.AdminFrame.Maintenance;
 import ui.AdminFrame.RemoveUser;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
@@ -301,7 +302,9 @@ public class AdminDashboard extends JFrame {
         JPanel maintenanceCard = createFunctionCard("Maintenance");
         maintenanceCard.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                createPlaceholderFrame("Maintenance");
+                Maintenance maintenance = new Maintenance();
+                maintenance.setVisible(true);
+                AdminDashboard.this.setVisible(false);
             }
         });
 

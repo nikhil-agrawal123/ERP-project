@@ -35,7 +35,7 @@ values
     ("gaurav","gaurav"),
     ("aditri" , "aditri");
 
-insert  into auth.adminauth(adminId, adminName, adminPass)
+insert  into auth.adminauth(adminId, adminPass)
 values
-    ( "nikhil","nikhil", "$2a$10$Kc/0I11BVSsNDxsuYAsJDekSvfAze0t7auWjff5OF6oC/anfVdVje");
+    ( "nikhil", "$2a$10$Kc/0I11BVSsNDxsuYAsJDekSvfAze0t7auWjff5OF6oC/anfVdVje");
 
