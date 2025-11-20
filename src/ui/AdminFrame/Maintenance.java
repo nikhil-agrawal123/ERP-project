@@ -9,7 +9,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
@@ -17,94 +16,92 @@ import java.util.List;
 
 public class Maintenance extends JFrame {
 
-    // --- Color Palette (Matched to AdminDashboard) ---
-    private Color bgColor = new Color(42, 48, 60);            // Background
-    private Color cardColor = new Color(54, 59, 74);          // Card/Panel
-    private Color textColor = new Color(255, 255, 255);       // Text
-    private Color textSecondary = new Color(179, 179, 179);   // Subtext
-    private Color accentColor = new Color(52, 159, 148);      // Teal/Primary
-    private Color accentGlow = new Color(79, 196, 184);       // Lighter Teal
-    private Color dangerColor = new Color(190, 60, 60);       // Red for "Offline"
+    // --- Color Palette ---
+    private Color bgColor = new Color(42, 48, 60);
+    private Color cardColor = new Color(54, 59, 74);
+    private Color textColor = new Color(255, 255, 255);
+    private Color textSecondary = new Color(179, 179, 179);
+    private Color accentColor = new Color(52, 159, 148);      // Teal (Allowed/Live)
+    private Color accentGlow = new Color(79, 196, 184);
+    private Color dangerColor = new Color(220, 53, 69);       // Bright Red (Restricted/Maintenance)
+    private Color toggleOffColor = new Color(80, 85, 100);    // Grey (Off track)
     private Color borderColor = new Color(64, 69, 89);
+    private Color Buttonback = new Color(38, 44, 58);
+    private Color Buttonhover = new Color(25, 30, 40);
 
     // --- Components ---
     private ModernToggle masterSwitch;
-    private JLabel statusLabel;
+    private JLabel statusLabel;        // The big text "System is LIVE/MAINTENANCE"
+    private JLabel masterToggleLabel;  // The text next to the button "Status: OFF"
     private JPanel optionsContainer;
     private JTextArea messageArea;
     private List<ModernToggle> subToggles;
 
     public Maintenance() {
         setTitle("System Maintenance Control");
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // Full Screen
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setSize(1280, 800);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Closes this frame, not app
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         getContentPane().setBackground(bgColor);
         setLayout(new BorderLayout());
 
         subToggles = new ArrayList<>();
 
-        // 1. Header Section
         add(createHeader(), BorderLayout.NORTH);
-
-        // 2. Main Content (Scrollable)
-        JScrollPane scrollPane = createMainContent();
-        add(scrollPane, BorderLayout.CENTER);
-
-        // 3. Footer (Action Buttons)
+        add(createMainContent(), BorderLayout.CENTER);
         add(createFooter(), BorderLayout.SOUTH);
     }
 
-    /**
-     * Creates the top header with the Back button.
-     */
     private JPanel createHeader() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(bgColor);
         header.setBorder(new EmptyBorder(25, 30, 10, 30));
 
-        // Title
         JLabel title = new JLabel("Maintenance Configuration");
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
         title.setForeground(textColor);
 
         header.add(title, BorderLayout.WEST);
-
         return header;
     }
 
-    /**
-     * Creates the central scrollable content area.
-     */
     private JScrollPane createMainContent() {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBackground(bgColor);
-        mainPanel.setBorder(new EmptyBorder(20, 100, 40, 100)); // High padding for centered look
+        mainPanel.setBorder(new EmptyBorder(20, 100, 40, 100));
 
         // --- Section A: Master Control ---
         RoundedPanel masterPanel = new RoundedPanel(20, cardColor, borderColor, 1);
         masterPanel.setLayout(new BorderLayout());
-        masterPanel.setMaximumSize(new Dimension(1000, 120));
-        masterPanel.setPreferredSize(new Dimension(1000, 120));
-        masterPanel.setBorder(new EmptyBorder(25, 40, 25, 40));
+        masterPanel.setMaximumSize(new Dimension(1000, 100));
+        masterPanel.setPreferredSize(new Dimension(1000, 100));
+        masterPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
 
-        // Text Info
+        // Left Side: Text Info
         JPanel textPanel = new JPanel(new GridLayout(2, 1));
         textPanel.setOpaque(false);
         JLabel masterLabel = new JLabel("Maintenance Mode");
-        masterLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        masterLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         masterLabel.setForeground(textColor);
 
-        statusLabel = new JLabel("System is currently LIVE (Online)");
-        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        statusLabel.setForeground(accentColor); // Starts green/teal
+        statusLabel = new JLabel("System is LIVE");
+        statusLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        statusLabel.setForeground(accentColor);
 
         textPanel.add(masterLabel);
         textPanel.add(statusLabel);
 
-        // Master Switch
+        // Right Side: Master Switch + Label
+        JPanel switchWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 5));
+        switchWrapper.setOpaque(false);
+
+        // New text against the toggle
+        masterToggleLabel = new JLabel("Maintenance: OFF");
+        masterToggleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        masterToggleLabel.setForeground(textSecondary);
+
         masterSwitch = new ModernToggle();
         masterSwitch.addMouseListener(new MouseAdapter() {
             @Override
@@ -113,29 +110,31 @@ public class Maintenance extends JFrame {
             }
         });
 
+        switchWrapper.add(masterToggleLabel); // Text next to button
+        switchWrapper.add(masterSwitch);      // The Button
+
         masterPanel.add(textPanel, BorderLayout.CENTER);
-        masterPanel.add(masterSwitch, BorderLayout.EAST);
+        masterPanel.add(switchWrapper, BorderLayout.EAST);
 
         // --- Section B: Configuration Options ---
         optionsContainer = new JPanel();
         optionsContainer.setLayout(new BoxLayout(optionsContainer, BoxLayout.Y_AXIS));
         optionsContainer.setOpaque(false);
 
-        // Add specific options (Hardcoded as requested, but realistic)
-        optionsContainer.add(createOptionRow("Option 1: Student Login Portal", "Allow students to log in."));
+        optionsContainer.add(createOptionRow("Student Login Portal", "Allow students to log in via mobile/web."));
         optionsContainer.add(Box.createRigidArea(new Dimension(0, 15)));
-        optionsContainer.add(createOptionRow("Option 2: Faculty Grading System", "Allow faculty to enter marks."));
+        optionsContainer.add(createOptionRow("Faculty Grading System", "Enable grade entry and modification."));
         optionsContainer.add(Box.createRigidArea(new Dimension(0, 15)));
-        optionsContainer.add(createOptionRow("Option 3: Course Registration", "Open/Close course enrollment."));
+        optionsContainer.add(createOptionRow("Course Registration", "Allow new course enrollments."));
         optionsContainer.add(Box.createRigidArea(new Dimension(0, 15)));
-        optionsContainer.add(createOptionRow("Option 4: Library Database", "Access to digital library assets."));
+        optionsContainer.add(createOptionRow("Library Database", "Access to digital assets and borrowing."));
 
-        // --- Section C: Custom Message ---
+        // --- Section C: Message ---
         JPanel msgPanelContainer = new JPanel(new BorderLayout());
         msgPanelContainer.setOpaque(false);
         msgPanelContainer.setMaximumSize(new Dimension(1000, 150));
 
-        JLabel msgLabel = new JLabel("Maintenance Message (Visible to Users)");
+        JLabel msgLabel = new JLabel("Maintenance Message");
         msgLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         msgLabel.setForeground(textColor);
         msgLabel.setBorder(new EmptyBorder(0, 0, 10, 0));
@@ -155,7 +154,7 @@ public class Maintenance extends JFrame {
         msgPanelContainer.add(msgLabel, BorderLayout.NORTH);
         msgPanelContainer.add(messageArea, BorderLayout.CENTER);
 
-        // Add all to main panel
+        // Assemble
         mainPanel.add(masterPanel);
         mainPanel.add(Box.createRigidArea(new Dimension(0, 40)));
 
@@ -164,7 +163,7 @@ public class Maintenance extends JFrame {
         settingsHeader.setForeground(textSecondary);
         settingsHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JPanel headerWrapper = new JPanel(new BorderLayout()); // Wrapper to help alignment
+        JPanel headerWrapper = new JPanel(new BorderLayout());
         headerWrapper.setOpaque(false);
         headerWrapper.setMaximumSize(new Dimension(1000, 30));
         headerWrapper.add(settingsHeader, BorderLayout.WEST);
@@ -175,29 +174,27 @@ public class Maintenance extends JFrame {
         mainPanel.add(Box.createRigidArea(new Dimension(0, 40)));
         mainPanel.add(msgPanelContainer);
 
-        // Initial State: Disable options because master is OFF (Live)
         toggleOptions(false);
 
-        // Scroll Pane Wrapper
         JScrollPane scrollPane = new JScrollPane(mainPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        // Make scrollbar aesthetic if desired (reusing the one from dashboard or default)
 
         return scrollPane;
     }
 
     /**
-     * Helper to create a single option row (Option Name + Toggle).
+     * Creates a row with: [Title/Sub] ... [State Text] [Small Toggle]
      */
     private JPanel createOptionRow(String title, String subtitle) {
         RoundedPanel row = new RoundedPanel(15, cardColor, borderColor, 1);
         row.setLayout(new BorderLayout());
-        row.setMaximumSize(new Dimension(1000, 80));
-        row.setPreferredSize(new Dimension(1000, 80));
-        row.setBorder(new EmptyBorder(15, 25, 15, 25));
+        row.setMaximumSize(new Dimension(1000, 75));
+        row.setPreferredSize(new Dimension(1000, 75));
+        row.setBorder(new EmptyBorder(10, 25, 10, 25));
 
+        // Left side: Text
         JPanel textPanel = new JPanel(new GridLayout(2, 1));
         textPanel.setOpaque(false);
 
@@ -206,73 +203,102 @@ public class Maintenance extends JFrame {
         tLabel.setForeground(textColor);
 
         JLabel sLabel = new JLabel(subtitle);
-        sLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        sLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         sLabel.setForeground(textSecondary);
 
         textPanel.add(tLabel);
         textPanel.add(sLabel);
 
+        // Right side: State Label + Toggle
+        JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 12));
+        controlsPanel.setOpaque(false);
+
+        JLabel stateText = new JLabel("Allowed");
+        stateText.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        stateText.setForeground(accentColor);
+
         ModernToggle subToggle = new ModernToggle();
-        // Add labels to the toggle for clarity
-        subToggle.setLabels("Allow", "Disallow");
-        subToggles.add(subToggle); // Add to list for bulk management
+        subToggle.setSelected(true); // Default to allowed
+        subToggle.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(subToggle.isEnabled()) {
+                    boolean isAllowed = subToggle.isSelected();
+                    if(isAllowed) {
+                        stateText.setText("Allowed");
+                        stateText.setForeground(accentColor); // Teal
+                    } else {
+                        stateText.setText("Restricted");
+                        stateText.setForeground(dangerColor); // RED
+                    }
+                }
+            }
+        });
+
+        subToggles.add(subToggle);
+
+        controlsPanel.add(stateText);
+        controlsPanel.add(subToggle);
 
         row.add(textPanel, BorderLayout.CENTER);
-        row.add(subToggle, BorderLayout.EAST);
+        row.add(controlsPanel, BorderLayout.EAST);
 
         return row;
     }
 
-    /**
-     * Creates the footer with Save/Back buttons.
-     */
     private JPanel createFooter() {
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 20));
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 25, 25)); // Slight padding increase
         footer.setBackground(bgColor);
         footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, borderColor));
 
-        RoundedButton backBtn = new RoundedButton("Back to Dashboard", bgColor, borderColor, cardColor, bgColor, 10);
+        RoundedButton backBtn = new RoundedButton("Back", Buttonback,
+                Buttonhover,
+                borderColor.darker(), bgColor, 10);
         backBtn.setForeground(textColor);
-        backBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        backBtn.setPreferredSize(new Dimension(180, 45));
+        // Increased font size to 16
+        backBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        // Increased Dimensions (150, 50)
+        backBtn.setPreferredSize(new Dimension(150, 50));
         backBtn.addActionListener(e -> {
-            // Assuming AdminDashboard expects to be shown again
             new AdminDashboard("ADMIN01", "Admin").setVisible(true);
             this.dispose();
         });
 
-        RoundedButton saveBtn = new RoundedButton("Apply Changes", accentColor, accentGlow, accentColor.darker(), accentColor, 10);
+        RoundedButton saveBtn = new RoundedButton("Save Changes", accentColor, accentGlow, accentColor.darker(), accentColor, 10);
         saveBtn.setForeground(Color.WHITE);
-        saveBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        saveBtn.setPreferredSize(new Dimension(180, 45));
-        saveBtn.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Maintenance settings updated successfully.");
-        });
+        // Increased font size to 16
+        saveBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        // Increased Dimensions (200, 50)
+        saveBtn.setPreferredSize(new Dimension(200, 50));
+        saveBtn.addActionListener(e -> JOptionPane.showMessageDialog(this, "Settings Saved"));
 
         footer.add(backBtn);
         footer.add(saveBtn);
-
         return footer;
     }
 
-    /**
-     * Logic to handle what happens when Master Switch is toggled.
-     */
     private void toggleMasterState(boolean isMaintenanceOn) {
         if (isMaintenanceOn) {
-            statusLabel.setText("System is UNDER MAINTENANCE (Offline)");
-            statusLabel.setForeground(dangerColor);
-            toggleOptions(true); // Enable editing options
+            // --- Maintenance ACTIVE ---
+            statusLabel.setText("System is UNDER MAINTENANCE");
+            statusLabel.setForeground(dangerColor); // Red
+
+            masterToggleLabel.setText("Maintenance: ON");
+            masterToggleLabel.setForeground(textSecondary); // Red
+
+            toggleOptions(true); // Enable the sub-toggles
         } else {
-            statusLabel.setText("System is currently LIVE (Online)");
-            statusLabel.setForeground(accentColor);
-            toggleOptions(false); // Disable/Hide options
+            // --- Maintenance OFF (Live) ---
+            statusLabel.setText("System is LIVE");
+            statusLabel.setForeground(accentColor); // Teal
+
+            masterToggleLabel.setText("Maintenance: OFF");
+            masterToggleLabel.setForeground(textSecondary); // Grey
+
+            toggleOptions(false); // Disable the sub-toggles
         }
     }
 
-    /**
-     * Enables or Disables the visual state of the sub-options.
-     */
     private void toggleOptions(boolean enable) {
         for (Component comp : optionsContainer.getComponents()) {
             if (comp instanceof RoundedPanel) {
@@ -283,28 +309,22 @@ public class Maintenance extends JFrame {
     }
 
     private void setPanelEnabled(JPanel panel, boolean isEnabled) {
-        // Dim the panel color slightly if disabled
-        // Iterate recursively to disable components
         for (Component c : panel.getComponents()) {
             c.setEnabled(isEnabled);
-            if (c instanceof JPanel) {
-                setPanelEnabled((JPanel) c, isEnabled);
-            }
+            if (c instanceof JPanel) setPanelEnabled((JPanel) c, isEnabled);
         }
     }
 
     // =================================================================================
-    // --- CUSTOM COMPONENT: Modern Toggle Switch ---
+    // --- MODERN TOGGLE (iOS Style) ---
     // =================================================================================
     class ModernToggle extends JComponent {
         private boolean selected = false;
         private Timer timer;
-        private float animationProgress = 0f; // 0.0 to 1.0
-        private String labelOn = "ON";
-        private String labelOff = "OFF";
+        private float animationProgress = 0f;
 
         public ModernToggle() {
-            setPreferredSize(new Dimension(100, 34));
+            setPreferredSize(new Dimension(50, 26));
             setCursor(new Cursor(Cursor.HAND_CURSOR));
             addMouseListener(new MouseAdapter() {
                 @Override
@@ -315,14 +335,13 @@ public class Maintenance extends JFrame {
                 }
             });
 
-            // Simple animation timer
             timer = new Timer(10, e -> {
                 if (selected && animationProgress < 1.0f) {
-                    animationProgress += 0.1f;
+                    animationProgress += 0.15f;
                     if (animationProgress > 1.0f) animationProgress = 1.0f;
                     repaint();
                 } else if (!selected && animationProgress > 0.0f) {
-                    animationProgress -= 0.1f;
+                    animationProgress -= 0.15f;
                     if (animationProgress < 0.0f) animationProgress = 0.0f;
                     repaint();
                 } else {
@@ -331,14 +350,10 @@ public class Maintenance extends JFrame {
             });
         }
 
-        public void setLabels(String on, String off) {
-            this.labelOn = on;
-            this.labelOff = off;
-        }
-
         public boolean isSelected() { return selected; }
         public void setSelected(boolean s) {
             this.selected = s;
+            this.animationProgress = s ? 1.0f : 0.0f;
             timer.start();
         }
 
@@ -349,43 +364,30 @@ public class Maintenance extends JFrame {
 
             int w = getWidth();
             int h = getHeight();
-            int arc = h;
 
             // 1. Draw Track
             if (isEnabled()) {
-                g2.setColor(selected ? accentColor : cardColor.darker());
+                g2.setColor(interpolateColor(toggleOffColor, accentColor, animationProgress));
             } else {
-                g2.setColor(bgColor); // Dimmed if disabled
+                g2.setColor(borderColor); // Disabled state
             }
 
-            if (!isEnabled() && !selected) g2.setColor(borderColor); // Visible border when disabled off
+            g2.fill(new RoundRectangle2D.Double(0, 0, w, h, h, h));
 
-            g2.fill(new RoundRectangle2D.Double(0, 0, w, h, arc, arc));
-
-            // 2. Draw Label Text inside track
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 10));
-            g2.setColor(Color.WHITE);
-            FontMetrics fm = g2.getFontMetrics();
-
-            // Draw "ON" text on the left
-            if (animationProgress > 0.5) {
-                g2.drawString(labelOn, 15, (h + fm.getAscent()) / 2 - 2);
-            }
-            // Draw "OFF" text on the right
-            else {
-                g2.drawString(labelOff, w - fm.stringWidth(labelOff) - 15, (h + fm.getAscent()) / 2 - 2);
-            }
-
-            // 3. Draw Knob
-            int knobSize = h - 6;
+            // 2. Draw Knob (White Circle)
             int padding = 3;
-            // Calculate X position based on animation
-            double knobX = padding + (w - knobSize - padding * 2) * animationProgress;
+            int knobSize = h - (padding * 2);
+            double knobX = padding + (w - knobSize - (padding * 2)) * animationProgress;
 
-            g2.setColor(Color.WHITE);
-            if (!isEnabled()) g2.setColor(textSecondary);
-
+            g2.setColor(isEnabled() ? Color.WHITE : textSecondary);
             g2.fill(new Ellipse2D.Double(knobX, padding, knobSize, knobSize));
+        }
+
+        private Color interpolateColor(Color c1, Color c2, float fraction) {
+            int r = (int) (c1.getRed() + (c2.getRed() - c1.getRed()) * fraction);
+            int g = (int) (c1.getGreen() + (c2.getGreen() - c1.getGreen()) * fraction);
+            int b = (int) (c1.getBlue() + (c2.getBlue() - c1.getBlue()) * fraction);
+            return new Color(r, g, b);
         }
     }
 }
