@@ -4,22 +4,17 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.RoundRectangle2D;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
-import middleware.facultyService;
-import ui.components.RoundedButton; // <-- IMPORTED
-import ui.components.RoundedPanel;  // <-- IMPORTED
+import dbClasses.facultyCourseClass;
 
-/**
- * A JPanel that displays courses taught by a faculty member.
- * This version uses the public ui.components classes.
- */
+import middleware.facultyService;
+import ui.components.RoundedButton;
+import ui.components.RoundedPanel;
+
 public class FacultyCoursesPanel extends JPanel {
 
     // --- Services & Data ---
@@ -49,12 +44,12 @@ public class FacultyCoursesPanel extends JPanel {
         // --- Hardcode Data ---
         this.semesterCourses = new LinkedHashMap<>();
         List<facultyCourseClass> fall2025 = new ArrayList<>();
-        fall2025.add(new facultyCourseClass("CS-301", "Operating Systems", 4, "CSE", 75));
-        fall2025.add(new facultyCourseClass("MATH-201", "Linear Algebra", 4, "MATH", 120));
+        fall2025.add(new facultyCourseClass("Operating Systems", "CS-301", 75, 4, "CSE"));
+        fall2025.add(new facultyCourseClass("Linear Algebra","MATH-201",  120,4, "MATH"));
         List<facultyCourseClass> spring2025 = new ArrayList<>();
-        spring2025.add(new facultyCourseClass("CS-101", "Intro to Programming", 4, "CSE", 150));
+        spring2025.add(new facultyCourseClass("Intro to Programming","CS-101", 150 ,4, "CSE"));
         List<facultyCourseClass> fall2024 = new ArrayList<>();
-        fall2024.add(new facultyCourseClass("CS-450", "Database Systems", 4, "CSE", 60));
+        fall2024.add(new facultyCourseClass("Database Systems","CS-450", 60, 4, "CSE"));
         semesterCourses.put("Monsoon 2025", fall2025);
         semesterCourses.put("Winter 2024", spring2025);
         semesterCourses.put("Monsoon 2024", fall2024);
@@ -75,7 +70,7 @@ public class FacultyCoursesPanel extends JPanel {
 
         for (String semester : semesterCourses.keySet()) {
             for (facultyCourseClass course : semesterCourses.get(semester)) {
-                JPanel detailPanel = createCourseDetailPanel(course);
+                JPanel detailPanel = createCourseDetailPanel(course, semester);
                 mainContentPanel.add(detailPanel, "DETAIL_" + course.getCourseCode());
             }
         }
@@ -277,7 +272,7 @@ public class FacultyCoursesPanel extends JPanel {
     /**
      * Creates the "Course Detail" panel for a specific course.
      */
-    private JPanel createCourseDetailPanel(facultyCourseClass course) {
+    private JPanel createCourseDetailPanel(facultyCourseClass course, String semester) {
         JPanel panel = new JPanel(new BorderLayout(0, 20));
         panel.setBackground(mainPanelColor);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 40, 40));
@@ -346,7 +341,10 @@ public class FacultyCoursesPanel extends JPanel {
 
         viewStudentsButton.setFont(buttonFont);
         viewStudentsButton.setBorder(buttonBorder);
-        viewStudentsButton.addActionListener(e -> JOptionPane.showMessageDialog(panel, "Opening student list for " + course.getCourseCode()));
+        viewStudentsButton.addActionListener(e -> {
+            ShowStudentsFrame showStudentsFrame = new ShowStudentsFrame(course.getCourseCode(), course.getCourseName(), semester);
+            showStudentsFrame.setVisible(true);
+        });
 
         updateScoresButton.setFont(buttonFont);
         updateScoresButton.setBorder(buttonBorder);
@@ -361,7 +359,7 @@ public class FacultyCoursesPanel extends JPanel {
         setGradingPolicyButton.setBorder(buttonBorder);
         setGradingPolicyButton.addActionListener(e ->
         {
-            GradingPolicyFrame gradingPolicyFrame = new GradingPolicyFrame(course.getCourseCode(), course.getCourseName(),"INST-CS-501", "Monsoon 2025");
+            GradingPolicyFrame gradingPolicyFrame = new GradingPolicyFrame(course.getCourseCode(), course.getCourseName(),"INST-CS-501", semester);
             gradingPolicyFrame.setVisible(true);
         });
 
@@ -468,26 +466,5 @@ public class FacultyCoursesPanel extends JPanel {
             g2.fillRoundRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height, 10, 10);
             g2.dispose();
         }
-    }
-
-    /**
-     * LOCAL PLACEHOLDER CLASS
-     */
-    private class facultyCourseClass {
-        private String courseCode, courseName, department;
-        private int courseCredits, studentCount;
-
-        public facultyCourseClass(String code, String name, int credits, String dept, int count) {
-            this.courseCode = code;
-            this.courseName = name;
-            this.courseCredits = credits;
-            this.department = dept;
-            this.studentCount = count;
-        }
-        public String getCourseCode() { return courseCode; }
-        public String getCourseName() { return courseName; }
-        public int getCourseCredits() { return courseCredits; }
-        public String getDepartment() { return department; }
-        public int getStudentCount() { return studentCount; }
     }
 }
