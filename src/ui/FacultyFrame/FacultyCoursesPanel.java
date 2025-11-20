@@ -44,12 +44,12 @@ public class FacultyCoursesPanel extends JPanel {
         // --- Hardcode Data ---
         this.semesterCourses = new LinkedHashMap<>();
         List<facultyCourseClass> fall2025 = new ArrayList<>();
-        fall2025.add(new facultyCourseClass("Operating Systems", "CS-301", 75, 4, "CSE"));
-        fall2025.add(new facultyCourseClass("Linear Algebra","MATH-201",  120,4, "MATH"));
+        fall2025.add(new facultyCourseClass("Operating Systems", "CS301", 75, 4, "CSE"));
+        fall2025.add(new facultyCourseClass("Linear Algebra","MTH201",  120,4, "MATH"));
         List<facultyCourseClass> spring2025 = new ArrayList<>();
-        spring2025.add(new facultyCourseClass("Intro to Programming","CS-101", 150 ,4, "CSE"));
+        spring2025.add(new facultyCourseClass("Intro to Programming","CS101", 150 ,4, "CSE"));
         List<facultyCourseClass> fall2024 = new ArrayList<>();
-        fall2024.add(new facultyCourseClass("Database Systems","CS-450", 60, 4, "CSE"));
+        fall2024.add(new facultyCourseClass("Database Systems","CS450", 60, 4, "CSE"));
         semesterCourses.put("Monsoon 2025", fall2025);
         semesterCourses.put("Winter 2024", spring2025);
         semesterCourses.put("Monsoon 2024", fall2024);
@@ -351,7 +351,7 @@ public class FacultyCoursesPanel extends JPanel {
         updateScoresButton.addActionListener(e ->
         {
             // --- MODIFIED --- Pass the correct course code
-            UpdateScoresFrame updateScoresFrame = new UpdateScoresFrame(course.getCourseCode());
+            UpdateScoresFrame updateScoresFrame = new UpdateScoresFrame(course.getCourseCode(), "INST-CS-501",  semester);
             updateScoresFrame.setVisible(true);
         });
 
@@ -415,10 +415,6 @@ public class FacultyCoursesPanel extends JPanel {
         activeButton.setActive(true);
         activeButton.setForeground(textColor); // Set active text color
     }
-
-    // ---
-    // --- INNER CLASSES (Still Needed) ---
-    // ---
 
     /**
      * Inner class for a custom styled scrollbar.
