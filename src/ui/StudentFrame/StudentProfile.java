@@ -1,28 +1,34 @@
 package ui.StudentFrame;
 
+import ui.components.RoundedButton;
+import ui.components.RoundedPanel;
 import ui.dashboard.ChangePasswordDialog;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StudentProfile extends JFrame {
 
-    // These fields store the data passed from the dashboard
-    private String rollNumber; // e.g., "2024380"
-    private String username;   // e.g., "nikhil24380" (this is the auth ID)
+    private String rollNumber;
+    private String username;
 
-    // Use consistent colors from the dashboard
-    private Color bgColor = new Color(45, 45, 45);
-    private Color mainPanelColor = new Color(50, 50, 50);
-    private Color textColor = Color.WHITE;
-    private Color accentColor = new Color(100, 100, 100);
-    private Color buttonColor = new Color(57, 174, 168);
+    // --- UNIFIED COLOR PALETTE (Matches StudentDashboard) ---
+    private Color bgColor = new Color(42, 48, 60);            // --background
+    private Color cardColor = new Color(54, 59, 74);          // --card
+    private Color borderColor = new Color(64, 69, 89);        // --border
+    private Color buttonColor = new Color(52, 159, 148);      // --primary
+    private Color buttonColorGlow = new Color(79, 196, 184);  // --primary-glow
+    private Color textColor = new Color(255, 255, 255);       // --foreground
+    private Color textSecondaryColor = new Color(179, 179, 179); // --muted-foreground
 
-    // Components for the card layout
+    // Components
     private JPanel cardContentPanel;
     private CardLayout cardLayout;
+    private List<RoundedButton> tabButtons; // To manage active state
 
     // Card Names
     private final String PERSONAL_CARD = "Personal Details";
@@ -30,322 +36,318 @@ public class StudentProfile extends JFrame {
     private final String FAMILY_CARD = "Family";
     private final String CONTACT_CARD = "Contact Details";
 
-
     public StudentProfile(String rollNumber, String username) {
         super("Student Profile - " + username);
         this.rollNumber = rollNumber;
         this.username = username;
 
-        // Set properties for the new frame
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1080, 720);
-        setLocationRelativeTo(null); // Center
+        setExtendedState(JFrame.MAXIMIZED_BOTH); // Full Screen
+        setSize(1280, 800);
+        setLocationRelativeTo(null);
         getContentPane().setBackground(bgColor);
-        setLayout(new BorderLayout());
+        setLayout(new GridBagLayout()); // Use GridBag for the main layout
 
-        // Main panel that will hold the new GridBagLayout
-        JPanel mainPanel = new JPanel(new GridBagLayout());
-        mainPanel.setBackground(mainPanelColor);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        add(mainPanel, BorderLayout.CENTER);
+        this.tabButtons = new ArrayList<>();
 
-        GridBagConstraints c = new GridBagConstraints();
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(30, 30, 30, 30); // Outer padding
+        gbc.fill = GridBagConstraints.BOTH;
 
-        // 1. Left Panel (Photo + Details)
-        JPanel leftPanel = createLeftPanel();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.weightx = 0.3; // Give 30% width to left panel
-        c.weighty = 1.0;
-        c.fill = GridBagConstraints.BOTH;
-        c.insets = new Insets(0, 0, 0, 10); // Padding to the right
-        mainPanel.add(leftPanel, c);
+        // 1. Left Sidebar (Profile Photo, Basic Info, Actions)
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.25; // 25% width
+        gbc.weighty = 1.0;
+        add(createLeftSidebar(), gbc);
 
-        // 2. Vertical Separator
-        JPanel separatorPanel = new JPanel();
-        separatorPanel.setBackground(Color.WHITE);
-        separatorPanel.setPreferredSize(new Dimension(2, 0)); // Width of 2px, height will stretch
-        c.gridx = 1;
-        c.weightx = 0; // No extra width
-        c.fill = GridBagConstraints.VERTICAL;
-        c.insets = new Insets(0, 0, 0, 10); // Padding to the right
-        mainPanel.add(separatorPanel, c);
-
-        // 3. Right Panel (Nav Tabs + Content)
-        JPanel rightPanel = createRightPanel();
-        c.gridx = 2;
-        c.weightx = 0.7; // Give 70% width to right panel
-        c.fill = GridBagConstraints.BOTH;
-        c.insets = new Insets(0, 0, 0, 0); // No padding
-        mainPanel.add(rightPanel, c);
+        // 2. Right Content Area (Tabs + Details)
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 0.75; // 75% width
+        gbc.weighty = 1.0;
+        add(createRightContentPanel(), gbc);
     }
 
-    private JPanel createLeftPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(mainPanelColor);
-        panel.setOpaque(false); // Let main panel color show through
+    /**
+     * Creates the left sidebar styled as a card.
+     */
+    private JPanel createLeftSidebar() {
+        RoundedPanel panel = new RoundedPanel(20, cardColor, borderColor, 1);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(40, 30, 40, 30));
 
-        // 1. Passport Photo Placeholder
-        JPanel photoPanel = new JPanel();
-        photoPanel.setBackground(accentColor);
-        photoPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 1));
-        photoPanel.setPreferredSize(new Dimension(180, 220)); // Passport-like-ish size
-
-        JLabel photoLabel = new JLabel("Photo Placeholder");
-        photoLabel.setForeground(textColor);
-        photoLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        photoPanel.add(photoLabel);
-
-        // Use a container to keep the photo panel from stretching
+        // --- Profile Picture Placeholder ---
+        // Creating a circular panel simulation
         JPanel photoContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
         photoContainer.setOpaque(false);
-        photoContainer.add(photoPanel);
-        panel.add(photoContainer, BorderLayout.NORTH);
 
-        // 2. Details Panel
-        JPanel detailsPanel = new JPanel();
-        detailsPanel.setBackground(mainPanelColor);
-        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
-        detailsPanel.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
+        // High radius RoundedPanel to look like a circle
+        RoundedPanel photoCircle = new RoundedPanel(100, buttonColor, buttonColorGlow);
+        photoCircle.setPreferredSize(new Dimension(150, 150));
+        photoCircle.setLayout(new GridBagLayout()); // To center the text
 
-        JLabel rollLabel = new JLabel("Roll Number:");
-        rollLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        rollLabel.setForeground(textColor);
-        rollLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel initialLabel = new JLabel(username.substring(0, 1).toUpperCase());
+        initialLabel.setFont(new Font("Segoe UI", Font.BOLD, 64));
+        initialLabel.setForeground(textColor);
+        photoCircle.add(initialLabel);
 
-        // This is the display roll number (e.g., "2024380")
-        JLabel rollValue = new JLabel(rollNumber);
-        rollValue.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        rollValue.setForeground(textColor);
-        rollValue.setAlignmentX(Component.LEFT_ALIGNMENT);
-        rollValue.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0)); // Padding below
+        photoContainer.add(photoCircle);
+        panel.add(photoContainer);
 
-        JLabel userLabel = new JLabel("Username / Auth ID:"); // Clarified label
-        userLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        userLabel.setForeground(textColor);
-        userLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        // This is the auth username (e.g., "nikhil24380")
-        JLabel userValue = new JLabel(username);
-        userValue.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        userValue.setForeground(textColor);
-        userValue.setAlignmentX(Component.LEFT_ALIGNMENT);
-        userValue.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0)); // Added more padding below
+        // --- Basic Info ---
+        panel.add(createSidebarLabel("Roll Number", rollNumber));
+        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+        panel.add(createSidebarLabel("Username", username));
 
-        detailsPanel.add(rollLabel);
-        detailsPanel.add(rollValue);
-        detailsPanel.add(userLabel);
-        detailsPanel.add(userValue);
+        panel.add(Box.createVerticalGlue()); // Push buttons to bottom
 
-        // Add "Change Password" button
-        JButton changePassButton = createMenuButton("Change Password");
-        changePassButton.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        changePassButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        // --- Action Buttons ---
+        RoundedButton changePassBtn = new RoundedButton(
+                "Change Password",
+                buttonColor,
+                buttonColorGlow,
+                10
+        );
+        changePassBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        changePassBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 
-        // ---
-        // --- THIS IS THE MODIFIED ACTION LISTENER ---
-        // ---
-        changePassButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Create and show the new dialog
-                // 'StudentProfile.this' is the parent frame
-                // 'username' is the auth ID (e.g., "nikhil24380") needed by the service
-                ChangePasswordDialog dialog = new ChangePasswordDialog(StudentProfile.this, username);
-                dialog.setVisible(true);
-            }
+        changePassBtn.addActionListener(e -> {
+            ChangePasswordDialog dialog = new ChangePasswordDialog(StudentProfile.this, username);
+            dialog.setVisible(true);
         });
 
-        detailsPanel.add(changePassButton);
+        panel.add(changePassBtn);
 
-        // Add glue to push button to the top
-        detailsPanel.add(Box.createVerticalGlue());
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
 
-        panel.add(detailsPanel, BorderLayout.CENTER);
+        RoundedButton closeBtn = new RoundedButton(
+                "Close Profile",
+                cardColor,
+                borderColor, // hover
+                borderColor.darker(), // pressed
+                10
+        );
+        closeBtn.setForeground(textSecondaryColor);
+        closeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        closeBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        closeBtn.addActionListener(e -> dispose());
+
+        panel.add(closeBtn);
 
         return panel;
     }
 
-    // --- (Rest of your StudentProfile.java class is unchanged) ---
+    private JPanel createSidebarLabel(String title, String value) {
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+        p.setOpaque(false);
+        p.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-    private JPanel createRightPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setOpaque(false);
+        JLabel t = new JLabel(title);
+        t.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        t.setForeground(textSecondaryColor);
+        t.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // 1. Nav Tabs Panel
-        JPanel navTabsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        navTabsPanel.setBackground(mainPanelColor);
+        JLabel v = new JLabel(value);
+        v.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        v.setForeground(textColor);
+        v.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Use a ButtonGroup to make buttons act like tabs (only one selected)
-        ButtonGroup tabGroup = new ButtonGroup();
-        ActionListener tabListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Get the button's text, which is the card name
-                cardLayout.show(cardContentPanel, e.getActionCommand());
-            }
-        };
+        p.add(t);
+        p.add(Box.createRigidArea(new Dimension(0, 5)));
+        p.add(v);
+        return p;
+    }
 
-        // Create buttons
-        JToggleButton personalBtn = createNavButton(PERSONAL_CARD, tabListener);
-        JToggleButton academicBtn = createNavButton(ACADEMIC_CARD, tabListener);
-        JToggleButton familyBtn = createNavButton(FAMILY_CARD, tabListener);
-        JToggleButton contactBtn = createNavButton(CONTACT_CARD, tabListener);
+    /**
+     * Creates the right side: Tabs on top, Card content below.
+     */
+    private JPanel createRightContentPanel() {
+        JPanel container = new JPanel(new BorderLayout(0, 20));
+        container.setOpaque(false);
 
-        // Add to group and panel
-        tabGroup.add(personalBtn);
-        tabGroup.add(academicBtn);
-        tabGroup.add(familyBtn);
-        tabGroup.add(contactBtn);
+        // 1. Navigation Tabs
+        JPanel tabsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        tabsPanel.setOpaque(false);
 
-        navTabsPanel.add(personalBtn);
-        navTabsPanel.add(academicBtn);
-        navTabsPanel.add(familyBtn);
-        navTabsPanel.add(contactBtn);
+        // Create the tabs
+        tabsPanel.add(createTabButton(PERSONAL_CARD, true)); // Active by default
+        tabsPanel.add(createTabButton(ACADEMIC_CARD, false));
+        tabsPanel.add(createTabButton(FAMILY_CARD, false));
+        tabsPanel.add(createTabButton(CONTACT_CARD, false));
 
-        // Select the first tab by default
-        personalBtn.setSelected(true);
+        container.add(tabsPanel, BorderLayout.NORTH);
 
-        panel.add(navTabsPanel, BorderLayout.NORTH);
-
-        // 2. Card Content Panel (where content changes)
+        // 2. Card Content Area
         cardLayout = new CardLayout();
         cardContentPanel = new JPanel(cardLayout);
-        cardContentPanel.setOpaque(false);
-        cardContentPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        cardContentPanel.setOpaque(false); // Transparent so we see rounded panels inside
 
-        // Add the different content cards
-        cardContentPanel.add(createDetailsPanel(PERSONAL_CARD), PERSONAL_CARD);
-        cardContentPanel.add(createDetailsPanel(ACADEMIC_CARD), ACADEMIC_CARD);
-        cardContentPanel.add(createDetailsPanel(FAMILY_CARD), FAMILY_CARD);
-        cardContentPanel.add(createDetailsPanel(CONTACT_CARD), CONTACT_CARD);
+        cardContentPanel.add(createDetailsCard(PERSONAL_CARD), PERSONAL_CARD);
+        cardContentPanel.add(createDetailsCard(ACADEMIC_CARD), ACADEMIC_CARD);
+        cardContentPanel.add(createDetailsCard(FAMILY_CARD), FAMILY_CARD);
+        cardContentPanel.add(createDetailsCard(CONTACT_CARD), CONTACT_CARD);
 
-        panel.add(cardContentPanel, BorderLayout.CENTER);
+        container.add(cardContentPanel, BorderLayout.CENTER);
 
-        // Show the default card
-        cardLayout.show(cardContentPanel, PERSONAL_CARD);
-
-        return panel;
+        return container;
     }
 
-    private JToggleButton createNavButton(String text, ActionListener listener) {
-        JToggleButton button = new JToggleButton(text);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        button.setForeground(textColor);
-        button.setBackground(accentColor);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        button.setFocusPainted(false);
-        button.setActionCommand(text); // Set command to the card name
-        button.addActionListener(listener);
+    /**
+     * Creates a styled tab button using RoundedButton.
+     */
+    private RoundedButton createTabButton(String text, boolean isActive) {
+        // Constructor: text, normal, hover, pressed, activeStart, activeEnd, arc
+        RoundedButton btn = new RoundedButton(
+                text,
+                cardColor,          // Normal Background
+                cardColor.brighter(), // Hover
+                cardColor.darker(),   // Pressed
+                buttonColor,          // Active Gradient Start
+                buttonColorGlow,      // Active Gradient End
+                15                    // Arc
+        );
 
-        // Simple styling for selected state
-        button.addItemListener(e -> {
-            if (e.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
-                button.setBackground(new Color(80, 80, 80)); // Darker when selected
-            } else {
-                button.setBackground(accentColor); // Reset when deselected
-            }
-        });
+        btn.setPreferredSize(new Dimension(180, 45));
+        btn.setActive(isActive);
 
-        return button;
-    }
-
-    // Helper method to create placeholder "NA" panels
-    private JPanel createDetailsPanel(String title) {
-        JPanel panel = new JPanel();
-        panel.setBackground(mainPanelColor);
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(accentColor, 1),
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        ));
-
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        titleLabel.setForeground(textColor);
-        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        panel.add(titleLabel);
-
-        // Add "NA" fields based on the title
-        switch (title) {
-            case PERSONAL_CARD:
-                panel.add(createNAField("E-mail:"));
-                panel.add(createNAField("Date of Birth:"));
-                panel.add(createNAField("Contact Number:"));
-                panel.add(createNAField("Unique Identification Number:"));
-
-                // Add vertical space before the new section
-                panel.add(Box.createRigidArea(new Dimension(0, 20)));
-
-                // Add "Additional Details" sub-title
-                JLabel additionalDetailsLabel = new JLabel("Additional Details");
-                additionalDetailsLabel.setFont(new Font("Segoe UI", Font.BOLD, 18)); // Slightly smaller than main title
-                additionalDetailsLabel.setForeground(textColor);
-                additionalDetailsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-                additionalDetailsLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0)); // Padding below
-                panel.add(additionalDetailsLabel);
-
-                // Add fields for the new section
-                panel.add(createNAField("Marital Status:"));
-                panel.add(createNAField("Blood Group:"));
-                panel.add(createNAField("Nationality:"));
-                panel.add(createNAField("Gender:")); // Added new "Gender" field
-
-                break;
-            case ACADEMIC_CARD:
-                panel.add(createNAField("Program:"));
-                panel.add(createNAField("Batch:"));
-                panel.add(createNAField("Enrollment No:"));
-                break;
-            case FAMILY_CARD:
-                panel.add(createNAField("Father's Name:"));
-                panel.add(createNAField("Mother's Name:"));
-                panel.add(createNAField("Guardian's Contact:"));
-                break;
-            case CONTACT_CARD:
-                panel.add(createNAField("Email:"));
-                panel.add(createNAField("Contact No:"));
-                panel.add(createNAField("Permanent Address:"));
-                break;
-            default:
-                panel.add(new JLabel("Content for " + title));
+        if(isActive) {
+            btn.setForeground(textColor);
+        } else {
+            btn.setForeground(textSecondaryColor);
         }
 
-        panel.add(Box.createVerticalGlue()); // Pushes content to the top
+        btn.addActionListener(e -> {
+            // 1. Switch Card
+            cardLayout.show(cardContentPanel, text);
 
-        // Wrap in a JScrollPane
-        JScrollPane scrollPane = new JScrollPane(panel);
+            // 2. Update Visual State
+            for (RoundedButton b : tabButtons) {
+                b.setActive(false);
+                b.setForeground(textSecondaryColor);
+            }
+            btn.setActive(true);
+            btn.setForeground(textColor);
+        });
+
+        tabButtons.add(btn);
+        return btn;
+    }
+
+    /**
+     * Creates the actual content panel for a specific category.
+     */
+    private JPanel createDetailsCard(String category) {
+        RoundedPanel card = new RoundedPanel(20, cardColor, borderColor, 1);
+        card.setLayout(new BorderLayout());
+        card.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
+        // Content Wrapper
+        Box contentBox = Box.createVerticalBox();
+
+        // Title
+        JLabel title = new JLabel(category);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        title.setForeground(textColor);
+        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        contentBox.add(title);
+        contentBox.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        JSeparator sep = new JSeparator();
+        sep.setForeground(borderColor);
+        sep.setBackground(cardColor);
+        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+        sep.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        contentBox.add(sep);
+        contentBox.add(Box.createRigidArea(new Dimension(0, 25)));
+
+        // Add fields based on category
+        switch (category) {
+            case PERSONAL_CARD:
+                contentBox.add(createDataRow("Date of Birth", "NA"));
+                contentBox.add(createDataRow("Contact Number", "NA"));
+                contentBox.add(createDataRow("Unique ID", "NA"));
+                contentBox.add(Box.createRigidArea(new Dimension(0, 20)));
+                JLabel subTitle = new JLabel("Additional Details");
+                subTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+                subTitle.setForeground(buttonColor); // Accent color
+                subTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+                contentBox.add(subTitle);
+                contentBox.add(Box.createRigidArea(new Dimension(0, 15)));
+                contentBox.add(createDataRow("Gender", "NA"));
+                contentBox.add(createDataRow("Blood Group", "NA"));
+                contentBox.add(createDataRow("Nationality", "NA"));
+                break;
+            case ACADEMIC_CARD:
+                contentBox.add(createDataRow("Program", "B.Tech (CSE)"));
+                contentBox.add(createDataRow("Current Semester", "Semester 3"));
+                contentBox.add(createDataRow("Batch", "2024"));
+                contentBox.add(createDataRow("Enrollment No", rollNumber));
+                break;
+            case FAMILY_CARD:
+                contentBox.add(createDataRow("Father's Name", "NA"));
+                contentBox.add(createDataRow("Mother's Name", "NA"));
+                contentBox.add(createDataRow("Guardian Contact", "NA"));
+                break;
+            case CONTACT_CARD:
+                contentBox.add(createDataRow("Official Email", username + "@iiitd.ac.in"));
+                contentBox.add(createDataRow("Personal Email", "NA"));
+                contentBox.add(createDataRow("Permanent Address", "NA"));
+                break;
+        }
+
+        contentBox.add(Box.createVerticalGlue());
+
+        JScrollPane scrollPane = new JScrollPane(contentBox);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
         scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(mainPanelColor);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        // Need a wrapper panel to return a JPanel, not a JScrollPane
-        JPanel wrapper = new JPanel(new BorderLayout());
+        card.add(scrollPane, BorderLayout.CENTER);
+        return card;
+    }
+
+    /**
+     * Helper to create a styled row: "Label ......... Value"
+     */
+    private JPanel createDataRow(String labelText, String valueText) {
+        JPanel row = new JPanel(new BorderLayout());
+        row.setOpaque(false);
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        row.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        label.setForeground(textSecondaryColor);
+
+        JLabel value = new JLabel(valueText);
+        value.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        value.setForeground(textColor);
+
+        row.add(label, BorderLayout.WEST);
+        row.add(value, BorderLayout.EAST);
+
+        // Add a bottom border line for separation
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
         wrapper.setOpaque(false);
-        wrapper.add(scrollPane, BorderLayout.CENTER);
+        wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        wrapper.add(row);
+
+        JSeparator line = new JSeparator();
+        line.setForeground(new Color(255,255,255, 30)); // Very subtle divider
+        line.setBackground(cardColor);
+        line.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+
+        wrapper.add(line);
+
         return wrapper;
-    }
-
-    private JLabel createNAField(String label) {
-        JLabel field = new JLabel(label + "\t NA");
-        field.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        field.setForeground(textColor);
-        field.setAlignmentX(Component.LEFT_ALIGNMENT);
-        field.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-        return field;
-    }
-    private JButton createMenuButton(String text) {
-        JButton button = new JButton(text);
-        button.setBackground(buttonColor);
-        button.setForeground(textColor);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        button.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        return button;
     }
 }

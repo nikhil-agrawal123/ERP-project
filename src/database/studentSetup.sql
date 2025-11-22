@@ -152,7 +152,7 @@ update grades
 set grades.credits = 4
 where student_roll_no = '2024380' and course_code ='CS101';
 
-alter table enrollments drop column section_id;
+alter table enrollments add column section_id int not null;
 
 alter table enrollments add column student_name varchar(50) not null,
 add column course_code varchar(50) not null,

@@ -39,3 +39,5 @@ insert  into auth.adminauth(adminId, adminPass)
 values
     ( "nikhil", "$2a$10$Kc/0I11BVSsNDxsuYAsJDekSvfAze0t7auWjff5OF6oC/anfVdVje");
 
+insert into auth.facultyauth(facultyId, facultyPass)
+value  ('alok','$2a$12$k7oWbvnZ0TQejjHEDLhTGuNzLcpCCAWGEFDENQHbL6cNVBCtWEVhW')
