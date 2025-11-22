@@ -4,8 +4,7 @@ import middleware.services;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import middleware.loggerService;
 
 /**
  * A modal dialog window for changing a student's password.
@@ -13,11 +12,11 @@ import java.awt.event.ActionListener;
 public class ChangePasswordDialog extends JDialog {
 
     // --- Student Auth ID ---
-    // This is the studentId used for authentication (e.g., "nikhil24380")
     private String studentId;
 
     // --- Service for auth logic ---
     private services authService;
+    private loggerService logger;
 
     // --- UI Components ---
     private JPasswordField currentPassField;
@@ -39,9 +38,10 @@ public class ChangePasswordDialog extends JDialog {
      * @param studentId The 'username' or 'studentId' used for authentication.
      */
     public ChangePasswordDialog(Frame parent, String studentId) {
-        super(parent, "Change Password", true); // 'true' makes it modal
+        super(parent, "Change Password", true);
         this.studentId = studentId;
-        this.authService = new services(); // Initialize the auth service
+        this.authService = new services();
+        this.logger = new loggerService();
 
         // --- Dialog Properties ---
         setSize(450, 300);
@@ -117,14 +117,14 @@ public class ChangePasswordDialog extends JDialog {
         panel.add(buttonPanel, gbc);
 
         // --- Action Listeners ---
-        submitButton.addActionListener(e -> handleSubmit());
-        cancelButton.addActionListener(e -> dispose()); // Just close the dialog
+        submitButton.addActionListener(e -> handleSubmit(studentId));
+        cancelButton.addActionListener(e -> dispose());
     }
 
     /**
      * Handles the logic when the "Submit" button is clicked.
      */
-    private void handleSubmit() {
+    private void handleSubmit(String username) {
         String currentPass = new String(currentPassField.getPassword());
         String newPass = new String(newPassField.getPassword());
         String confirmPass = new String(confirmPassField.getPassword());
@@ -135,6 +135,7 @@ public class ChangePasswordDialog extends JDialog {
                     "All fields are required.",
                     "Validation Error",
                     JOptionPane.ERROR_MESSAGE);
+            logger.log(username,"Password Reset" ,"Student Tried resetting password");
             return;
         }
 
@@ -144,6 +145,8 @@ public class ChangePasswordDialog extends JDialog {
                     "New passwords do not match.",
                     "Validation Error",
                     JOptionPane.ERROR_MESSAGE);
+            logger.log(username,"Password Reset" ,"Student Tried resetting password but failed");
+
             return;
         }
 
@@ -153,6 +156,8 @@ public class ChangePasswordDialog extends JDialog {
                     "Incorrect current password.",
                     "Authentication Error",
                     JOptionPane.ERROR_MESSAGE);
+            logger.log(username,"Password Reset" ,"Student Tried resetting - Current Password Error");
+
             return;
         }
 
@@ -162,12 +167,16 @@ public class ChangePasswordDialog extends JDialog {
                     "Password updated successfully!",
                     "Success",
                     JOptionPane.INFORMATION_MESSAGE);
-            dispose(); // Close the dialog on success
+            dispose();
+            logger.log(username,"Password Reset" ,"Student Tried resetting successfully");
+
         } else {
             JOptionPane.showMessageDialog(this,
                     "Failed to update password. A database error occurred.",
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
+            logger.log(username,"Password Reset" ,"Student Tried resetting password but failed");
+
         }
     }
 

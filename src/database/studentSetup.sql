@@ -262,4 +262,13 @@ CREATE TABLE `gradingPolicy` (
     PRIMARY KEY (`policy_id`)
 ) ENGINE = InnoDB;
 
-alter table gradingpolicy rename column instructor to instructor_id;
+alter table gradingpolicy rename column
+
+CREATE TABLE IF NOT EXISTS `audit_logs` (
+                                            `log_id` INT NOT NULL AUTO_INCREMENT,
+                                            `user_id` VARCHAR(50) NOT NULL,      -- Who did it? (e.g., "admin01")
+                                            `action_type` VARCHAR(50) NOT NULL,  -- What did they do? (e.g., "ADD_STUDENT")
+                                            `description` TEXT,                  -- Details (e.g., "Added student Roll No 202401")
+                                            `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                            PRIMARY KEY (`log_id`)
+) ENGINE = InnoDB;

@@ -5,6 +5,7 @@ import ui.dashboard.StudentDashboard;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import middleware.studentService;
+import middleware.loggerService;
 
 import java.util.List;
 
@@ -34,7 +35,9 @@ public class StudentRegCourses extends JFrame {
     private Color textSecondaryColor = new Color(179, 179, 179);
     private Color Buttonback = new Color(38, 44, 58);
     private Color Buttonhover = new Color(25, 30, 40);
+
     private studentService student;
+    private loggerService logger;
 
     // --- Icons for our custom checkbox (will be styled with new colors) ---
     private ImageIcon uncheckedIcon;
@@ -54,6 +57,7 @@ public class StudentRegCourses extends JFrame {
         this.uncheckedIcon = createCheckBoxIcon(false);
         this.checkedIcon = createCheckBoxIcon(true);
         this.student = new studentService();
+        this.logger = new loggerService();
 
         // --- Standard Frame Setup (using new colors) ---
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -146,7 +150,6 @@ public class StudentRegCourses extends JFrame {
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        // Apply custom scrollbar UI
         scrollPane.getVerticalScrollBar().setUI(new StyledScrollBarUI());
 
 
@@ -158,7 +161,7 @@ public class StudentRegCourses extends JFrame {
                 centerContentPanel.removeAll();
                 if (!selectedItem.equals("Select Term")) {
                     System.out.println("User selected: " + selectedItem);
-                    loadCourses(selectedItem); // Load placeholder courses
+                    loadCourses(selectedItem);
                 } else {
                     showPromptCard();
                 }
@@ -180,7 +183,6 @@ public class StudentRegCourses extends JFrame {
             Component[] components = centerContentPanel.getComponents();
             int selectedCount = 0;
 
-            // --- FIX 1: Change the list type to match your data class ---
             java.util.List<studentAvailableCourses> selectedCourses = new java.util.ArrayList<>();
 
             for (Component comp : components) {
@@ -212,6 +214,7 @@ public class StudentRegCourses extends JFrame {
                         "You have not selected any courses to register.",
                         "No Courses Selected",
                         JOptionPane.INFORMATION_MESSAGE);
+                logger.log(username,"Register Courses", "User tries registering for 0 courses");
             } else {
                 List<String> courseNames = new java.util.ArrayList<>();
                 for (studentAvailableCourses c : selectedCourses) {
@@ -223,6 +226,7 @@ public class StudentRegCourses extends JFrame {
                                 "Same course can't be registered multiple times." ,
                                 "Registration unsuccessful",
                                 JOptionPane.INFORMATION_MESSAGE);
+                        logger.log(username,"Register Course","User Tries registering same course multiple times.");
 
                         break;
                     }
@@ -237,6 +241,7 @@ public class StudentRegCourses extends JFrame {
                                 "Successfully registered " + selectedCount + " course(s):\n" + courseList,
                                 "Registration Complete",
                                 JOptionPane.INFORMATION_MESSAGE);
+                        logger.log(username,"Register Courses" ,"Successfully registered " + selectedCount + " course(s)");
                         new StudentDashboard(rollNumber, username).setVisible(true);
                         dispose();
                     }else{
@@ -244,6 +249,7 @@ public class StudentRegCourses extends JFrame {
                                 "Registration unsuccessful " + selectedCount + " course(s):\n" + courseList,
                                 "Registration unsuccessful",
                                 JOptionPane.INFORMATION_MESSAGE);
+                        logger.log(username,"Register Courses" ,"Failed to register courses");
                     }
                 }
             }
@@ -289,6 +295,7 @@ public class StudentRegCourses extends JFrame {
     private void loadCourses(String semester) {
 
         List<studentAvailableCourses> courses = student.AllCourses(semester);
+        logger.log(username,"Fetch courses", "User fetched all courses");
         courses.forEach(course -> {
             JPanel coursePanel = createCourseTilePanel(course);
             centerContentPanel.add(coursePanel);
@@ -338,7 +345,6 @@ public class StudentRegCourses extends JFrame {
         topInfoPanel.add(nameLabel);
         topInfoPanel.add(Box.createHorizontalGlue()); // Pushes link to the right
 
-        // --- Use the new createClickableLink helper ---
         JLabel detailsLink = createClickableLink(
                 "Check course details ↗",
                 "https://techtree.iiitd.edu.in/viewDescription/filename?=" + code
@@ -372,11 +378,9 @@ public class StudentRegCourses extends JFrame {
         checkBoxLabel.setIcon(uncheckedIcon); // Set default state
         checkBoxLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // --- FIX 2: Store the full object ---
         checkBoxLabel.putClientProperty("selected", false);
         checkBoxLabel.putClientProperty("courseObject", course); // <-- This is the key change
 
-        // Add padding to make it a larger click target
         checkBoxLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 10));
 
         checkBoxLabel.addMouseListener(new MouseAdapter() {
@@ -507,12 +511,15 @@ public class StudentRegCourses extends JFrame {
                 try {
                     if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                         Desktop.getDesktop().browse(new URI(url));
+                        logger.log(username,"Redirect" ,"Successfully redirected to external link");
                     } else {
                         showError("Cannot open link. OS does not support Desktop.browse.");
+                        logger.log(username,"Warning" ,"Warning: Cannot open link.");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                     showError("Could not open link: " + e.getMessage());
+                    logger.log(username,"Warning" ,"Warning: Could not open link.");
                 }
             }
 

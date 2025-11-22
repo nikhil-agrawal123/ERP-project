@@ -2,6 +2,7 @@ package ui.StudentFrame;
 
 import dbClasses.StudentRegisteredCourse;
 import middleware.studentService;
+import middleware.loggerService;
 import ui.components.*;
 import ui.service.PdfExportService;
 
@@ -36,10 +37,10 @@ public class StudentCoursesPanel extends JPanel {
     private Color textColor;
     private Color textSecondaryColor;
 
-    // --- Restored HeaderButton dependency ---
     private HeaderButton headerButton;
 
     private PdfExportService pdfExportService;
+    private loggerService loggerService;
     private Map<Integer, List<StudentRegisteredCourse>> semesterData;
 
     public StudentCoursesPanel(studentService enrollmentService, String username,
@@ -60,6 +61,7 @@ public class StudentCoursesPanel extends JPanel {
         this.buttonColorGlow = buttonColorGlow;
         this.textColor = textColor;
         this.textSecondaryColor = textSecondaryColor;
+        this.loggerService = new loggerService();
 
         // --- Initialize the external HeaderButton component ---
         this.headerButton = new HeaderButton();
@@ -148,6 +150,7 @@ public class StudentCoursesPanel extends JPanel {
 
                 // --- Create the Table Content Card ---
                 List<StudentRegisteredCourse> coursesForThisSem = semesterData.get(i);
+                loggerService.log(username,"Courses accessed" , "Courses for the user were fetched");
                 Object[][] data = new Object[coursesForThisSem.size()][5];
 
                 for (int j = 0; j < coursesForThisSem.size(); j++) {
@@ -206,11 +209,13 @@ public class StudentCoursesPanel extends JPanel {
                         "Report exported successfully to:\n" + fileToSave.getAbsolutePath(),
                         "Export Successful",
                         JOptionPane.INFORMATION_MESSAGE);
+                loggerService.log(username, "Pdf export service" , "Pdf was exported successfully");
             } else {
                 JOptionPane.showMessageDialog(this,
                         "Failed to export report. See console for errors.",
                         "Export Failed",
                         JOptionPane.ERROR_MESSAGE);
+                loggerService.log(username, "Pdf export service" , "Pdf was export failed");
             }
         }
     }

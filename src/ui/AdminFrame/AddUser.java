@@ -1,13 +1,13 @@
 package ui.AdminFrame;
 
 import dbClasses.NewStudent;
-import dbEndpoints.adminPoints;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 
-// --- Import new classes ---
-import dbClasses.NewStudent;
 import middleware.adminService;
+import middleware.loggerService;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxUI;
@@ -22,6 +22,7 @@ import java.sql.SQLException;
  */
 public class AddUser extends JPanel {
 
+    private static final Logger log = LoggerFactory.getLogger(AddUser.class);
     // --- UI Color Palette ---
     private Color bgColor = new Color(42, 48, 60);
     private Color sideMenuColor = new Color(48, 54, 70);
@@ -43,11 +44,13 @@ public class AddUser extends JPanel {
 
     // --- Service ---
     private adminService adminService;
+    private loggerService loggerService;
 
     public AddUser() {
         super();
         this.menuButtons = new ArrayList<>();
-        this.adminService = new adminService(); // Initialize Service
+        this.adminService = new adminService();
+        this.loggerService = new loggerService();
 
         setLayout(new BorderLayout());
         setBackground(bgColor);
@@ -71,7 +74,6 @@ public class AddUser extends JPanel {
 
         add(cardHolderPanel, BorderLayout.CENTER);
 
-        // Show the welcome panel by default
         cardLayout.show(cardHolderPanel, "WELCOME");
     }
 
@@ -154,7 +156,6 @@ public class AddUser extends JPanel {
         return panel;
     }
 
-    // --- FORM CREATION METHODS ---
 
     /**
      * Creates the SPECIFIC "Add Student" form panel with extra fields.
@@ -293,9 +294,11 @@ public class AddUser extends JPanel {
                 emailField.setText("");
                 studentIdField.setText("");
                 progDropdown.setSelectedIndex(0);
+                loggerService.log("Admin", "New Student" , "New user has been added");
 
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to add student. User ID or Roll No might be duplicate.", "Error", JOptionPane.ERROR_MESSAGE);
+                loggerService.log("Admin", "New Student" , "New user creation failed");
             }
         });
 

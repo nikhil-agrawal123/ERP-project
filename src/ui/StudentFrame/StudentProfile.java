@@ -148,9 +148,6 @@ public class StudentProfile extends JFrame {
         changePassButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Create and show the new dialog
-                // 'StudentProfile.this' is the parent frame
-                // 'username' is the auth ID (e.g., "nikhil24380") needed by the service
                 ChangePasswordDialog dialog = new ChangePasswordDialog(StudentProfile.this, username);
                 dialog.setVisible(true);
             }
