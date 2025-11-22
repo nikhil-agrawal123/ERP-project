@@ -1,10 +1,6 @@
 package ui.dashboard;
 
-import ui.AdminFrame.AddUser;
-import ui.AdminFrame.AdminManageCourses;
-import ui.AdminFrame.ViewLogsFrame;
-import ui.AdminFrame.Maintenance;
-import ui.AdminFrame.RemoveUser;
+import ui.AdminFrame.*;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import ui.landing.LandingFrame;
@@ -40,7 +36,6 @@ public class AdminDashboard extends JFrame {
     private JPanel cardHolderPanel;
     private CardLayout cardLayout;
 
-    // --- NEW ---
     // List to manage the active state of right-panel buttons
     private List<RoundedButton> rightPanelButtons;
 
@@ -49,7 +44,6 @@ public class AdminDashboard extends JFrame {
         this.adminID = adminID;
         this.username = username;
 
-        // --- NEW ---
         this.rightPanelButtons = new ArrayList<>();
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -73,15 +67,12 @@ public class AdminDashboard extends JFrame {
         cardHolderPanel.setOpaque(false);
         mainLayeredPane.add(cardHolderPanel, JLayeredPane.DEFAULT_LAYER);
 
-        // --- Profile Button REMOVED ---
-
         // --- Component Resizing Listener ---
         mainLayeredPane.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 Dimension size = e.getComponent().getSize();
                 cardHolderPanel.setBounds(0, 0, size.width, size.height);
-                // Profile button resizing logic removed
             }
         });
 
@@ -89,7 +80,7 @@ public class AdminDashboard extends JFrame {
         createContentCards(cardHolderPanel, username);
         cardLayout.show(cardHolderPanel, "HOME");
 
-        // --- MODIFIED --- Set the first button as active by default
+        // Set the first button as active by default
         if (!rightPanelButtons.isEmpty()) {
             setActiveRightButton(rightPanelButtons.get(0));
         }
@@ -133,7 +124,6 @@ public class AdminDashboard extends JFrame {
         homePanel.add(titlePanel, BorderLayout.NORTH);
 
         // --- 2. Main Content Panel (Center) ---
-        // This panel holds the original layout (Profile West, Functions Center, Buttons East)
         JPanel mainContentContainer = new JPanel(new BorderLayout(0, 0));
         mainContentContainer.setOpaque(false);
 
@@ -154,14 +144,10 @@ public class AdminDashboard extends JFrame {
         mainContentContainer.add(centerAndLeftContainer, BorderLayout.CENTER);
 
         // --- 3. Add to Scroll Pane ---
-        // Wrap the main content in a scroll pane (with hidden bars)
         JScrollPane mainScrollPane = createMainScrollPane(mainContentContainer);
         homePanel.add(mainScrollPane, BorderLayout.CENTER);
 
         cardHolder.add(homePanel, "HOME");
-
-        // Add other panels here if needed (e.g., "MANAGE_USERS")
-        // cardHolder.add(createManageUsersPanel(), "MANAGE_USERS");
     }
 
     /**
@@ -177,54 +163,52 @@ public class AdminDashboard extends JFrame {
                 BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
 
-        // --- MODIFIED: Passport photo panel with gradient border ---
+        // --- Passport photo panel with gradient border ---
         JPanel passportPhotoPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
-                // Call super.paintComponent to handle JPanel's default painting,
-                // but we will draw over it, so setting Opaque to false for the panel itself might be better
-                // super.paintComponent(g); // Removed or set setOpaque(false) for the panel
-                Graphics2D g2d = (Graphics2D) g.create(); // Create a copy to not affect original Graphics object
+                Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-                int borderWidth = 3; // Reduced border width
+                int borderWidth = 3;
 
                 // Draw gradient border
                 GradientPaint gp = new GradientPaint(
                         0, 0, buttonColor,
                         getWidth(), getHeight(), buttonColorGlow);
                 g2d.setPaint(gp);
-                // Draw the outer rounded rectangle (border)
                 g2d.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 10, 10));
 
-                // Draw inner background, ensuring it doesn't leave white corners
-                // This draws a slightly smaller rounded rectangle inside the border
-                g2d.setColor(sideMenuColor); // Use sideMenuColor for the inner background
+                // Draw inner background
+                g2d.setColor(sideMenuColor);
                 g2d.fill(new RoundRectangle2D.Double(borderWidth, borderWidth,
-                        getWidth() - 2 * borderWidth, getHeight() - 2 * borderWidth, 8, 8)); // Slightly smaller arc for inner
+                        getWidth() - 2 * borderWidth, getHeight() - 2 * borderWidth, 8, 8));
 
-                g2d.dispose(); // Release Graphics resources
+                g2d.dispose();
             }
         };
         passportPhotoPanel.setLayout(new BorderLayout());
         passportPhotoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         passportPhotoPanel.setPreferredSize(new Dimension(180, 220)); // Passport photo aspect ratio
         passportPhotoPanel.setMaximumSize(new Dimension(180, 220));
-        passportPhotoPanel.setOpaque(false); // Make the panel transparent so its default background doesn't show
+        passportPhotoPanel.setOpaque(false);
 
         // Load and scale the image for the passport photo
-        ImageIcon originalIcon = new ImageIcon(getClass().getResource("/logo.jpg"));
-        Image originalImage = originalIcon.getImage();
-        Image scaledImage = originalImage.getScaledInstance(
-                passportPhotoPanel.getPreferredSize().width - 10, // Some padding
-                passportPhotoPanel.getPreferredSize().height - 10,
-                Image.SCALE_SMOOTH);
-        JLabel photoLabel = new JLabel(new ImageIcon(scaledImage));
-        photoLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        photoLabel.setVerticalAlignment(SwingConstants.CENTER);
-        passportPhotoPanel.add(photoLabel, BorderLayout.CENTER);
-        // --- END MODIFIED ---
+        try {
+            ImageIcon originalIcon = new ImageIcon(getClass().getResource("/logo.jpg"));
+            Image originalImage = originalIcon.getImage();
+            Image scaledImage = originalImage.getScaledInstance(
+                    170, // width - padding
+                    210, // height - padding
+                    Image.SCALE_SMOOTH);
+            JLabel photoLabel = new JLabel(new ImageIcon(scaledImage));
+            photoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            photoLabel.setVerticalAlignment(SwingConstants.CENTER);
+            passportPhotoPanel.add(photoLabel, BorderLayout.CENTER);
+        } catch (Exception e) {
+            System.out.println("Profile image not found.");
+        }
 
         JLabel nameLabel = new JLabel(username);
         nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
@@ -237,7 +221,7 @@ public class AdminDashboard extends JFrame {
         idLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         panel.add(Box.createRigidArea(new Dimension(0, 20)));
-        panel.add(passportPhotoPanel); // Add the new photo panel
+        panel.add(passportPhotoPanel);
         panel.add(Box.createRigidArea(new Dimension(0, 30)));
         panel.add(nameLabel);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
@@ -252,26 +236,24 @@ public class AdminDashboard extends JFrame {
      * Creates the Function panel with clickable cards (Original CENTER position).
      */
     private JPanel createFunctionPanel() {
-        // Use GridBagLayout to anchor the grid of cards to the top-left
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(mainPanelColor);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // This panel holds the cards in a 3-column grid
-        JPanel cardGridPanel = new JPanel(new GridLayout(0, 3, 25, 25)); // 0 rows, 3 cols, 25px gaps
-        cardGridPanel.setOpaque(false); // Make it transparent
+        JPanel cardGridPanel = new JPanel(new GridLayout(0, 3, 25, 25));
+        cardGridPanel.setOpaque(false);
 
         // Create styled function cards
         JPanel addUserCard = createFunctionCard("Add Users");
         addUserCard.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 AddUser addUserPanel = new AddUser();
-                JDialog addUserDialog = new JDialog(AdminDashboard.this, "Add New User", true); // 'true' makes it modal
+                JDialog addUserDialog = new JDialog(AdminDashboard.this, "Add New User", true);
 
                 addUserDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-                addUserDialog.getContentPane().add(addUserPanel); // Add your panel
+                addUserDialog.getContentPane().add(addUserPanel);
 
-                // Now that AddUser has a size, pack() will work!
                 addUserDialog.pack();
                 addUserDialog.setLocationRelativeTo(AdminDashboard.this);
                 addUserDialog.setVisible(true);
@@ -309,23 +291,19 @@ public class AdminDashboard extends JFrame {
             }
         });
 
-        // --- REMOVED ---
-        // Logout card has been removed
-
         // Add cards to the new grid panel
         cardGridPanel.add(addUserCard);
         cardGridPanel.add(removeUsersCard);
         cardGridPanel.add(manageCoursesCard);
         cardGridPanel.add(maintenanceCard);
-        // cardGridPanel.add(logoutCard); // Removed
 
         // Add the grid panel to the main panel, anchored to the top-left
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.NORTHWEST; // Pin to top-left
-        gbc.weightx = 1.0; // Allow panel to use horizontal space
-        gbc.weighty = 1.0; // Allow panel to use vertical space
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
 
         panel.add(cardGridPanel, gbc);
 
@@ -334,44 +312,52 @@ public class AdminDashboard extends JFrame {
 
     /**
      * Creates the Right Side panel with buttons (Original EAST position).
-     * --- MODIFIED TO MATCH STUDENTDASHBOARD ---
      */
     private JPanel createRightSidePanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(sideMenuColor); // Use side menu color
-        // --- MODIFIED --- (Increased width, changed padding, removed MatteBorder)
+        panel.setBackground(sideMenuColor);
         panel.setPreferredSize(new Dimension(300, 0));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
 
-        // --- MODIFIED ---
-        // Use the new button creation method that supports an active state
+        // --- Create Buttons ---
         RoundedButton b1 = createRightPanelButton("Home");
         RoundedButton b2 = createRightPanelButton("View Logs");
         RoundedButton b3 = createRightPanelButton("Settings");
         RoundedButton b4 = createRightPanelButton("Reports");
+        // --- ADDED B5 ---
+        RoundedButton b5 = createRightPanelButton("Backup & Restore");
 
+        // --- Action Listeners ---
         b1.addActionListener(e -> {
             setActiveRightButton(b1);
-            System.out.println("Home pressed");
             // cardLayout.show(cardHolderPanel, "HOME"); // Example
         });
+
         b2.addActionListener(e -> {
             setActiveRightButton(b2);
             SwingUtilities.invokeLater(() -> new ViewLogsFrame().setVisible(true));
         });
+
         b3.addActionListener(e -> {
             setActiveRightButton(b3);
             System.out.println("Settings pressed");
         });
+
         b4.addActionListener(e -> {
             setActiveRightButton(b4);
             System.out.println("Reports pressed");
         });
 
+        // --- ADDED B5 LISTENER ---
+        b5.addActionListener(e -> {
+            setActiveRightButton(b5);
+            SwingUtilities.invokeLater(() -> new Backup().setVisible(true));
+        });
 
-        // --- MODIFIED --- (Spacing changed from 15 to 10)
+
+        // --- Add Buttons to Panel ---
         panel.add(b1);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(b2);
@@ -379,18 +365,20 @@ public class AdminDashboard extends JFrame {
         panel.add(b3);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(b4);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(b5);
+
         panel.add(Box.createVerticalGlue());
 
         Color logoutBg = bgColor;
 
-        // This button is already styled correctly, no changes needed.
         RoundedButton logoutButton = new RoundedButton(
                 "\u21AA   Logout",
-                logoutBg,       // Normal background
-                logoutRedHover,       // Hover background (same as normal)
-                logoutRedPressed,       // Pressed background (same as normal)
-                logoutBg,       // Active background (same as normal)
-                8               // Arc
+                logoutBg,
+                logoutRedHover,
+                logoutRedPressed,
+                logoutBg,
+                8
         );
 
         logoutButton.setFont(new Font("Segoe UI", Font.BOLD, 17));
@@ -407,7 +395,7 @@ public class AdminDashboard extends JFrame {
         });
 
         panel.add(logoutButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 20))); // 20px bottom margin
+        panel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         return panel;
     }
@@ -419,13 +407,10 @@ public class AdminDashboard extends JFrame {
         // Use RoundedPanel as a base
         RoundedPanel card = new RoundedPanel(15, cardColor, borderColor, 1);
         card.setPreferredSize(new Dimension(220, 180));
-        card.setLayout(new GridBagLayout()); // Use GridBagLayout to center text
+        card.setLayout(new GridBagLayout());
         card.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Set the panel to use the gradient on hover
-        // This is the *default* hover for all cards.
         card.setHoverGradient(buttonColor, buttonColorGlow);
-
 
         JLabel label = new JLabel(text, SwingConstants.CENTER);
         label.setFont(new Font("Segoe UI", Font.BOLD, 20));
@@ -435,20 +420,19 @@ public class AdminDashboard extends JFrame {
 
         return card;
     }
+
     /**
      * Helper to create styled buttons for the right panel that support an
      * active (gradient) state.
-     * --- MODIFIED TO MATCH STUDENTDASHBOARD ---
      */
     private RoundedButton createRightPanelButton(String text) {
-        // --- MODIFIED --- (Uses 4-color constructor, matches student's active style)
         RoundedButton button = new RoundedButton(
                 text,
-                sideMenuColor,      // Normal
-                borderColor,        // Hover
-                buttonColor.darker(), // Pressed
-                buttonColor,        // Active
-                8                   // Arc
+                sideMenuColor,
+                borderColor,
+                buttonColor.darker(),
+                buttonColor,
+                8
         );
         button.setFont(new Font("Segoe UI", Font.BOLD, 17));
         button.setForeground(textSecondaryColor);
@@ -460,28 +444,24 @@ public class AdminDashboard extends JFrame {
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
 
 
-        rightPanelButtons.add(button); // Add to list for state management
+        rightPanelButtons.add(button);
         return button;
     }
 
     /**
      * Sets the clicked button to active (gradient) and all others to inactive.
-     * --- MODIFIED TO MATCH STUDENTDASHBOARD ---
      */
     private void setActiveRightButton(RoundedButton activeButton) {
         for (RoundedButton button : rightPanelButtons) {
             button.setActive(false);
-            // --- ADDED --- (Set inactive text color)
             button.setForeground(textSecondaryColor);
         }
         activeButton.setActive(true);
-        // --- ADDED --- (Set active text color)
         activeButton.setForeground(textColor);
     }
 
     /**
      * Creates a custom scroll pane with hidden bars.
-     * (Copied from StudentDashboard)
      */
     private JScrollPane createMainScrollPane(Component view) {
         JScrollPane scrollPane = new JScrollPane(view);
@@ -491,7 +471,6 @@ public class AdminDashboard extends JFrame {
         scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
         scrollPane.setBackground(mainPanelColor);
 
-        // Hide both scrollbars permanently
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 

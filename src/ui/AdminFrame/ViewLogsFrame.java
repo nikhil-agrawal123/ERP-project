@@ -159,15 +159,16 @@ public class ViewLogsFrame extends JFrame {
         tableModel.setRowCount(0); // Clear existing
         List<logClass> logs = loggerService.getSystemLogs();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
+        int itr = 1;
         for (logClass log : logs) {
             Object[] row = {
-                    log.getLogId(),
+                    itr,
                     sdf.format(log.getDate()),
                     log.getUserId(),
                     log.getActionType(),
                     log.getDescription()
             };
+            itr++;
             tableModel.addRow(row);
         }
     }

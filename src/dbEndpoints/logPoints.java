@@ -21,8 +21,6 @@ public class logPoints {
     public void logAction(String userId, String actionType, String description) {
         String sql = "INSERT INTO users.audit_logs (user_id, action_type, description) VALUES (?, ?, ?)";
 
-        // We use a try-with-resources that intentionally swallows errors
-        // Logging should never crash the main application if it fails.
         try (Connection conn = dbConnector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
