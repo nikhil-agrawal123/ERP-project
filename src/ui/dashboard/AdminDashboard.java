@@ -2,6 +2,7 @@ package ui.dashboard;
 
 import ui.AdminFrame.AddUser;
 import ui.AdminFrame.AdminManageCourses;
+import ui.AdminFrame.ViewLogsFrame;
 import ui.AdminFrame.Maintenance;
 import ui.AdminFrame.RemoveUser;
 import ui.components.RoundedButton;
@@ -358,7 +359,7 @@ public class AdminDashboard extends JFrame {
         });
         b2.addActionListener(e -> {
             setActiveRightButton(b2);
-            System.out.println("View Logs pressed");
+            SwingUtilities.invokeLater(() -> new ViewLogsFrame().setVisible(true));
         });
         b3.addActionListener(e -> {
             setActiveRightButton(b3);
@@ -434,11 +435,6 @@ public class AdminDashboard extends JFrame {
 
         return card;
     }
-
-    // --- REMOVED ---
-    // createHeaderButton(String text) is no longer needed
-
-    // --- NEW METHOD ---
     /**
      * Helper to create styled buttons for the right panel that support an
      * active (gradient) state.
@@ -454,15 +450,11 @@ public class AdminDashboard extends JFrame {
                 buttonColor,        // Active
                 8                   // Arc
         );
-        // --- MODIFIED --- (Font size 17)
         button.setFont(new Font("Segoe UI", Font.BOLD, 17));
-        // --- MODIFIED --- (Default text color is secondary)
         button.setForeground(textSecondaryColor);
-        // --- MODIFIED --- (Border padding matches student's)
         button.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25));
         button.setHorizontalAlignment(SwingConstants.LEFT);
 
-        // --- ADDED --- (Size and alignment matches student's)
         button.setPreferredSize(new Dimension(Integer.MAX_VALUE, 60));
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -472,7 +464,6 @@ public class AdminDashboard extends JFrame {
         return button;
     }
 
-    // --- NEW METHOD ---
     /**
      * Sets the clicked button to active (gradient) and all others to inactive.
      * --- MODIFIED TO MATCH STUDENTDASHBOARD ---
@@ -486,30 +477,6 @@ public class AdminDashboard extends JFrame {
         activeButton.setActive(true);
         // --- ADDED --- (Set active text color)
         activeButton.setForeground(textColor);
-    }
-
-
-    /**
-     * Creates the placeholder frame with the new styling.
-     */
-    private void createPlaceholderFrame(String title) {
-        JFrame placeholderFrame = new JFrame(title);
-        placeholderFrame.setSize(800, 600);
-        placeholderFrame.setLocationRelativeTo(this);
-        placeholderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        placeholderFrame.getContentPane().setBackground(mainPanelColor);
-
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(mainPanelColor);
-
-        JLabel label = new JLabel(title);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-        label.setForeground(textColor);
-
-        panel.add(label);
-
-        placeholderFrame.add(panel);
-        placeholderFrame.setVisible(true);
     }
 
     /**
@@ -565,10 +532,4 @@ public class AdminDashboard extends JFrame {
             return jbutton;
         }
     }
-
-    /**
-     * Inner class for the circular profile button.
-     * REMOVED - not used anymore
-     */
-    // private class CircularButton extends JButton { ... }
 }

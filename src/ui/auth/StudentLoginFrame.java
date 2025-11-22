@@ -11,7 +11,9 @@ import ui.components.RoundedPanel;
 
 import ui.landing.LandingFrame;
 import ui.dashboard.StudentDashboard;
+
 import middleware.services;
+import middleware.loggerService;
 
 /**
  * The initial login window for the application.
@@ -36,6 +38,7 @@ public class StudentLoginFrame extends JFrame {
     private Color primaryGlowColor = new Color(79, 196, 184); // --primary-glow: 177 51% 52%
     private Color secondaryColor = new Color(64, 69, 89);   // --secondary / --border: 220 15% 30%
     private Color inputBgColor = new Color(41, 47, 61);     // --background (for contrast)
+    private loggerService logger;
 
     private int numTry = 3;
 
@@ -50,6 +53,7 @@ public class StudentLoginFrame extends JFrame {
         setIconImage(image.getImage());
 
         this.studentService = new services();
+        this.logger = new loggerService();
 
         initComponents();
         layoutComponents();
@@ -64,9 +68,7 @@ public class StudentLoginFrame extends JFrame {
         int fieldPadding = 12;
         Font fieldFont = new Font("Segoe UI", Font.PLAIN, 16);
 
-        // Create a rounded border for the text fields
         Border roundedBorder = new RoundedBorder(fieldArc, 1, secondaryColor);
-        // Create an empty border for internal padding
         Border paddingBorder = BorderFactory.createEmptyBorder(fieldPadding, fieldPadding, fieldPadding, fieldPadding);
 
         usernameField = new JTextField(20);
@@ -236,6 +238,7 @@ public class StudentLoginFrame extends JFrame {
                     "Username and password cannot be empty.",
                     "Login Error",
                     JOptionPane.ERROR_MESSAGE);
+            logger.log(username,"Login Attempt" ,"User attempted with invalid credentials");
             return;
         }
 
@@ -244,9 +247,12 @@ public class StudentLoginFrame extends JFrame {
             StudentDashboard dashboard = new StudentDashboard(rollNumber, username);
             dashboard.setVisible(true);
             dispose();
+            logger.log(username,"Login Attempt" ,"User logged in");
+
         } else {
             JOptionPane.showMessageDialog(this, "Incorrect username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
             numTry -= 1;
+            logger.log(username,"Login Attempt" ,"User attempted with invalid credentials");
         }
     }
 
@@ -260,6 +266,8 @@ public class StudentLoginFrame extends JFrame {
                 "Too many failed attempts. Account locked for 30 seconds.",
                 "Auth Error",
                 JOptionPane.ERROR_MESSAGE);
+        logger.log("Student","Login Attempt" ,"User attempted with invalid credentials locked login attempt");
+
 
         Timer lockoutTimer = new Timer(30000, e -> {
             numTry = 3;

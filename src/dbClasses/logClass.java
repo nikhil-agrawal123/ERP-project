@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 
 public class logClass {
 
+    private int logId;
     private String userId;
     private String actionType;
     private String description;
@@ -21,4 +22,5 @@ public class logClass {
     public String getActionType() { return actionType; }
     public String getDescription() { return description; }
     public Timestamp getDate() { return date; }
+    public int getLogId() { return logId; }
 }
