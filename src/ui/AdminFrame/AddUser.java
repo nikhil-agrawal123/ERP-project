@@ -1,8 +1,9 @@
 package ui.AdminFrame;
 
+import dbClasses.AddFaculty;
 import dbClasses.NewStudent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import dbClasses.AddAdmin;
+
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 
@@ -22,7 +23,6 @@ import java.sql.SQLException;
  */
 public class AddUser extends JPanel {
 
-    private static final Logger log = LoggerFactory.getLogger(AddUser.class);
     // --- UI Color Palette ---
     private Color bgColor = new Color(42, 48, 60);
     private Color sideMenuColor = new Color(48, 54, 70);
@@ -265,6 +265,7 @@ public class AddUser extends JPanel {
         submitButton.addActionListener(e -> {
             if (nameField.getText().isEmpty() || idField.getText().isEmpty() || studentIdField.getText().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Name, Roll Number, and User ID are required.", "Error", JOptionPane.ERROR_MESSAGE);
+                loggerService.log("Admin", "Add Student", "Admin Tried adding a student but failed");
                 return;
             }
 
@@ -288,6 +289,7 @@ public class AddUser extends JPanel {
 
             if (success) {
                 JOptionPane.showMessageDialog(this, "Student added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loggerService.log("Admin", "Add Student", "Admin Tried adding a student- successfully");
                 // Reset fields
                 nameField.setText("");
                 idField.setText("");
@@ -316,22 +318,223 @@ public class AddUser extends JPanel {
      * Creates the "Add Faculty" form panel (Generic).
      */
     private JPanel createAddFacultyPanel() {
-        String[] depts = {"Select Department", "Computer Science (CSE)", "Electronics (ECE)", "Computational Biology (CB)", "Mathematics", "Social Sciences", "Design"};
-        return createGenericFormPanel("Add New Faculty", "Faculty ID:", depts, "Add Faculty");
+        JPanel outerPanel = new JPanel(new GridBagLayout());
+        outerPanel.setBackground(mainPanelColor);
+        outerPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+
+        RoundedPanel formPanel = new RoundedPanel(15, cardColor, borderColor, 1);
+        formPanel.setLayout(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Row 0: Header
+        JLabel titleLabel = createFormTitle("Add New Faculty");
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        formPanel.add(titleLabel, gbc);
+
+        JSeparator sep = new JSeparator();
+        sep.setForeground(borderColor);
+        gbc.gridy = 1; gbc.insets = new Insets(0, 0, 20, 0);
+        formPanel.add(sep, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        // Row 2: Full Name
+        addLabel(formPanel, "Full Name:", 0, 2, gbc);
+        JTextField nameField = createFormField();
+        addField(formPanel, nameField, 1, 2, gbc);
+
+        // Row 3: Instructor ID
+        addLabel(formPanel, "Instructor ID:", 0, 3, gbc);
+        JTextField instIdField = createFormField();
+        addField(formPanel, instIdField, 1, 3, gbc);
+
+        // Row 4: User ID (Login)
+        addLabel(formPanel, "User ID (Login):", 0, 4, gbc);
+        JTextField userIdField = createFormField();
+        addField(formPanel, userIdField, 1, 4, gbc);
+
+        // Row 5: Email
+        addLabel(formPanel, "Email:", 0, 5, gbc);
+        JTextField emailField = createFormField();
+        addField(formPanel, emailField, 1, 5, gbc);
+
+        // Row 6: Department
+        addLabel(formPanel, "Department:", 0, 6, gbc);
+        String[] depts = {
+                "Select Department", "Computer Science (CSE)", "Electronics (ECE)",
+                "Computational Biology (CB)", "Mathematics", "Social Sciences", "Design", "Physics"
+        };
+        JComboBox<String> deptDropdown = createFormComboBox(depts);
+        addField(formPanel, deptDropdown, 1, 6, gbc);
+
+        // Row 7: Submit
+        RoundedButton submitButton = createActionButton("Add Faculty");
+        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.insets = new Insets(30, 10, 0, 10);
+        formPanel.add(submitButton, gbc);
+
+        gbc.gridy = 8;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        formPanel.add(Box.createVerticalGlue(), gbc);
+
+        // --- SUBMIT ACTION ---
+        submitButton.addActionListener(e -> {
+            if (nameField.getText().isEmpty() || instIdField.getText().isEmpty() || userIdField.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Name, Instructor ID, and User ID are required.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            AddFaculty newFaculty = new AddFaculty(
+                    nameField.getText(),
+                    instIdField.getText(),
+                    userIdField.getText(),
+                    emailField.getText(),
+                    (String) deptDropdown.getSelectedItem()
+            );
+
+            boolean success = false;
+            try {
+                success = adminService.addInstructor(newFaculty);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Faculty added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loggerService.log("Admin", "Add Faculty", "Admin Tried adding a instructor successfully");
+                nameField.setText("");
+                instIdField.setText("");
+                userIdField.setText("");
+                emailField.setText("");
+                deptDropdown.setSelectedIndex(0);
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add Faculty. ID might be duplicate.", "Error", JOptionPane.ERROR_MESSAGE);
+                loggerService.log("Admin" ,"Failed to add Faculty", "Failed to add Faculty");
+            }
+        });
+
+        GridBagConstraints outerGbc = new GridBagConstraints();
+        outerGbc.fill = GridBagConstraints.BOTH;
+        outerGbc.weightx = 1.0;
+        outerGbc.weighty = 1.0;
+        outerGbc.insets = new Insets(0, 100, 0, 100);
+        outerPanel.add(formPanel, outerGbc);
+
+        return outerPanel;
     }
 
     /**
      * Creates the "Add Admin" form panel (Generic).
      */
     private JPanel createAddAdminPanel() {
-        String[] depts = {"Select Role", "Registrar", "Accounts", "IT Support", "HR", "Student Affairs"};
-        return createGenericFormPanel("Add New Admin Staff", "Admin ID:", depts, "Add Admin");
+        JPanel outerPanel = new JPanel(new GridBagLayout());
+        outerPanel.setBackground(mainPanelColor);
+        outerPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+
+        RoundedPanel formPanel = new RoundedPanel(15, cardColor, borderColor, 1);
+        formPanel.setLayout(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Row 0: Header
+        JLabel titleLabel = createFormTitle("Add New Admin Staff");
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        formPanel.add(titleLabel, gbc);
+
+        JSeparator sep = new JSeparator();
+        sep.setForeground(borderColor);
+        gbc.gridy = 1; gbc.insets = new Insets(0, 0, 20, 0);
+        formPanel.add(sep, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        // Row 2: Full Name
+        addLabel(formPanel, "Full Name:", 0, 2, gbc);
+        JTextField nameField = createFormField();
+        addField(formPanel, nameField, 1, 2, gbc);
+
+        // Row 3: Admin ID
+        addLabel(formPanel, "Admin ID:", 0, 3, gbc);
+        JTextField adminIdField = createFormField();
+        addField(formPanel, adminIdField, 1, 3, gbc);
+
+        // Row 5: Email
+        addLabel(formPanel, "Email:", 0, 5, gbc);
+        JTextField emailField = createFormField();
+        addField(formPanel, emailField, 1, 5, gbc);
+
+        // Row 6: Role
+        addLabel(formPanel, "Role:", 0, 6, gbc);
+        String[] roles = {"Select Role", "Registrar", "Accounts", "IT Support", "HR", "Student Affairs", "System Admin"};
+        JComboBox<String> roleDropdown = createFormComboBox(roles);
+        addField(formPanel, roleDropdown, 1, 6, gbc);
+
+        // Row 7: Submit
+        RoundedButton submitButton = createActionButton("Add Admin");
+        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.insets = new Insets(30, 10, 0, 10);
+        formPanel.add(submitButton, gbc);
+
+        gbc.gridy = 8;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        formPanel.add(Box.createVerticalGlue(), gbc);
+
+        // --- SUBMIT ACTION ---
+        submitButton.addActionListener(e -> {
+            if (nameField.getText().isEmpty() || adminIdField.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Name, Admin ID, and User ID are required.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            AddAdmin newAdmin = new AddAdmin(
+                    nameField.getText(),
+                    adminIdField.getText(),
+                    emailField.getText(),
+                    (String) roleDropdown.getSelectedItem()
+            );
+
+            boolean success = adminService.registerAdmin(newAdmin);
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Admin added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                nameField.setText("");
+                adminIdField.setText("");
+                emailField.setText("");
+                roleDropdown.setSelectedIndex(0);
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add Admin. ID might be duplicate.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        GridBagConstraints outerGbc = new GridBagConstraints();
+        outerGbc.fill = GridBagConstraints.BOTH;
+        outerGbc.weightx = 1.0;
+        outerGbc.weighty = 1.0;
+        outerGbc.insets = new Insets(0, 100, 0, 100);
+        outerPanel.add(formPanel, outerGbc);
+
+        return outerPanel;
     }
 
     /**
      * Generic form builder for simple cases (Faculty/Admin).
      */
-    private JPanel createGenericFormPanel(String title, String idLabelText, String[] departmentOptions, String buttonText) {
+        private JPanel createGenericFormPanel(String title, String idLabelText, String[] departmentOptions, String buttonText) {
         JPanel outerPanel = new JPanel(new GridBagLayout());
         outerPanel.setBackground(mainPanelColor);
         outerPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));

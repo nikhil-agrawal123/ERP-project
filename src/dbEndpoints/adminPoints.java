@@ -3,6 +3,7 @@ package dbEndpoints;
 import databaseConfig.Connector;
 import dbClasses.NewStudent;
 import dbClasses.AddFaculty;
+import dbClasses.AddAdmin;
 
 import dependancy.org.mindrot.jbcrypt.BCrypt;
 
@@ -104,6 +105,54 @@ public class adminPoints {
                 String hashedPassword = BCrypt.hashpw(defaultPassword, BCrypt.gensalt());
 
                 pstmt2.setString(1, faculty.getUserId());
+                pstmt2.setString(2, hashedPassword);
+                pstmt2.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+            }
+        }
+    }
+
+    public boolean addAdmin(AddAdmin admin) {
+        // SQL for the profile database
+        String sqlProfile = "INSERT INTO users.admins ( admin_id, full_name, role, email) VALUES ( ?, ?, ?, ?)";
+
+        // SQL for the auth database
+        String sqlAuth = "INSERT INTO auth.adminAuth (adminId, adminPass) VALUES (?, ?)";
+
+        Connection conn = null;
+        try {
+            conn = connector.connect();
+            conn.setAutoCommit(false);
+
+            // 1. Insert Profile
+            try (PreparedStatement pstmt1 = conn.prepareStatement(sqlProfile)) {
+                pstmt1.setString(1, admin.getAdminId());
+                pstmt1.setString(2, admin.getFullName());
+                pstmt1.setString(3, admin.getRole());
+                pstmt1.setString(4, admin.getEmail());
+                pstmt1.executeUpdate();
+            }
+
+            // 2. Insert Auth
+            try (PreparedStatement pstmt2 = conn.prepareStatement(sqlAuth)) {
+                // Default password is the Admin ID
+                String defaultPassword = admin.getAdminId();
+                String hashedPassword = BCrypt.hashpw(defaultPassword, BCrypt.gensalt());
+
+                pstmt2.setString(1, admin.getAdminId());
                 pstmt2.setString(2, hashedPassword);
                 pstmt2.executeUpdate();
             }

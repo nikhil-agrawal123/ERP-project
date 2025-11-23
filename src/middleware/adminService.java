@@ -7,6 +7,7 @@ import dbEndpoints.AdminBackup;
 
 import java.io.File;
 import java.sql.SQLException;
+import dbClasses.AddAdmin;
 
 public class adminService {
     private final adminPoints adminPoints;
@@ -27,6 +28,16 @@ public class adminService {
     public boolean addInstructor(AddFaculty faculty) throws SQLException {
         loggerService.log("Admin", "Add Instructor", "Admin Tried adding a instructor");
         return adminPoints.addFaculty(faculty);
+    }
+
+    public boolean registerAdmin(AddAdmin admin) {
+        boolean success = adminPoints.addAdmin(admin);
+        if (success) {
+            loggerService.log("CurrentAdmin", "ADD_ADMIN", "Added Admin: " + admin.getAdminId());
+        } else {
+            loggerService.log("CurrentAdmin", "ADD_ADMIN_FAIL", "Failed: " + admin.getAdminId());
+        }
+        return success;
     }
 
     public boolean performSystemBackup(File file) {
