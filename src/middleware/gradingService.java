@@ -3,11 +3,12 @@ package middleware;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import dbEndpoints.gradingPoints;
-import ui.FacultyFrame.GradingComponent;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+
+import dbClasses.GradingComponent;
 
 /**
  * Service to handle Grading Policy logic and JSON conversion.
