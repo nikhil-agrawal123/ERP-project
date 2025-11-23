@@ -14,6 +14,7 @@ import ui.dashboard.StudentDashboard;
 
 import middleware.services;
 import middleware.loggerService;
+import middleware.maintenanceService;
 
 /**
  * The initial login window for the application.
@@ -22,6 +23,7 @@ import middleware.loggerService;
 public class StudentLoginFrame extends JFrame {
 
     private services studentService;
+    private maintenanceService maintenance;
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -54,6 +56,7 @@ public class StudentLoginFrame extends JFrame {
 
         this.studentService = new services();
         this.logger = new loggerService();
+        this.maintenance = new maintenanceService();
 
         initComponents();
         layoutComponents();
@@ -76,7 +79,6 @@ public class StudentLoginFrame extends JFrame {
         usernameField.setForeground(fgColor);
         usernameField.setCaretColor(fgColor);
         usernameField.setFont(fieldFont);
-        // Combine the rounded border and padding border
         usernameField.setBorder(BorderFactory.createCompoundBorder(roundedBorder, paddingBorder));
 
         passwordField = new JPasswordField(20);
@@ -121,14 +123,21 @@ public class StudentLoginFrame extends JFrame {
 
         // --- Action Listeners ---
         loginButton.addActionListener(e -> {
-            if (numTry > 0) {
-                try {
-                    handleLoginAttempt();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
+            if(maintenance.isMaintenanceActive()){
+                JOptionPane.showMessageDialog(this,
+                        "Maintenance is active. Please try later",
+                        "Maintenance",
+                        JOptionPane.ERROR_MESSAGE);
+            }else{
+                if (numTry > 0) {
+                    try {
+                        handleLoginAttempt();
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                } else {
+                    handleLock();
                 }
-            } else {
-                handleLock();
             }
         });
 
@@ -139,9 +148,16 @@ public class StudentLoginFrame extends JFrame {
         });
 
         forgetButton.addActionListener(e -> {
-            ForgetPassword frame = new ForgetPassword("student");
-            frame.setVisible(true);
-            dispose();
+            if(maintenance.isMaintenanceActive()){
+                JOptionPane.showMessageDialog(this,
+                        "Maintenance is active. Please try later",
+                        "Maintenance",
+                        JOptionPane.ERROR_MESSAGE);
+            }else{
+                ForgetPassword frame = new ForgetPassword("student");
+                frame.setVisible(true);
+                dispose();
+            }
         });
     }
 

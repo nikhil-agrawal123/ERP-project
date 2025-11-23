@@ -174,7 +174,6 @@ public class Backup extends JFrame {
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
 
-            // Show loading cursor
             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
             boolean success = adminService.performSystemRestore(file);

@@ -4,12 +4,15 @@ import dbClasses.EnrolledStudent;
 import dbEndpoints.facultyPoints;
 import dbClasses.facultyCourseClass;
 import java.util.List;
+import middleware.maintenanceService;
 
 public class facultyService {
     private facultyPoints faculty;
+    private maintenanceService maintenance;
 
     public facultyService() {
         this.faculty = new facultyPoints();
+        this.maintenance = new maintenanceService();
     }
 
     public String facultyId(String userid){

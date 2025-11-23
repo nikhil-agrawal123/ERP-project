@@ -3,6 +3,7 @@ package ui.AdminFrame;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import ui.dashboard.AdminDashboard;
+import middleware.maintenanceService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,24 +22,29 @@ public class Maintenance extends JFrame {
     private Color cardColor = new Color(54, 59, 74);
     private Color textColor = new Color(255, 255, 255);
     private Color textSecondary = new Color(179, 179, 179);
-    private Color accentColor = new Color(52, 159, 148);      // Teal (Allowed/Live)
+    private Color accentColor = new Color(52, 159, 148);
     private Color accentGlow = new Color(79, 196, 184);
-    private Color dangerColor = new Color(220, 53, 69);       // Bright Red (Restricted/Maintenance)
-    private Color toggleOffColor = new Color(80, 85, 100);    // Grey (Off track)
+    private Color dangerColor = new Color(220, 53, 69);
+    private Color toggleOffColor = new Color(80, 85, 100);
     private Color borderColor = new Color(64, 69, 89);
     private Color Buttonback = new Color(38, 44, 58);
     private Color Buttonhover = new Color(25, 30, 40);
 
     // --- Components ---
     private ModernToggle masterSwitch;
-    private JLabel statusLabel;        // The big text "System is LIVE/MAINTENANCE"
-    private JLabel masterToggleLabel;  // The text next to the button "Status: OFF"
+    private JLabel statusLabel;
+    private JLabel masterToggleLabel;
     private JPanel optionsContainer;
     private JTextArea messageArea;
     private List<ModernToggle> subToggles;
 
+    // --- Service ---
+    private maintenanceService maintenanceService; // --- NEW ---
+
     public Maintenance() {
         setTitle("System Maintenance Control");
+        this.maintenanceService = new maintenanceService(); // --- INIT ---
+
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setSize(1280, 800);
         setLocationRelativeTo(null);
@@ -51,8 +57,14 @@ public class Maintenance extends JFrame {
         add(createHeader(), BorderLayout.NORTH);
         add(createMainContent(), BorderLayout.CENTER);
         add(createFooter(), BorderLayout.SOUTH);
+
+        // --- LOAD INITIAL STATE FROM DB ---
+        boolean currentStatus = maintenanceService.isMaintenanceActive();
+        masterSwitch.setSelected(currentStatus);
+        updateVisuals(currentStatus);
     }
 
+    // ... (createHeader is unchanged) ...
     private JPanel createHeader() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(bgColor);
@@ -79,7 +91,6 @@ public class Maintenance extends JFrame {
         masterPanel.setPreferredSize(new Dimension(1000, 100));
         masterPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
 
-        // Left Side: Text Info
         JPanel textPanel = new JPanel(new GridLayout(2, 1));
         textPanel.setOpaque(false);
         JLabel masterLabel = new JLabel("Maintenance Mode");
@@ -93,11 +104,9 @@ public class Maintenance extends JFrame {
         textPanel.add(masterLabel);
         textPanel.add(statusLabel);
 
-        // Right Side: Master Switch + Label
         JPanel switchWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 5));
         switchWrapper.setOpaque(false);
 
-        // New text against the toggle
         masterToggleLabel = new JLabel("Maintenance: OFF");
         masterToggleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         masterToggleLabel.setForeground(textSecondary);
@@ -106,17 +115,21 @@ public class Maintenance extends JFrame {
         masterSwitch.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                toggleMasterState(masterSwitch.isSelected());
+                if (masterSwitch.isEnabled()) {
+                    // Perform the toggle logic
+                    boolean newState = !masterSwitch.isSelected();
+                    toggleMasterState(newState); // Update DB and UI
+                }
             }
         });
 
-        switchWrapper.add(masterToggleLabel); // Text next to button
-        switchWrapper.add(masterSwitch);      // The Button
+        switchWrapper.add(masterToggleLabel);
+        switchWrapper.add(masterSwitch);
 
         masterPanel.add(textPanel, BorderLayout.CENTER);
         masterPanel.add(switchWrapper, BorderLayout.EAST);
 
-        // --- Section B: Configuration Options ---
+        // ... (Options Container code is unchanged) ...
         optionsContainer = new JPanel();
         optionsContainer.setLayout(new BoxLayout(optionsContainer, BoxLayout.Y_AXIS));
         optionsContainer.setOpaque(false);
@@ -125,11 +138,8 @@ public class Maintenance extends JFrame {
         optionsContainer.add(Box.createRigidArea(new Dimension(0, 15)));
         optionsContainer.add(createOptionRow("Faculty Grading System", "Enable grade entry and modification."));
         optionsContainer.add(Box.createRigidArea(new Dimension(0, 15)));
-        optionsContainer.add(createOptionRow("Course Registration", "Allow new course enrollments."));
-        optionsContainer.add(Box.createRigidArea(new Dimension(0, 15)));
-        optionsContainer.add(createOptionRow("Library Database", "Access to digital assets and borrowing."));
 
-        // --- Section C: Message ---
+        // ... (Message Area code is unchanged) ...
         JPanel msgPanelContainer = new JPanel(new BorderLayout());
         msgPanelContainer.setOpaque(false);
         msgPanelContainer.setMaximumSize(new Dimension(1000, 150));
@@ -158,11 +168,11 @@ public class Maintenance extends JFrame {
         mainPanel.add(masterPanel);
         mainPanel.add(Box.createRigidArea(new Dimension(0, 40)));
 
+        // Header for options
         JLabel settingsHeader = new JLabel("Access Control Settings");
         settingsHeader.setFont(new Font("Segoe UI", Font.BOLD, 18));
         settingsHeader.setForeground(textSecondary);
         settingsHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         JPanel headerWrapper = new JPanel(new BorderLayout());
         headerWrapper.setOpaque(false);
         headerWrapper.setMaximumSize(new Dimension(1000, 30));
@@ -174,8 +184,6 @@ public class Maintenance extends JFrame {
         mainPanel.add(Box.createRigidArea(new Dimension(0, 40)));
         mainPanel.add(msgPanelContainer);
 
-        toggleOptions(false);
-
         JScrollPane scrollPane = new JScrollPane(mainPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
@@ -185,8 +193,41 @@ public class Maintenance extends JFrame {
     }
 
     /**
-     * Creates a row with: [Title/Sub] ... [State Text] [Small Toggle]
+     * Updates the DB and the UI based on the new state.
      */
+    private void toggleMasterState(boolean newState) {
+        // 1. Update Database
+        boolean success = maintenanceService.setSystemMaintenance(newState);
+
+        if (success) {
+            // 2. Update Toggle Visuals
+            masterSwitch.setSelected(newState);
+            // 3. Update Labels
+            updateVisuals(newState);
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to update system settings. Database Error.");
+        }
+    }
+
+    private void updateVisuals(boolean isMaintenanceOn) {
+        if (isMaintenanceOn) {
+            statusLabel.setText("System is UNDER MAINTENANCE");
+            statusLabel.setForeground(dangerColor);
+            masterToggleLabel.setText("Maintenance: ON");
+            masterToggleLabel.setForeground(dangerColor); // changed to red for visibility
+            toggleOptions(true);
+        } else {
+            statusLabel.setText("System is LIVE");
+            statusLabel.setForeground(accentColor);
+            masterToggleLabel.setText("Maintenance: OFF");
+            masterToggleLabel.setForeground(textSecondary);
+            toggleOptions(false);
+        }
+    }
+
+    // ... (createOptionRow, createButtonRow, createFooter, toggleOptions, setPanelEnabled, ModernToggle inner class are unchanged) ...
+    // ... (Assuming createButtonRow was added in the previous step, if not, paste it here) ...
+
     private JPanel createOptionRow(String title, String subtitle) {
         RoundedPanel row = new RoundedPanel(15, cardColor, borderColor, 1);
         row.setLayout(new BorderLayout());
@@ -247,7 +288,7 @@ public class Maintenance extends JFrame {
     }
 
     private JPanel createFooter() {
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 25, 25)); // Slight padding increase
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 25, 25));
         footer.setBackground(bgColor);
         footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, borderColor));
 
@@ -255,9 +296,7 @@ public class Maintenance extends JFrame {
                 Buttonhover,
                 borderColor.darker(), bgColor, 10);
         backBtn.setForeground(textColor);
-        // Increased font size to 16
         backBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        // Increased Dimensions (150, 50)
         backBtn.setPreferredSize(new Dimension(150, 50));
         backBtn.addActionListener(e -> {
             new AdminDashboard("ADMIN01", "Admin").setVisible(true);
@@ -266,37 +305,13 @@ public class Maintenance extends JFrame {
 
         RoundedButton saveBtn = new RoundedButton("Save Changes", accentColor, accentGlow, accentColor.darker(), accentColor, 10);
         saveBtn.setForeground(Color.WHITE);
-        // Increased font size to 16
         saveBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        // Increased Dimensions (200, 50)
         saveBtn.setPreferredSize(new Dimension(200, 50));
         saveBtn.addActionListener(e -> JOptionPane.showMessageDialog(this, "Settings Saved"));
 
         footer.add(backBtn);
         footer.add(saveBtn);
         return footer;
-    }
-
-    private void toggleMasterState(boolean isMaintenanceOn) {
-        if (isMaintenanceOn) {
-            // --- Maintenance ACTIVE ---
-            statusLabel.setText("System is UNDER MAINTENANCE");
-            statusLabel.setForeground(dangerColor); // Red
-
-            masterToggleLabel.setText("Maintenance: ON");
-            masterToggleLabel.setForeground(textSecondary); // Red
-
-            toggleOptions(true); // Enable the sub-toggles
-        } else {
-            // --- Maintenance OFF (Live) ---
-            statusLabel.setText("System is LIVE");
-            statusLabel.setForeground(accentColor); // Teal
-
-            masterToggleLabel.setText("Maintenance: OFF");
-            masterToggleLabel.setForeground(textSecondary); // Grey
-
-            toggleOptions(false); // Disable the sub-toggles
-        }
     }
 
     private void toggleOptions(boolean enable) {
@@ -315,9 +330,7 @@ public class Maintenance extends JFrame {
         }
     }
 
-    // =================================================================================
-    // --- MODERN TOGGLE (iOS Style) ---
-    // =================================================================================
+    // --- Inner Class ModernToggle ---
     class ModernToggle extends JComponent {
         private boolean selected = false;
         private Timer timer;
@@ -326,14 +339,7 @@ public class Maintenance extends JFrame {
         public ModernToggle() {
             setPreferredSize(new Dimension(50, 26));
             setCursor(new Cursor(Cursor.HAND_CURSOR));
-            addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (isEnabled()) {
-                        setSelected(!selected);
-                    }
-                }
-            });
+            // Note: MouseListener is handled by parent to control state changes
 
             timer = new Timer(10, e -> {
                 if (selected && animationProgress < 1.0f) {
@@ -365,16 +371,14 @@ public class Maintenance extends JFrame {
             int w = getWidth();
             int h = getHeight();
 
-            // 1. Draw Track
             if (isEnabled()) {
                 g2.setColor(interpolateColor(toggleOffColor, accentColor, animationProgress));
             } else {
-                g2.setColor(borderColor); // Disabled state
+                g2.setColor(borderColor);
             }
 
             g2.fill(new RoundRectangle2D.Double(0, 0, w, h, h, h));
 
-            // 2. Draw Knob (White Circle)
             int padding = 3;
             int knobSize = h - (padding * 2);
             double knobX = padding + (w - knobSize - (padding * 2)) * animationProgress;

@@ -272,3 +272,14 @@ CREATE TABLE IF NOT EXISTS `audit_logs` (
                                             `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                             PRIMARY KEY (`log_id`)
 ) ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `system_settings` (
+                                                 `setting_key` VARCHAR(50) NOT NULL,
+                                                 `setting_value` VARCHAR(255) NOT NULL,
+                                                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                                 PRIMARY KEY (`setting_key`)
+) ENGINE = InnoDB;
+
+-- Insert default maintenance state (FALSE = Live)
+INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_value`)
+VALUES ('maintenance_mode', 'false');
