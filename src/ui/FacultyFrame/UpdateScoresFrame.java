@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Vector;
 
 // --- Your Custom Components ---
+import dbClasses.GradingComponent;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 

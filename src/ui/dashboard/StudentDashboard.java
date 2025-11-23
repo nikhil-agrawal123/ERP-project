@@ -182,6 +182,7 @@ public class StudentDashboard extends JFrame {
         RoundedButton coursesButton = createSideMenuButton("My Courses");
         RoundedButton registerForCourses = createSideMenuButton("Register For Courses");
         RoundedButton receiptButton = createSideMenuButton("Fee details");
+        RoundedButton calenderButton = createSideMenuButton("Calender");
         // --- Create a custom button for Logout with the darkest background ---
 // This is your --background color (220 18% 20%)
         Color logoutBg = bgColor;
@@ -208,6 +209,7 @@ public class StudentDashboard extends JFrame {
         menuButtons.add(coursesButton);
         menuButtons.add(registerForCourses);
         menuButtons.add(receiptButton);
+        menuButtons.add(calenderButton);
 
         homeButton.addActionListener(e -> {
             cardLayout.show(cardHolderPanel, "HOME");
@@ -232,6 +234,11 @@ public class StudentDashboard extends JFrame {
         receiptButton.addActionListener(e -> {
             Payfees feeFrame = new Payfees(rollNumber, username);
             feeFrame.setVisible(true);
+        });
+
+        calenderButton.addActionListener(e -> {
+            Calender calender = new Calender();
+            calender.setVisible(true);
         });
 
         logoutButton.addActionListener(e -> {
@@ -268,7 +275,8 @@ public class StudentDashboard extends JFrame {
         panel.add(registerForCourses);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(receiptButton);
-
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(calenderButton);
         panel.add(Box.createVerticalGlue());
         panel.add(logoutButton);
 
