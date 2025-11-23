@@ -272,10 +272,10 @@ public class AddUser extends JPanel {
             NewStudent newStudent = new NewStudent(
                     nameField.getText(),
                     idField.getText(),
-                    emailField.getText(),
                     (String) progDropdown.getSelectedItem(),
-                    (Integer) currYearSpinner.getValue(),
+                    emailField.getText(),
                     (Integer) enrollSpinner.getValue(),
+                    (Integer) currYearSpinner.getValue(),
                     studentIdField.getText()
             );
 

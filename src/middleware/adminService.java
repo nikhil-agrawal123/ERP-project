@@ -1,5 +1,6 @@
 package middleware;
 
+import dbClasses.AddFaculty;
 import dbClasses.NewStudent;
 import dbEndpoints.adminPoints;
 import dbEndpoints.AdminBackup;
@@ -19,7 +20,13 @@ public class adminService {
     }
 
     public boolean addStudent(NewStudent newStudent) throws SQLException {
+        loggerService.log("Admin", "Add Student", "Admin Tried adding a student");
         return adminPoints.addStudent(newStudent);
+    }
+
+    public boolean addInstructor(AddFaculty faculty) throws SQLException {
+        loggerService.log("Admin", "Add Instructor", "Admin Tried adding a instructor");
+        return adminPoints.addFaculty(faculty);
     }
 
     public boolean performSystemBackup(File file) {
