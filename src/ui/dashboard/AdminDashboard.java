@@ -281,6 +281,17 @@ public class AdminDashboard extends JFrame {
             }
         });
 
+        JPanel addCoursesCard = createFunctionCard("Add Course");
+        addCoursesCard.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    AdminAddcourse addcourseFrame = new AdminAddcourse(adminID, username, AdminDashboard.this);
+                    addcourseFrame.setVisible(true);
+                    AdminDashboard.this.setVisible(false);
+                });
+            }
+        });
+
         JPanel maintenanceCard = createFunctionCard("Maintenance");
         maintenanceCard.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -293,6 +304,7 @@ public class AdminDashboard extends JFrame {
         // Add cards to the new grid panel
         cardGridPanel.add(addUserCard);
         cardGridPanel.add(removeUsersCard);
+        cardGridPanel.add(addCoursesCard);
         cardGridPanel.add(manageCoursesCard);
         cardGridPanel.add(maintenanceCard);
 
@@ -323,7 +335,6 @@ public class AdminDashboard extends JFrame {
         // --- Create Buttons ---
         RoundedButton b1 = createRightPanelButton("Home");
         RoundedButton b2 = createRightPanelButton("View Logs");
-        RoundedButton b3 = createRightPanelButton("Settings");
         RoundedButton b4 = createRightPanelButton("Reports");
         // --- ADDED B5 ---
         RoundedButton b5 = createRightPanelButton("Backup & Restore");
@@ -339,10 +350,6 @@ public class AdminDashboard extends JFrame {
             SwingUtilities.invokeLater(() -> new ViewLogsFrame().setVisible(true));
         });
 
-        b3.addActionListener(e -> {
-            setActiveRightButton(b3);
-            System.out.println("Settings pressed");
-        });
 
         b4.addActionListener(e -> {
             setActiveRightButton(b4);
@@ -360,8 +367,6 @@ public class AdminDashboard extends JFrame {
         panel.add(b1);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(b2);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(b3);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(b4);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
