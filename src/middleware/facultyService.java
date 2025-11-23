@@ -4,7 +4,6 @@ import dbClasses.EnrolledStudent;
 import dbEndpoints.facultyPoints;
 import dbClasses.facultyCourseClass;
 import java.util.List;
-import middleware.maintenanceService;
 
 public class facultyService {
     private facultyPoints faculty;

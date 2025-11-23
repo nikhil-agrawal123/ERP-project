@@ -11,6 +11,9 @@ import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 
 import middleware.services;
+import middleware.maintenanceService;
+import middleware.loggerService;
+
 import ui.dashboard.FacultyDashboard;
 import ui.landing.LandingFrame;
 
@@ -18,6 +21,8 @@ public class FacultyLoginFrame extends JFrame {
     private int numTry = 3;
 
     private services facultyService;
+    private maintenanceService maintenance;
+    private loggerService logger;
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -46,6 +51,8 @@ public class FacultyLoginFrame extends JFrame {
         setIconImage(image.getImage());
 
         this.facultyService = new services();
+        this.maintenance = new maintenanceService();
+        this.logger = new loggerService();
 
         initComponents();
         layoutComponents();
@@ -106,11 +113,21 @@ public class FacultyLoginFrame extends JFrame {
 
         // --- Action Listeners ---
         loginButton.addActionListener(e -> {
-            if(numTry > 0){
-                handleLoginAttempt();
+            if(maintenance.isMaintenanceActive()){
+                JOptionPane.showMessageDialog(this,
+                        "Maintenance in progress. Please try again later",
+                        "Maintenance",
+                        JOptionPane.ERROR_MESSAGE);
+                logger.log(usernameField.getText(), "Login Attemp" , "User tried logging during maintenance" );
             }else{
-                handleLock();
+                if(numTry > 0){
+                    handleLoginAttempt();
+                    logger.log(usernameField.getText(), "Login Attemp" , "User tried logging in" );
+                }else{
+                    handleLock();
+                }
             }
+
         });
 
         backButton.addActionListener(e -> {
@@ -120,12 +137,18 @@ public class FacultyLoginFrame extends JFrame {
         });
 
         forgetButton.addActionListener(e -> {
-            ForgetPassword frame = new ForgetPassword("faculty");
-            frame.setVisible(true);
-            dispose();
-        });
+            if(maintenance.isMaintenanceActive()){
+                JOptionPane.showMessageDialog(this,
+                        "Maintenance is active. Please try later",
+                        "Maintenance",
+                        JOptionPane.ERROR_MESSAGE);
+                logger.log(usernameField.getText(), "Login Attempt" , "User tried forget password during maintenance" );
 
-        // "Forget Password" button removed to match new UI
+            }else{
+                ForgetPassword frame = new ForgetPassword("faculty");
+                frame.setVisible(true);
+                dispose();            }
+        });
     }
 
     /**
@@ -223,6 +246,7 @@ public class FacultyLoginFrame extends JFrame {
                     "Username and password cannot be empty.",
                     "Login Error",
                     JOptionPane.ERROR_MESSAGE);
+            logger.log(username,"Login Attempt" ,"User tried logging in with invalid credentials" );
             return;
         }
 
@@ -232,11 +256,13 @@ public class FacultyLoginFrame extends JFrame {
             FacultyDashboard dashboard = new FacultyDashboard(username);
             dashboard.setVisible(true);
             dispose();
+            logger.log(username,"Login Attempt" ,"User tried logging in - successful");
         } else {
             JOptionPane.showMessageDialog(this,
                     "Incorrect username or password.",
                     "Login Failed",
                     JOptionPane.ERROR_MESSAGE);
+            logger.log(username,"Login Attempt" ,"User tried logging in with invalid credentials");
             numTry -= 1;
         }
     }
@@ -250,6 +276,7 @@ public class FacultyLoginFrame extends JFrame {
                 "Too many failed attempts. Account locked for 30 seconds.",
                 "Auth Error",
                 JOptionPane.ERROR_MESSAGE);
+        logger.log(usernameField.getText() ,"Login Attempt" ,"User tried logging in with invalid credentials login locked");
 
         Timer lockoutTimer = new Timer(30000, e -> {
             numTry = 3;
