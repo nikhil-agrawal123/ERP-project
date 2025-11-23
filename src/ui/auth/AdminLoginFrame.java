@@ -3,8 +3,6 @@ package ui.auth;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
 
@@ -25,6 +23,7 @@ public class AdminLoginFrame extends JFrame {
     private JPasswordField passwordField;
     private RoundedButton loginButton;
     private RoundedButton backButton;
+    private RoundedButton forgeButton;
 
     private int numTry = 3;
 
@@ -101,6 +100,14 @@ public class AdminLoginFrame extends JFrame {
         backButton.setForeground(fgColor);
         backButton.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
 
+        forgeButton = new RoundedButton(
+                "Forget Button",
+                primaryColor,
+                primaryColor.brighter(),
+                primaryColor.darker(),
+                9
+                );
+
         // --- Action Listeners ---
         loginButton.addActionListener(e -> {
             if(numTry > 0){
@@ -113,6 +120,12 @@ public class AdminLoginFrame extends JFrame {
         backButton.addActionListener(e -> {
             LandingFrame landingFrame = new LandingFrame();
             landingFrame.setVisible(true);
+            dispose();
+        });
+
+        forgeButton.addActionListener(e -> {
+            ForgetPassword frame = new ForgetPassword("admin");
+            frame.setVisible(true);
             dispose();
         });
 
@@ -193,6 +206,13 @@ public class AdminLoginFrame extends JFrame {
         gbc.gridy = 6;
         gbc.insets = new Insets(0, 0, 0, 0); // No bottom padding after buttons
         cardPanel.add(buttonPanel, gbc);
+
+        JPanel buttonPanel_1 = new JPanel(new GridLayout(1, 2, 10, 0));
+        buttonPanel_1.setOpaque(false);
+        buttonPanel_1.add(forgeButton);
+        gbc.gridy = 7;
+        gbc.insets = new Insets(10, 0, 0, 0);
+        cardPanel.add(buttonPanel_1, gbc);
     }
 
     /**

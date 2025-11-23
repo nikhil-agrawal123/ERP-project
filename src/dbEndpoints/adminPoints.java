@@ -126,10 +126,8 @@ public class adminPoints {
     }
 
     public boolean addAdmin(AddAdmin admin) {
-        // SQL for the profile database
-        String sqlProfile = "INSERT INTO users.admins ( admin_id, full_name, role, email) VALUES ( ?, ?, ?, ?)";
+        String sqlProfile = "INSERT INTO users.admins ( admin_id, full_name, role, email) VALUES ( ?,?, ?, ?, ?)";
 
-        // SQL for the auth database
         String sqlAuth = "INSERT INTO auth.adminAuth (adminId, adminPass) VALUES (?, ?)";
 
         Connection conn = null;
@@ -140,9 +138,10 @@ public class adminPoints {
             // 1. Insert Profile
             try (PreparedStatement pstmt1 = conn.prepareStatement(sqlProfile)) {
                 pstmt1.setString(1, admin.getAdminId());
-                pstmt1.setString(2, admin.getFullName());
-                pstmt1.setString(3, admin.getRole());
-                pstmt1.setString(4, admin.getEmail());
+                pstmt1.setString(2, admin.getUserId());
+                pstmt1.setString(3, admin.getFullName());
+                pstmt1.setString(4, admin.getRole());
+                pstmt1.setString(5, admin.getEmail());
                 pstmt1.executeUpdate();
             }
 

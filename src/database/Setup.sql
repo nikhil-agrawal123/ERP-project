@@ -285,6 +285,7 @@ INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_value`)
 VALUES ('maintenance_mode', 'false');
 
 CREATE TABLE IF NOT EXISTS `admins` (
+
                                         `admin_id` VARCHAR(45) NOT NULL,     -- Employee ID (e.g., 'ADM-001')
                                         `full_name` VARCHAR(100) NOT NULL,
                                         `role` VARCHAR(100) NULL,            -- e.g., 'Registrar', 'IT Support'
@@ -292,3 +293,5 @@ CREATE TABLE IF NOT EXISTS `admins` (
                                         PRIMARY KEY (`admin_id`),
                                         UNIQUE INDEX `admin_id_UNIQUE` (`admin_id` ASC)
 ) ENGINE = InnoDB;
+
+alter table users.admins add user_id VARCHAR(50) not null ;

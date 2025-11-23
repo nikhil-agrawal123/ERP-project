@@ -470,6 +470,10 @@ public class AddUser extends JPanel {
         JTextField adminIdField = createFormField();
         addField(formPanel, adminIdField, 1, 3, gbc);
 
+        addLabel(formPanel, "User ID:", 0, 4, gbc);
+        JTextField userIdField = createFormField();
+        addField(formPanel, userIdField, 1, 4, gbc);
+
         // Row 5: Email
         addLabel(formPanel, "Email:", 0, 5, gbc);
         JTextField emailField = createFormField();
@@ -503,6 +507,7 @@ public class AddUser extends JPanel {
 
             AddAdmin newAdmin = new AddAdmin(
                     nameField.getText(),
+                    userIdField.getText(),
                     adminIdField.getText(),
                     emailField.getText(),
                     (String) roleDropdown.getSelectedItem()

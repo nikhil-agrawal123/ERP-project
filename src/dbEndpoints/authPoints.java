@@ -64,11 +64,8 @@ public class authPoints {
             getUserIdSQL = "SELECT user_id FROM users.instructors WHERE email = ?";
             updatePassSQL = "UPDATE auth.facultyAuth SET facultyPass = ? WHERE facultyId = ?";
         }else if(userType.equals("admin")){
-            getUserIdSQL = "SELECT adminID FROM users.admin WHERE adminEmail = ?";
+            getUserIdSQL = "SELECT user_id FROM users.admins WHERE email = ?";
             updatePassSQL = "UPDATE auth.adminAuth SET adminPass = ? WHERE adminId = ?";
-        }else{
-            getUserIdSQL = "SELECT user_id FROM users.students WHERE student_email = ?";
-            updatePassSQL = "UPDATE auth.studentAuth SET studentPass = ? WHERE studentId = ?";
         }
 
         try(Connection conn = dbConnector.connect()){
@@ -78,7 +75,7 @@ public class authPoints {
                 ResultSet rs = preparedStatement.executeQuery();
                 if (rs.next()) {
                     String studentId = rs.getString("user_id");
-                    System.out.println("Found student ID: " + studentId);
+                    System.out.println("Found user ID: " + studentId);
 
                     PreparedStatement ps = conn.prepareStatement(updatePassSQL);
                     ps.setString(1, newHash);

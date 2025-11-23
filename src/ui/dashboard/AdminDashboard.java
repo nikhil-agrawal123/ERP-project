@@ -20,7 +20,6 @@ public class AdminDashboard extends JFrame {
     private Color sideMenuColor = new Color(48, 54, 70);      // --sidebar-background
     private Color mainPanelColor = new Color(42, 48, 60);       // --background
     private Color cardColor = new Color(54, 59, 74);          // --card
-    private Color popoverColor = new Color(46, 52, 66);       // --popover
     private Color borderColor = new Color(64, 69, 89);        // --border
     private Color buttonColor = new Color(52, 159, 148);      // --primary / --accent
     private Color buttonColorGlow = new Color(79, 196, 184);  // --primary-glow
