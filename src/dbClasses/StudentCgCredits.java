@@ -18,8 +18,5 @@ public class StudentCgCredits {
     public double getCg() {
         return cg;
     }
-    public void setCg(double cg) {
-        this.cg = cg;
-    }
 }
 

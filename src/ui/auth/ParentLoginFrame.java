@@ -14,7 +14,7 @@ import ui.components.RoundedPanel;
 import middleware.*;
 import ui.dashboard.ParentDashboard;
 import ui.landing.LandingFrame;
-import ui.auth.FaceVerificationFrame;
+//import ui.auth.FaceVerificationFrame;
 
 
 public class ParentLoginFrame extends JFrame {
@@ -224,14 +224,14 @@ public class ParentLoginFrame extends JFrame {
                 dashboard.setVisible(true);
             };
 
-            // 2. Open the verification frame
-            FaceVerificationFrame faceVerifier = new FaceVerificationFrame(
-                    username,
-                    username,
-                    onVerificationSuccess
-            );
-            faceVerifier.setVisible(true);
-            dispose(); // Close this login window
+//            // 2. Open the verification frame
+//            FaceVerificationFrame faceVerifier = new FaceVerificationFrame(
+//                    username,
+//                    username,
+//                    onVerificationSuccess
+//            );
+//            faceVerifier.setVisible(true);
+//            dispose(); // Close this login window
 
         } else {
             JOptionPane.showMessageDialog(this,

@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.GradientPaint;
 import java.awt.geom.RoundRectangle2D;
-// --- NEW IMPORTS ---
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
