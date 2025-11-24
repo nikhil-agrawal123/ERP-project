@@ -57,4 +57,9 @@ public class facultyService {
         logger.log(courseCode,"Enrolled Student List","Faculty fetched list of enrolled students ");
         return faculty.getEnrolledStudents(courseCode, Semester);
     }
+
+    public String getFullNmae(String instructor_id){
+        logger.log("Admin" ,"Fetch Name" ,"Admin fetched instructor name with id" + instructor_id);
+        return faculty.getFacultyName(instructor_id);
+    }
 }

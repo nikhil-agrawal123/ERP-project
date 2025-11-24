@@ -66,6 +66,9 @@ public class authPoints {
         }else if(userType.equals("admin")){
             getUserIdSQL = "SELECT user_id FROM users.admins WHERE email = ?";
             updatePassSQL = "UPDATE auth.adminAuth SET adminPass = ? WHERE adminId = ?";
+        }else{
+            getUserIdSQL = "SELECT user_id FROM users.students WHERE student_email = ?";
+            updatePassSQL = "UPDATE auth.studentAuth SET studentPass = ? WHERE studentId = ?";
         }
 
         try(Connection conn = dbConnector.connect()){

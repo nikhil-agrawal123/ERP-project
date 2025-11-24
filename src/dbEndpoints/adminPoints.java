@@ -1,11 +1,10 @@
 package dbEndpoints;
 
 import databaseConfig.Connector;
-import dbClasses.NewStudent;
-import dbClasses.AddFaculty;
-import dbClasses.AddAdmin;
+import dbClasses.*;
 
 import dependancy.org.mindrot.jbcrypt.BCrypt;
+import middleware.facultyService;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -77,10 +76,8 @@ public class adminPoints {
     }
 
     public boolean addFaculty(AddFaculty faculty) {
-        // SQL for the profile database
         String sqlProfile = "INSERT INTO users.instructors (user_id, instructor_id, full_name, department, email) VALUES (?, ?, ?, ?, ?)";
 
-        // SQL for the auth database (Assuming table is auth.facultyAuth)
         String sqlAuth = "INSERT INTO auth.facultyAuth (facultyId, facultyPass) VALUES (?, ?)";
 
         Connection conn = null;
@@ -153,6 +150,57 @@ public class adminPoints {
 
                 pstmt2.setString(1, admin.getAdminId());
                 pstmt2.setString(2, hashedPassword);
+                pstmt2.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+            }
+        }
+    }
+
+    public boolean addCourseAndSection(AddCourse data) {
+        // 1. Insert into Catalog (Updated with Department)
+        String sqlCourse = "INSERT IGNORE INTO users.courses (course_code, course_title, credits,semester,currenCap,offeredBy) VALUES (?, ?, ?,?,?,?)";
+
+        String sqlSection = "INSERT INTO users.sections (course_code, instructor_id, semester, year, capacity, department) VALUES (?, ?, ?, ?, ?, ?)";
+
+        String instructorName = new facultyService().getFullNmae(data.getInstructorId());
+
+        Connection conn = null;
+        try {
+            conn = connector.connect();
+            conn.setAutoCommit(false); // Start Transaction
+
+            // Insert Course
+            try (PreparedStatement pstmt1 = conn.prepareStatement(sqlCourse)) {
+                pstmt1.setString(1, data.getCourseCode());
+                pstmt1.setString(2, data.getCourseTitle());
+                pstmt1.setInt(3, data.getCredits());
+                pstmt1.setString(4, data.getSemester()+data.getYear());
+                pstmt1.setInt(5, 0);
+                pstmt1.setString(6, instructorName);
+                pstmt1.executeUpdate();
+            }
+
+            // Insert Section
+            try (PreparedStatement pstmt2 = conn.prepareStatement(sqlSection)) {
+                pstmt2.setString(1, data.getCourseCode());
+                pstmt2.setString(2, data.getInstructorId());
+                pstmt2.setString(3, data.getSemester());
+                pstmt2.setInt(4, data.getYear());
+                pstmt2.setInt(5, data.getCapacity());
+                pstmt2.setString(6, data.getDepartment()); // Set Dept
                 pstmt2.executeUpdate();
             }
 

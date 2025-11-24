@@ -1,5 +1,6 @@
 package middleware;
 
+import dbClasses.AddCourse;
 import dbClasses.AddFaculty;
 import dbClasses.NewStudent;
 import dbEndpoints.adminPoints;
@@ -56,6 +57,16 @@ public class adminService {
             loggerService.log("CurrentAdmin", "SYSTEM_RESTORE", "Restored from: " + file.getName());
         } else {
             loggerService.log("CurrentAdmin", "RESTORE_FAILED", "Failed to restore: " + file.getName());
+        }
+        return success;
+    }
+
+    public boolean createCourseOffering(AddCourse data) {
+        boolean success = adminPoints.addCourseAndSection(data);
+        if (success) {
+            loggerService.log("CurrentAdmin", "ADD_COURSE", "Created section for: " + data.getCourseCode());
+        } else {
+            loggerService.log("CurrentAdmin", "ADD_COURSE_FAIL", "Failed to create: " + data.getCourseCode());
         }
         return success;
     }

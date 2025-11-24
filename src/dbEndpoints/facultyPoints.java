@@ -135,4 +135,21 @@ public class facultyPoints {
 
         return studentList;
     }
+
+    public String getFacultyName(String instructorCode){
+        String facultyName = "SELECT full_name FROM users.instructors WHERE instructor_id = ?";
+
+        try(Connection conn = connector.connect();
+            PreparedStatement pstm = conn.prepareStatement(facultyName);
+        ){
+            pstm.setString(1, instructorCode);
+            ResultSet rs = pstm.executeQuery();
+            if(rs.next()){
+                return rs.getString("full_name");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

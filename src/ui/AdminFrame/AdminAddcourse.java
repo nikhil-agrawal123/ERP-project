@@ -2,16 +2,19 @@ package ui.AdminFrame;
 
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
+import middleware.adminService;
+import dbClasses.AddCourse;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
-import javax.swing.plaf.basic.BasicScrollBarUI;
+import javax.swing.plaf.basic.BasicScrollBarUI; // --- FIXED: Added Missing Import ---
 import javax.swing.plaf.basic.ComboPopup;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.util.Calendar;
 
 public class AdminAddcourse extends JFrame {
 
@@ -23,7 +26,7 @@ public class AdminAddcourse extends JFrame {
     private Color buttonColorGlow = new Color(79, 196, 184);
     private Color textColor = new Color(255, 255, 255);
     private Color textSecondaryColor = new Color(179, 179, 179);
-    private Color inputBgColor = new Color(48, 54, 70); // Slightly darker for inputs
+    private Color inputBgColor = new Color(48, 54, 70);
     private Color errorColor = new Color(190, 60, 60);
     private Color Buttonback = new Color(38, 44, 58);
     private Color Buttonhover = new Color(25, 30, 40);
@@ -32,9 +35,13 @@ public class AdminAddcourse extends JFrame {
     private String username;
     private JFrame parentFrame;
 
+    // --- SERVICE ---
+    private adminService adminService;
+
     // Form Components
     private JTextField txtCourseName, txtCourseId, txtInstructor, txtPrerequisites, txtCapacity;
     private JComboBox<String> comboDepartment, comboType, comboSemester, comboCredits;
+    private JSpinner yearSpinner;
     private JTextArea txtDescription;
 
     public AdminAddcourse(String adminID, String username, JFrame parentFrame) {
@@ -43,23 +50,20 @@ public class AdminAddcourse extends JFrame {
         this.username = username;
         this.parentFrame = parentFrame;
 
+        this.adminService = new adminService();
+
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setSize(1080, 1080);
         setLocationRelativeTo(null);
         getContentPane().setBackground(bgColor);
 
-        // Layout
         setLayout(new BorderLayout());
 
-        // 1. Header
         add(createHeader(), BorderLayout.NORTH);
-
-        // 2. Main Scrollable Content
         JScrollPane scrollPane = createMainScrollPane(createFormContent());
         add(scrollPane, BorderLayout.CENTER);
 
-        // Handle window closing to reshow parent
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent windowEvent) {
@@ -99,23 +103,21 @@ public class AdminAddcourse extends JFrame {
         container.setBackground(bgColor);
         container.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        // The Card holding the form
         RoundedPanel formCard = new RoundedPanel(20, cardColor, borderColor, 1);
         formCard.setLayout(new GridBagLayout());
-        // Limit width of the form card for aesthetics
-        formCard.setPreferredSize(new Dimension(900, 750));
+        formCard.setPreferredSize(new Dimension(900, 800));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(15, 20, 5, 20); // Padding
+        gbc.insets = new Insets(15, 20, 5, 20);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
-        // --- Row 1: Course Name & ID ---
+        // --- Row 1 ---
         gbc.gridy = 0;
         gbc.gridx = 0; gbc.weightx = 0.7;
         formCard.add(createLabel("Course Name"), gbc);
         gbc.gridx = 1; gbc.weightx = 0.3;
-        formCard.add(createLabel("Course ID"), gbc);
+        formCard.add(createLabel("Course Code"), gbc);
 
         gbc.gridy = 1;
         gbc.gridx = 0;
@@ -126,55 +128,61 @@ public class AdminAddcourse extends JFrame {
         txtCourseId = createStyledTextField();
         formCard.add(txtCourseId, gbc);
 
-        // --- Row 2: Department & Instructor ---
+        // --- Row 2 ---
         gbc.gridy = 2;
         gbc.gridx = 0;
         formCard.add(createLabel("Department"), gbc);
         gbc.gridx = 1;
-        formCard.add(createLabel("Instructor Name"), gbc);
+        formCard.add(createLabel("Instructor ID"), gbc);
 
         gbc.gridy = 3;
         gbc.gridx = 0;
-        String[] depts = {"Computer Science", "Information Technology", "Electronics", "Mechanical", "Civil", "Business"};
+        String[] depts = {"Computer Science", "Information Technology", "Electronics", "Mechanical", "Civil", "Business", "Physics", "Mathematics"};
         comboDepartment = createStyledComboBox(depts);
         formCard.add(comboDepartment, gbc);
 
         gbc.gridx = 1;
         txtInstructor = createStyledTextField();
+        txtInstructor.setToolTipText("Enter Instructor User ID (e.g. alok)");
         formCard.add(txtInstructor, gbc);
 
-        // --- Row 3: Type, Credits, Semester ---
+        // --- Row 3 ---
         gbc.gridy = 4;
-        gbc.gridx = 0; gbc.gridwidth = 2; // Span full width to add a sub-panel
-        JPanel row3 = new JPanel(new GridLayout(1, 3, 20, 0));
+        gbc.gridx = 0; gbc.gridwidth = 2;
+        JPanel row3 = new JPanel(new GridLayout(1, 4, 20, 0));
         row3.setOpaque(false);
 
-        // Col 1
         JPanel p1 = new JPanel(new BorderLayout(0, 5)); p1.setOpaque(false);
         p1.add(createLabel("Course Type"), BorderLayout.NORTH);
         comboType = createStyledComboBox(new String[]{"Mandatory (Core)", "Elective", "Lab", "Seminar"});
         p1.add(comboType, BorderLayout.CENTER);
         row3.add(p1);
 
-        // Col 2
         JPanel p2 = new JPanel(new BorderLayout(0, 5)); p2.setOpaque(false);
         p2.add(createLabel("Credits"), BorderLayout.NORTH);
         comboCredits = createStyledComboBox(new String[]{"1", "2", "3", "4", "5", "6"});
-        comboCredits.setSelectedItem("3");
+        comboCredits.setSelectedItem("4");
         p2.add(comboCredits, BorderLayout.CENTER);
         row3.add(p2);
 
-        // Col 3
         JPanel p3 = new JPanel(new BorderLayout(0, 5)); p3.setOpaque(false);
         p3.add(createLabel("Semester"), BorderLayout.NORTH);
-        comboSemester = createStyledComboBox(new String[]{"1", "2", "3", "4", "5", "6", "7", "8"});
+        comboSemester = createStyledComboBox(new String[]{"Monsoon", "Winter", "Summer"});
         p3.add(comboSemester, BorderLayout.CENTER);
         row3.add(p3);
 
-        formCard.add(row3, gbc);
-        gbc.gridwidth = 1; // Reset
+        JPanel p4 = new JPanel(new BorderLayout(0, 5)); p4.setOpaque(false);
+        p4.add(createLabel("Year"), BorderLayout.NORTH);
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        yearSpinner = new JSpinner(new SpinnerNumberModel(currentYear, 2020, 2030, 1));
+        styleSpinner(yearSpinner);
+        p4.add(yearSpinner, BorderLayout.CENTER);
+        row3.add(p4);
 
-        // --- Row 4: Capacity & Prerequisites ---
+        formCard.add(row3, gbc);
+        gbc.gridwidth = 1;
+
+        // --- Row 4 ---
         gbc.gridy = 5;
         gbc.gridx = 0; gbc.weightx = 0.3;
         formCard.add(createLabel("Class Capacity"), gbc);
@@ -189,13 +197,12 @@ public class AdminAddcourse extends JFrame {
 
         gbc.gridx = 1;
         txtPrerequisites = createStyledTextField();
-        txtPrerequisites.setToolTipText("e.g. CS101, MATH200");
         formCard.add(txtPrerequisites, gbc);
 
-        // --- Row 5: Description ---
+        // --- Row 5 ---
         gbc.gridy = 7;
         gbc.gridx = 0; gbc.gridwidth = 2;
-        formCard.add(createLabel("Course Description"), gbc);
+        formCard.add(createLabel("Course Description (Optional)"), gbc);
 
         gbc.gridy = 8;
         txtDescription = new JTextArea(5, 20);
@@ -207,7 +214,7 @@ public class AdminAddcourse extends JFrame {
 
         // --- Row 6: Buttons ---
         gbc.gridy = 9;
-        gbc.insets = new Insets(40, 20, 20, 20); // More top margin
+        gbc.insets = new Insets(40, 20, 20, 20);
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnPanel.setOpaque(false);
@@ -222,17 +229,44 @@ public class AdminAddcourse extends JFrame {
         btnSave.setForeground(Color.WHITE);
         btnSave.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
-        // SAVE ACTION
         btnSave.addActionListener(e -> {
-            // TODO: Implement Database Logic here
             String name = txtCourseName.getText();
-            String id = txtCourseId.getText();
+            String code = txtCourseId.getText();
+            String instId = txtInstructor.getText();
+            String capStr = txtCapacity.getText();
 
-            if(name.isEmpty() || id.isEmpty()) {
+            if(name.isEmpty() || code.isEmpty() || instId.isEmpty() || capStr.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please fill in all required fields.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this, "Course '" + name + "' created successfully!");
-                goBack();
+                return;
+            }
+
+            try {
+                int credits = Integer.parseInt((String) comboCredits.getSelectedItem());
+                int capacity = Integer.parseInt(capStr);
+                int year = (Integer) yearSpinner.getValue();
+
+                AddCourse data = new AddCourse(
+                        code,
+                        name,
+                        credits,
+                        (String) comboDepartment.getSelectedItem(),
+                        instId,
+                        (String) comboSemester.getSelectedItem(),
+                        year,
+                        capacity
+                );
+
+                boolean success = adminService.createCourseOffering(data);
+
+                if(success) {
+                    JOptionPane.showMessageDialog(this, "Course '" + name + "' created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    goBack();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to create course.\nCheck if Instructor ID exists and is valid.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                }
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Capacity must be a number.", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -241,13 +275,11 @@ public class AdminAddcourse extends JFrame {
         btnPanel.add(btnSave);
 
         formCard.add(btnPanel, gbc);
-
-        // Add Form Card to the Main Container
         container.add(formCard);
         return container;
     }
 
-    // --- UI Helper Methods for Consistency ---
+    // --- Helpers ---
 
     private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
@@ -268,37 +300,42 @@ public class AdminAddcourse extends JFrame {
         ));
 
         field.addFocusListener(new FocusAdapter() {
-            @Override
             public void focusGained(FocusEvent e) {
                 field.setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createMatteBorder(1, 1, 1, 1, buttonColor),
-                        BorderFactory.createEmptyBorder(10, 10, 10, 10)
-                ));
+                        BorderFactory.createEmptyBorder(10, 10, 10, 10)));
             }
-            @Override
             public void focusLost(FocusEvent e) {
                 field.setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createMatteBorder(1, 1, 1, 1, borderColor),
-                        BorderFactory.createEmptyBorder(10, 10, 10, 10)
-                ));
+                        BorderFactory.createEmptyBorder(10, 10, 10, 10)));
             }
         });
         return field;
     }
 
-    // --- KEY FIX FOR DROPDOWN (JCOMBOBOX) ---
+    private void styleSpinner(JSpinner spinner) {
+        spinner.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        JComponent editor = spinner.getEditor();
+        if (editor instanceof JSpinner.DefaultEditor) {
+            JTextField tf = ((JSpinner.DefaultEditor) editor).getTextField();
+            tf.setBackground(inputBgColor);
+            tf.setForeground(textColor);
+            tf.setCaretColor(buttonColor);
+        }
+        spinner.setBorder(BorderFactory.createLineBorder(borderColor, 1));
+    }
+
     private JComboBox<String> createStyledComboBox(String[] items) {
         JComboBox<String> box = new JComboBox<>(items);
         box.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         box.setForeground(textColor);
         box.setBackground(inputBgColor);
 
-        // 1. Custom Renderer for the Dropdown List Items
         box.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                // Set colors for the popup list
                 if (isSelected) {
                     setBackground(buttonColor);
                     setForeground(Color.WHITE);
@@ -311,36 +348,30 @@ public class AdminAddcourse extends JFrame {
             }
         });
 
-        // 2. Custom UI to handle the Main Box display and the Popup
         box.setUI(new BasicComboBoxUI() {
-
-            // Fix 1: Paint the background of the main box manually to avoid the "White" glitch
             @Override
             public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
                 g.setColor(inputBgColor);
                 g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
             }
-
             @Override
             protected JButton createArrowButton() {
-                JButton btn = new JButton("\u25BC"); // Down arrow symbol
+                JButton btn = new JButton("\u25BC");
                 btn.setBackground(inputBgColor);
                 btn.setForeground(textSecondaryColor);
                 btn.setBorder(BorderFactory.createEmptyBorder());
                 btn.setFocusable(false);
-                btn.setContentAreaFilled(false); // Remove button default fill
+                btn.setContentAreaFilled(false);
                 return btn;
             }
-
-            // Fix 2: Style the Popup (The actual list that drops down)
             @Override
             protected ComboPopup createPopup() {
                 BasicComboPopup popup = new BasicComboPopup(comboBox) {
                     @Override
                     protected JScrollPane createScroller() {
                         JScrollPane scroller = super.createScroller();
-                        // Make the scrollbar match the rest of the app
-                        scroller.getVerticalScrollBar().setUI(new StyledScrollBarUI());
+                        // --- FIX: Use static nested class with passed colors ---
+                        scroller.getVerticalScrollBar().setUI(new StyledScrollBarUI(buttonColor, bgColor));
                         scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
                         return scroller;
                     }
@@ -349,7 +380,6 @@ public class AdminAddcourse extends JFrame {
                 return popup;
             }
         });
-
         box.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, borderColor));
         return box;
     }
@@ -374,21 +404,28 @@ public class AdminAddcourse extends JFrame {
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(bgColor);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.getVerticalScrollBar().setUI(new StyledScrollBarUI());
-        scrollPane.getHorizontalScrollBar().setUI(new StyledScrollBarUI());
+        // --- FIX: Use static nested class with passed colors ---
+        scrollPane.getVerticalScrollBar().setUI(new StyledScrollBarUI(buttonColor, bgColor));
+        scrollPane.getHorizontalScrollBar().setUI(new StyledScrollBarUI(buttonColor, bgColor));
     }
 
-    // Custom ScrollBar UI (Inner Class)
-    private class StyledScrollBarUI extends BasicScrollBarUI {
+    // --- FIX: Made static and accept colors in constructor ---
+    private static class StyledScrollBarUI extends BasicScrollBarUI {
+        private Color thumbColor;
+        private Color trackColor;
+
+        public StyledScrollBarUI(Color thumbColor, Color trackColor) {
+            this.thumbColor = thumbColor;
+            this.trackColor = trackColor;
+        }
+
         @Override
         protected void configureScrollBarColors() {
-            this.thumbColor = buttonColor;
-            this.trackColor = bgColor;
+            this.thumbColor = thumbColor;
+            this.trackColor = trackColor;
         }
-        @Override
-        protected JButton createDecreaseButton(int orientation) { return createZeroButton(); }
-        @Override
-        protected JButton createIncreaseButton(int orientation) { return createZeroButton(); }
+        @Override protected JButton createDecreaseButton(int orientation) { return createZeroButton(); }
+        @Override protected JButton createIncreaseButton(int orientation) { return createZeroButton(); }
         private JButton createZeroButton() {
             JButton btn = new JButton();
             btn.setPreferredSize(new Dimension(0, 0));
