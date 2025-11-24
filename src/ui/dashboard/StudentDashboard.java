@@ -42,6 +42,7 @@ public class StudentDashboard extends JFrame {
     private double cg = 0;
     private int credits = 0;
     private String rollNumber;
+    private String studentProgram;
 
     private JLayeredPane mainContentPanel;
     private JPanel cardHolderPanel;
@@ -50,6 +51,7 @@ public class StudentDashboard extends JFrame {
     private RoundedButton onlineLinkButton;
     private RoundedButton generateReportButton;
     private List<RoundedButton> menuButtons;
+
 
     public StudentDashboard(String rollNum, String username) {
         super("Student Dashboard - " + username);
@@ -70,6 +72,7 @@ public class StudentDashboard extends JFrame {
 
         this.rollNumber = rollNum;
         this.username = username;
+        this.studentProgram = enrollmentService.getStudentProgram(rollNum);
         JPanel sideMenuPanel = createSideMenuPanel();
         add(sideMenuPanel, BorderLayout.WEST);
 
@@ -98,21 +101,12 @@ public class StudentDashboard extends JFrame {
         onlineLinkButton = createHeaderButton("Degree Requirements");
         onlineLinkButton.addActionListener(e -> {
             try {
-                String url = "https://iiitd.ac.in/sites/default/files/docs/education/2024/2024-May-BTech(CSE)-Regulations.pdf";
+                String url = getDegreeLink(this.studentProgram); // Use the new logic
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                     Desktop.getDesktop().browse(new URI(url));
-                } else {
-                    JOptionPane.showMessageDialog(StudentDashboard.this,
-                            "Cannot open link. OS does not support Desktop.browse.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(StudentDashboard.this,
-                        "Could not open link: " + ex.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -604,6 +598,27 @@ public class StudentDashboard extends JFrame {
         minorLinksPanel.add(Box.createVerticalGlue());
         return minorLinksPanel;
     }
+    private String getDegreeLink(String program) {
+        if (program == null) return "https://iiitd.ac.in/academics/regulations";
+        String p = program.toLowerCase();
+
+        if (p.contains("applied mathematics")) { // CSAM
+            return "https://iiitd.ac.in/sites/default/files/docs/education/2019/2019-July-BTech(CSAM)-Regulations.pdf";
+        } else if (p.contains("computer science") && (p.contains("engineering") || p.contains("&"))) { // CSE
+            return "https://iiitd.ac.in/sites/default/files/docs/education/2024/2024-May-BTech(CSE)-Regulations.pdf";
+        } else if (p.contains("electronics")) { // ECE
+            return "https://iiitd.ac.in/sites/default/files/docs/education/2022/2022-July-BTech(ECE)-Regulations.pdf";
+        } else if (p.contains("design")) { // CSD
+            return "https://iiitd.ac.in/sites/default/files/docs/education/2022/2022-July-BTech(CSD)-Regulations.pdf";
+        } else if (p.contains("artificial")) { // CSAI
+            return "https://iiitd.ac.in/sites/default/files/docs/education/2024/2024-July-BTech(CSAI)-Regulations.pdf";
+        } else if (p.contains("biology")) { // CSB
+            return "https://iiitd.ac.in/sites/default/files/docs/education/2019/2019-July-BTech(CSB)-Regulations.pdf";
+        } else if (p.contains("social")) { // CSSS
+            return "https://iiitd.ac.in/sites/default/files/docs/education/2022/2022-July-BTech(CSSS)-Regulations.pdf";
+        }
+        return "https://iiitd.ac.in/academics/regulations";
+    }
 
 
     private JLabel createClickableLink(String text, String url) {
@@ -738,6 +753,8 @@ public class StudentDashboard extends JFrame {
             jbutton.setMaximumSize(new Dimension(0, 0));
             return jbutton;
         }
+
+
     }
 
     /**
