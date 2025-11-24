@@ -1,9 +1,8 @@
 package ui.dashboard;
 
-// --- Imports from StudentDashboard ---
 import ui.FacultyFrame.FacultyCoursesPanel;
-import ui.components.RoundedButton; // <-- IMPORTED
-import ui.components.RoundedPanel;  // <-- IMPORTED
+import ui.components.RoundedButton;
+import ui.components.RoundedPanel;
 import ui.landing.LandingFrame;
 
 import javax.swing.*;
@@ -15,7 +14,6 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.*;
 
-// --- Original Imports from FacultyDashboard ---
 import ui.FacultyFrame.TAStats;
 import middleware.facultyService;
 
