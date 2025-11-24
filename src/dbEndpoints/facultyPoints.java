@@ -60,6 +60,7 @@ public class facultyPoints {
                 c.course_code,
                 c.credits,
                 s.department,
+                s.semester,
                 COUNT(DISTINCT e.student_id) AS student_count
             FROM 
                 users.sections s
@@ -70,7 +71,7 @@ public class facultyPoints {
             WHERE 
                 s.instructor_id = ?
             GROUP BY 
-                c.course_title, c.course_code, c.credits, s.department
+                c.course_title, c.course_code, c.credits, s.department, s.semester
             ORDER BY 
                 c.course_title
             """;
@@ -89,7 +90,8 @@ public class facultyPoints {
                         rs.getString("course_code"),
                         rs.getInt("student_count"),
                         rs.getInt("credits"),
-                        rs.getString("department")
+                        rs.getString("department"),
+                        rs.getString("semester")
                 ));
             }
 
@@ -102,10 +104,6 @@ public class facultyPoints {
     public List<EnrolledStudent> getEnrolledStudents(String courseCode, String semester) {
         List<EnrolledStudent> studentList = new ArrayList<>();
 
-        // We join 3 tables:
-        // 1. sections (to filter by course and semester)
-        // 2. enrollments (to link sections to students)
-        // 3. students (to get the student details)
         String sql = """
             SELECT DISTINCT st.full_name, st.student_roll_no, st.student_email
             FROM users.sections sec

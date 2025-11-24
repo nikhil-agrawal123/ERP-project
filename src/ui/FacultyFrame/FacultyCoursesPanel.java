@@ -42,17 +42,21 @@ public class FacultyCoursesPanel extends JPanel {
         this.facultySvc = new facultyService();
 
         // --- Hardcode Data ---
-        this.semesterCourses = new LinkedHashMap<>();
-        List<facultyCourseClass> fall2025 = new ArrayList<>();
-        fall2025.add(new facultyCourseClass("Operating Systems", "CS301", 75, 4, "CSE"));
-        fall2025.add(new facultyCourseClass("Linear Algebra","MTH201",  120,4, "MATH"));
-        List<facultyCourseClass> spring2025 = new ArrayList<>();
-        spring2025.add(new facultyCourseClass("Intro to Programming","CS101", 150 ,4, "CSE"));
-        List<facultyCourseClass> fall2024 = new ArrayList<>();
-        fall2024.add(new facultyCourseClass("Database Systems","CS450", 60, 4, "CSE"));
-        semesterCourses.put("Monsoon 2025", fall2025);
-        semesterCourses.put("Winter 2024", spring2025);
-        semesterCourses.put("Monsoon 2024", fall2024);
+
+        this.semesterCourses = facultySvc.getCoursesBySemester(username);
+
+//        List<facultyCourseClass> fall2025 = new ArrayList<>();
+//        fall2025.add(new facultyCourseClass("Operating Systems", "CS301", 75, 4, "CSE","Monsoon 2025"));
+//        fall2025.add(new facultyCourseClass("Linear Algebra","MTH201",  120,4, "MATH","Monsoon 2025"));
+//        fall2025.add(new facultyCourseClass("Intro to Programming","CS101", 150 ,4, "CSE","Monsoon 2025"));
+//        List<facultyCourseClass> spring2025 = new ArrayList<>();
+//        List<facultyCourseClass> fall2024 = new ArrayList<>();
+//        fall2024.add(new facultyCourseClass("Database Systems","CS450", 60, 4, "CSE","Monsoon 2024"));
+//        semesterCourses.put("Monsoon 2025", fall2025);
+//        semesterCourses.put("Winter 2024", spring2025);
+//        semesterCourses.put("Monsoon 2024", fall2024);
+
+//        facultySvc.getAllCourses(facultyUsername);
 
         // --- Configure this JPanel ---
         setLayout(new BorderLayout());
@@ -123,7 +127,7 @@ public class FacultyCoursesPanel extends JPanel {
         mainCoursesContentPanel.add(semesterCardPanel, BorderLayout.CENTER);
 
         // --- Populate Tabs and Cards ---
-        List<RoundedButton> semesterTabButtons = new ArrayList<>(); // <-- Changed to RoundedButton
+        List<RoundedButton> semesterTabButtons = new ArrayList<>();
         String firstAvailableSem = "";
 
         for (String semesterName : semesterCourses.keySet()) {
@@ -329,13 +333,10 @@ public class FacultyCoursesPanel extends JPanel {
         buttonPanel.setOpaque(false);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(25, 0, 0, 0));
 
-        // --- MODIFIED ---
-        // Create buttons using the public RoundedButton gradient constructor
         RoundedButton viewStudentsButton = new RoundedButton("View Enrolled Students", buttonColor, buttonColorGlow, 10);
         RoundedButton updateScoresButton = new RoundedButton("Update Scores", buttonColor, buttonColorGlow, 10);
         RoundedButton setGradingPolicyButton = new RoundedButton("Set Grading Policy", buttonColor, buttonColorGlow, 10);
 
-        // Style buttons (can be factorized)
         Font buttonFont = new Font("Segoe UI", Font.BOLD, 15);
         Border buttonBorder = BorderFactory.createEmptyBorder(12, 22, 12, 22);
 
@@ -350,7 +351,6 @@ public class FacultyCoursesPanel extends JPanel {
         updateScoresButton.setBorder(buttonBorder);
         updateScoresButton.addActionListener(e ->
         {
-            // --- MODIFIED --- Pass the correct course code
             UpdateScoresFrame updateScoresFrame = new UpdateScoresFrame(course.getCourseCode(), "INST-CS-501",  semester);
             updateScoresFrame.setVisible(true);
         });

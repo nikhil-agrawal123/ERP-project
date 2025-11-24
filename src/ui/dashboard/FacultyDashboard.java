@@ -321,7 +321,7 @@ public class FacultyDashboard extends JFrame {
 
         // --- Add all cards to the main panel ---
         cardHolder.add(homePanel, "HOME");
-        FacultyCoursesPanel coursesPanel = new FacultyCoursesPanel(username);
+        FacultyCoursesPanel coursesPanel = new FacultyCoursesPanel(facultyID);
         cardHolder.add(coursesPanel, "COURSES");
     }
 

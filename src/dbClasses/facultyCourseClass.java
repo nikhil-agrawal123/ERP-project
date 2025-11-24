@@ -7,13 +7,15 @@ public class facultyCourseClass {
     private int studentCount;
     private int courseCredits;
     private String department;
+    private String semester;
 
-    public facultyCourseClass(String courseNane, String courseCode, int studentCount, int courseCredits, String department) {
+    public facultyCourseClass(String courseNane, String courseCode, int studentCount, int courseCredits, String department,String semester) {
         this.courseNane = courseNane;
         this.courseCode = courseCode;
         this.studentCount = studentCount;
         this.courseCredits = courseCredits;
         this.department = department;
+        this.semester = semester;
     }
 
     public String getCourseName() {
@@ -31,4 +33,5 @@ public class facultyCourseClass {
     public String getDepartment() {
         return department;
     }
+    public String getSemester() {return semester;}
 }
