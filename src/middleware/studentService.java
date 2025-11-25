@@ -68,4 +68,13 @@ public class studentService {
     public boolean CheckRegister(String username, String courseCode) {
         return student.Check(username, courseCode) != 0;
     }
+
+    public String getStudentProgram(String rollNumber) {
+        try {
+            return student.getStudentProgram(rollNumber);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ""; // Return empty string if something goes wrong
+        }
+    }
 }

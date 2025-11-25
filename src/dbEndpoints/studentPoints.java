@@ -246,5 +246,23 @@ public class studentPoints {
             System.out.println("Promoted " + rows + " students to next semester.");
         }
     }
+
+    public String getStudentProgram(String rollNumber) throws SQLException {
+        String program = "";
+        // Query assumes your table is users.students and column is student_roll_no
+        String sql = "SELECT program FROM users.students WHERE student_roll_no = ?";
+
+        try (Connection connection = connector.connect();
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+            pstmt.setString(1, rollNumber);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                program = rs.getString("program");
+            }
+        }
+        return program;
+    }
 }
 
