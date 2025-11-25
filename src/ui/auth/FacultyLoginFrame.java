@@ -118,11 +118,11 @@ public class FacultyLoginFrame extends JFrame {
                         "Maintenance in progress. Please try again later",
                         "Maintenance",
                         JOptionPane.ERROR_MESSAGE);
-                logger.log(usernameField.getText(), "Login Attemp" , "User tried logging during maintenance" );
+                logger.log(usernameField.getText(), "Login Attemp" , "User tried logging during maintenance" ,"Faculty");
             }else{
                 if(numTry > 0){
                     handleLoginAttempt();
-                    logger.log(usernameField.getText(), "Login Attemp" , "User tried logging in" );
+                    logger.log(usernameField.getText(), "Login Attemp" , "User tried logging in" ,"Faculty");
                 }else{
                     handleLock();
                 }
@@ -142,7 +142,7 @@ public class FacultyLoginFrame extends JFrame {
                         "Maintenance is active. Please try later",
                         "Maintenance",
                         JOptionPane.ERROR_MESSAGE);
-                logger.log(usernameField.getText(), "Login Attempt" , "User tried forget password during maintenance" );
+                logger.log(usernameField.getText(), "Login Attempt" , "User tried forget password during maintenance","Faculty" );
 
             }else{
                 ForgetPassword frame = new ForgetPassword("faculty");
@@ -246,7 +246,7 @@ public class FacultyLoginFrame extends JFrame {
                     "Username and password cannot be empty.",
                     "Login Error",
                     JOptionPane.ERROR_MESSAGE);
-            logger.log(username,"Login Attempt" ,"User tried logging in with invalid credentials" );
+            logger.log(username,"Login Attempt" ,"User tried logging in with invalid credentials","Faculty" );
             return;
         }
 
@@ -256,13 +256,13 @@ public class FacultyLoginFrame extends JFrame {
             FacultyDashboard dashboard = new FacultyDashboard(username);
             dashboard.setVisible(true);
             dispose();
-            logger.log(username,"Login Attempt" ,"User tried logging in - successful");
+            logger.log(username,"Login Attempt" ,"User tried logging in - successful","Faculty");
         } else {
             JOptionPane.showMessageDialog(this,
                     "Incorrect username or password.",
                     "Login Failed",
                     JOptionPane.ERROR_MESSAGE);
-            logger.log(username,"Login Attempt" ,"User tried logging in with invalid credentials");
+            logger.log(username,"Login Attempt" ,"User tried logging in with invalid credentials","Faculty");
             numTry -= 1;
         }
     }
@@ -276,7 +276,7 @@ public class FacultyLoginFrame extends JFrame {
                 "Too many failed attempts. Account locked for 30 seconds.",
                 "Auth Error",
                 JOptionPane.ERROR_MESSAGE);
-        logger.log(usernameField.getText() ,"Login Attempt" ,"User tried logging in with invalid credentials login locked");
+        logger.log(usernameField.getText() ,"Login Attempt" ,"User tried logging in with invalid credentials login locked","Faculty");
 
         Timer lockoutTimer = new Timer(30000, e -> {
             numTry = 3;

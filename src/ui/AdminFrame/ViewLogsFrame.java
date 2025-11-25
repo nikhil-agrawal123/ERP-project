@@ -6,11 +6,15 @@ import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicComboBoxUI;
+import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.BasicScrollBarUI;
+import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,14 +36,19 @@ public class ViewLogsFrame extends JFrame {
     private JTable logsTable;
     private DefaultTableModel tableModel;
 
+    // --- NEW: Data Cache & Filter Components ---
+    private List<logClass> cachedLogs; // Stores all logs to avoid DB recalls on filter
+    private JComboBox<String> filterBox;
+
     public ViewLogsFrame() {
         super("System Audit Logs");
 
         this.loggerService = new loggerService();
+        this.cachedLogs = new ArrayList<>(); // Init cache
 
         // --- Frame Setup ---
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1000, 700);
+        setSize(1200, 700);
         setLocationRelativeTo(null);
         getContentPane().setBackground(bgColor);
         setLayout(new BorderLayout());
@@ -73,9 +82,16 @@ public class ViewLogsFrame extends JFrame {
         titleBlock.add(Box.createRigidArea(new Dimension(0, 5)));
         titleBlock.add(subtitleLabel);
 
-        // Header Buttons (Refresh & Close)
+        // Header Buttons (Filter, Refresh & Close)
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
+
+        // --- NEW: Filter Dropdown ---
+        String[] filterOptions = {"All Types", "Student", "Faculty", "Admin"}; // Updated options
+        filterBox = new JComboBox<>(filterOptions);
+        styleComboBox(filterBox);
+        filterBox.setPreferredSize(new Dimension(140, 35));
+        filterBox.addActionListener(e -> filterLogs()); // Trigger filter on selection
 
         RoundedButton refreshButton = new RoundedButton(
                 "Refresh",
@@ -99,6 +115,7 @@ public class ViewLogsFrame extends JFrame {
         closeButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
         closeButton.addActionListener(e -> dispose());
 
+        buttonPanel.add(filterBox); // Add filter
         buttonPanel.add(refreshButton);
         buttonPanel.add(closeButton);
 
@@ -120,7 +137,7 @@ public class ViewLogsFrame extends JFrame {
         add(contentWrapper, BorderLayout.CENTER);
 
         // Initialize Table
-        String[] columns = {"ID", "Timestamp", "User", "Action", "Description"};
+        String[] columns = {"ID", "Timestamp", "User", "Action", "Description", "UserType"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -137,6 +154,7 @@ public class ViewLogsFrame extends JFrame {
         logsTable.getColumnModel().getColumn(2).setPreferredWidth(100); // User
         logsTable.getColumnModel().getColumn(3).setPreferredWidth(120); // Action
         logsTable.getColumnModel().getColumn(4).setPreferredWidth(400); // Description
+        logsTable.getColumnModel().getColumn(5).setPreferredWidth(100); // UserType
 
         JScrollPane scrollPane = new JScrollPane(logsTable);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -155,25 +173,99 @@ public class ViewLogsFrame extends JFrame {
         loadLogs();
     }
 
+    /**
+     * Fetches logs from database, caches them, and applies current filter.
+     */
     private void loadLogs() {
-        tableModel.setRowCount(0); // Clear existing
-        List<logClass> logs = loggerService.getSystemLogs();
+        this.cachedLogs = loggerService.getSystemLogs(); // Fetch all logs
+        filterLogs(); // Apply filter (which populates tableModel)
+    }
+
+    /**
+     * Updates the table based on cachedLogs and the selected filter.
+     */
+    private void filterLogs() {
+        tableModel.setRowCount(0); // Clear table
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String selectedFilter = (String) filterBox.getSelectedItem();
+
         int itr = 1;
-        for (logClass log : logs) {
-            Object[] row = {
-                    itr,
-                    sdf.format(log.getDate()),
-                    log.getUserId(),
-                    log.getActionType(),
-                    log.getDescription()
-            };
-            itr++;
-            tableModel.addRow(row);
+        for (logClass log : cachedLogs) {
+            String userType = log.getUserType();
+
+            // Filter Logic:
+            // If "All Types" is selected, OR if the log's type matches the selection
+            if ("All Types".equals(selectedFilter) ||
+                    (userType != null && userType.equalsIgnoreCase(selectedFilter))) {
+
+                Object[] row = {
+                        itr,
+                        sdf.format(log.getDate()),
+                        log.getUserId(),
+                        log.getActionType(),
+                        log.getDescription(),
+                        userType
+                };
+                tableModel.addRow(row);
+                itr++;
+            }
         }
     }
 
     // --- Styling Helper Methods ---
+
+    private void styleComboBox(JComboBox<String> box) {
+        box.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        box.setForeground(textColor);
+        box.setBackground(cardColor);
+        box.setBorder(BorderFactory.createLineBorder(borderColor, 1));
+        box.setFocusable(false);
+
+        box.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (isSelected) {
+                    setBackground(buttonColor);
+                    setForeground(Color.WHITE);
+                } else {
+                    setBackground(cardColor);
+                    setForeground(textColor);
+                }
+                setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+                return this;
+            }
+        });
+
+        box.setUI(new BasicComboBoxUI() {
+            @Override
+            public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
+                g.setColor(cardColor);
+                g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+            }
+            @Override
+            protected JButton createArrowButton() {
+                RoundedButton b = new RoundedButton("▼", buttonColor, buttonColor.brighter(), buttonColor.darker(), 8);
+                b.setForeground(textColor);
+                b.setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
+                return b;
+            }
+            @Override
+            protected ComboPopup createPopup() {
+                BasicComboPopup popup = new BasicComboPopup(comboBox) {
+                    @Override
+                    protected JScrollPane createScroller() {
+                        JScrollPane scroller = super.createScroller();
+                        scroller.getVerticalScrollBar().setUI(new StyledScrollBarUI());
+                        scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+                        return scroller;
+                    }
+                };
+                popup.setBorder(BorderFactory.createLineBorder(borderColor));
+                return popup;
+            }
+        });
+    }
 
     private void styleTable(JTable table) {
         table.setBackground(cardColor);

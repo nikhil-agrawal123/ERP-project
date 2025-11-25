@@ -32,21 +32,21 @@ public class adminService {
     }
 
     public boolean addStudent(NewStudent newStudent) throws SQLException {
-        loggerService.log("Admin", "Add Student", "Admin Tried adding a student");
+        loggerService.log("Admin", "Add Student", "Admin Tried adding a student","Admin");
         return adminPoints.addStudent(newStudent);
     }
 
     public boolean addInstructor(AddFaculty faculty) throws SQLException {
-        loggerService.log("Admin", "Add Instructor", "Admin Tried adding a instructor");
+        loggerService.log("Admin", "Add Instructor", "Admin Tried adding a instructor","Admin");
         return adminPoints.addFaculty(faculty);
     }
 
     public boolean registerAdmin(AddAdmin admin) {
         boolean success = adminPoints.addAdmin(admin);
         if (success) {
-            loggerService.log("CurrentAdmin", "ADD_ADMIN", "Added Admin: " + admin.getAdminId());
+            loggerService.log("CurrentAdmin", "ADD_ADMIN", "Added Admin: " + admin.getAdminId(),"Admin");
         } else {
-            loggerService.log("CurrentAdmin", "ADD_ADMIN_FAIL", "Failed: " + admin.getAdminId());
+            loggerService.log("CurrentAdmin", "ADD_ADMIN_FAIL", "Failed: " + admin.getAdminId(),"Admin");
         }
         return success;
     }
@@ -54,9 +54,9 @@ public class adminService {
     public boolean performSystemBackup(File file) {
         boolean success = adminBackup.createBackup(file);
         if (success) {
-            loggerService.log("CurrentAdmin", "BACKUP_CREATED", "Saved to: " + file.getName());
+            loggerService.log("CurrentAdmin", "BACKUP_CREATED", "Saved to: " + file.getName(),"Admin");
         } else {
-            loggerService.log("CurrentAdmin", "BACKUP_FAILED", "Failed to save to: " + file.getName());
+            loggerService.log("CurrentAdmin", "BACKUP_FAILED", "Failed to save to: " + file.getName(),"Admin");
         }
         return success;
     }
@@ -64,9 +64,9 @@ public class adminService {
     public boolean performSystemRestore(File file) {
         boolean success = adminBackup.restoreBackup(file);
         if (success) {
-            loggerService.log("CurrentAdmin", "SYSTEM_RESTORE", "Restored from: " + file.getName());
+            loggerService.log("CurrentAdmin", "SYSTEM_RESTORE", "Restored from: " + file.getName(),"Admin");
         } else {
-            loggerService.log("CurrentAdmin", "RESTORE_FAILED", "Failed to restore: " + file.getName());
+            loggerService.log("CurrentAdmin", "RESTORE_FAILED", "Failed to restore: " + file.getName(),"Admin");
         }
         return success;
     }
@@ -74,9 +74,9 @@ public class adminService {
     public boolean createCourseOffering(AddCourse data) {
         boolean success = adminPoints.addCourseAndSection(data);
         if (success) {
-            loggerService.log("CurrentAdmin", "ADD_COURSE", "Created section for: " + data.getCourseCode());
+            loggerService.log("CurrentAdmin", "ADD_COURSE", "Created section for: " + data.getCourseCode(),"Admin");
         } else {
-            loggerService.log("CurrentAdmin", "ADD_COURSE_FAIL", "Failed to create: " + data.getCourseCode());
+            loggerService.log("CurrentAdmin", "ADD_COURSE_FAIL", "Failed to create: " + data.getCourseCode(),"Admin");
         }
         return success;
     }
@@ -97,9 +97,9 @@ public class adminService {
                 studentService.incrementAllStudentSemesters();
                 studentService.updateSemesterName(newSemester);
                 studentService.updateCurrentYear(newYear);
-                loggerService.log("CurrentAdmin", "SEM_CHANGE", "System moved to " + newSemester + " " + newYear + ". Students promoted.");
+                loggerService.log("CurrentAdmin", "SEM_CHANGE", "System moved to " + newSemester + " " + newYear + ". Students promoted.","Admin");
             } else {
-                loggerService.log("CurrentAdmin", "SEM_CHANGE", "System moved to " + newSemester + " " + newYear + ". No promotion (Summer).");
+                loggerService.log("CurrentAdmin", "SEM_CHANGE", "System moved to " + newSemester + " " + newYear + ". No promotion (Summer).","Admin");
             }
 
             conn.commit();
@@ -136,7 +136,7 @@ public class adminService {
         boolean success = systemSettings.updateRegistrationDates(startStr, endStr);
 
         if (success) {
-            loggerService.log("CurrentAdmin", "REG_PERIOD_UPDATE", "Set to: " + startStr + " to " + endStr);
+            loggerService.log("CurrentAdmin", "REG_PERIOD_UPDATE", "Set to: " + startStr + " to " + endStr,"Admin");
         }
         return success;
     }

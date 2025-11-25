@@ -24,17 +24,17 @@ public class facultyService {
     }
 
     public String facultyId(String userid){
-        logger.log(userid,"facultyId","faculty id is fetched");
+        logger.log(userid,"facultyId","faculty id is fetched","Faculty");
         return faculty.getFacultyId(userid);
     }
 
     public int getFacultyCourse(String facultyId){
-        logger.log(facultyId,"Courses Fetched" ,"faculty courses were fetched");
+        logger.log(facultyId,"Courses Fetched" ,"faculty courses were fetched","Faculty");
         return faculty.getNumberCourses(facultyId);
     }
 
     public List<facultyCourseClass> getAllCourses(String facultyId){
-        logger.log(facultyId,"Course List","List of courses were fetched");
+        logger.log(facultyId,"Course List","List of courses were fetched","Faculty");
         return faculty.getAllCourses(facultyId);
     }
 
@@ -49,17 +49,17 @@ public class facultyService {
             }
             organizedCourses.get(semKey).add(course);
         }
-        logger.log(instructorId,"Course Fetched","All courses were fetched and converted to HashMap to display");
+        logger.log(instructorId,"Course Fetched","All courses were fetched and converted to HashMap to display","Faculty");
         return organizedCourses;
     }
 
     public List<EnrolledStudent> getClassList(String courseCode, String Semester){
-        logger.log(courseCode,"Enrolled Student List","Faculty fetched list of enrolled students ");
+        logger.log(courseCode,"Enrolled Student List","Faculty fetched list of enrolled students ","Faculty");
         return faculty.getEnrolledStudents(courseCode, Semester);
     }
 
     public String getFullNmae(String instructor_id){
-        logger.log("Admin" ,"Fetch Name" ,"Admin fetched instructor name with id" + instructor_id);
+        logger.log("Admin" ,"Fetch Name" ,"Admin fetched instructor name with id" + instructor_id,"Faculty");
         return faculty.getFacultyName(instructor_id);
     }
 }

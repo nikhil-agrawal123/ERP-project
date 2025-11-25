@@ -18,8 +18,8 @@ public class logPoints {
     /**
      * Record an action in the database.
      */
-    public void logAction(String userId, String actionType, String description) {
-        String sql = "INSERT INTO users.audit_logs (user_id, action_type, description) VALUES (?, ?, ?)";
+    public void logAction(String userId, String actionType, String description, String user_type) {
+        String sql = "INSERT INTO users.audit_logs (user_id, action_type, description) VALUES (?, ?, ?,?)";
 
         try (Connection conn = dbConnector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -27,6 +27,7 @@ public class logPoints {
             pstmt.setString(1, userId);
             pstmt.setString(2, actionType);
             pstmt.setString(3, description);
+            pstmt.setString(4, user_type);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -50,7 +51,8 @@ public class logPoints {
                         rs.getString("user_id"),
                         rs.getString("action_type"),
                         rs.getString("description"),
-                        rs.getTimestamp("timestamp")
+                        rs.getTimestamp("timestamp"),
+                        rs.getString("user_type")
                 ));
             }
         } catch (SQLException e) {

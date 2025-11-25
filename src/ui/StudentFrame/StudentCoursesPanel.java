@@ -150,7 +150,7 @@ public class StudentCoursesPanel extends JPanel {
 
                 // --- Create the Table Content Card ---
                 List<StudentRegisteredCourse> coursesForThisSem = semesterData.get(i);
-                loggerService.log(username,"Courses accessed" , "Courses for the user were fetched");
+                loggerService.log(username,"Courses accessed" , "Courses for the user were fetched","Student");
                 Object[][] data = new Object[coursesForThisSem.size()][5];
 
                 for (int j = 0; j < coursesForThisSem.size(); j++) {
@@ -209,13 +209,13 @@ public class StudentCoursesPanel extends JPanel {
                         "Report exported successfully to:\n" + fileToSave.getAbsolutePath(),
                         "Export Successful",
                         JOptionPane.INFORMATION_MESSAGE);
-                loggerService.log(username, "Pdf export service" , "Pdf was exported successfully");
+                loggerService.log(username, "Pdf export service" , "Pdf was exported successfully","Student");
             } else {
                 JOptionPane.showMessageDialog(this,
                         "Failed to export report. See console for errors.",
                         "Export Failed",
                         JOptionPane.ERROR_MESSAGE);
-                loggerService.log(username, "Pdf export service" , "Pdf was export failed");
+                loggerService.log(username, "Pdf export service" , "Pdf was export failed","Student");
             }
         }
     }

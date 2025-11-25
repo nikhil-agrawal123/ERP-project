@@ -273,7 +273,7 @@ public class GradingPolicyFrame extends JFrame {
         for (GradingComponent comp : policyComponents) {
             editListModel.addElement(new GradingComponent(comp.getName(), comp.getPercentage()));
         }
-        logger.log(instructorId , "Policy Update" ,"Instructed updated policy for the course" + courseCode);
+        logger.log(instructorId , "Policy Update" ,"Instructed updated policy for the course" + courseCode,"Faculty");
         updateTotalLabel(totalLabelEdit);
     }
 
@@ -306,7 +306,7 @@ public class GradingPolicyFrame extends JFrame {
                             importedComponents.add(new GradingComponent(name, percent));
                         } catch (NumberFormatException ex) {
                             System.err.println("Skipping invalid line: " + line);
-                            logger.log(instructorId,"Parsing policy","Skipped invalid line: " + line);
+                            logger.log(instructorId,"Parsing policy","Skipped invalid line: " + line,"Faculty");
                         }
                     }
                 }
@@ -318,10 +318,10 @@ public class GradingPolicyFrame extends JFrame {
                     }
                     updateTotalLabel(totalLabelEdit);
                     JOptionPane.showMessageDialog(this, "Policy imported successfully!", "Import Complete", JOptionPane.INFORMATION_MESSAGE);
-                    logger.log(instructorId,"Import Policy" ,"Instructed updated policy for the course " + courseCode);
+                    logger.log(instructorId,"Import Policy" ,"Instructed updated policy for the course " + courseCode,"Faculty");
                 } else {
                     JOptionPane.showMessageDialog(this, "No valid data found in the CSV file.", "Import Error", JOptionPane.WARNING_MESSAGE);
-                    logger.log(instructorId,"Import Policy" , "Instructor tried importing data but failed to import");
+                    logger.log(instructorId,"Import Policy" , "Instructor tried importing data but failed to import","Faculty");
                 }
 
             } catch (IOException e) {
@@ -359,11 +359,11 @@ public class GradingPolicyFrame extends JFrame {
                 }
 
                 JOptionPane.showMessageDialog(this, "Policy exported successfully!", "Export Complete", JOptionPane.INFORMATION_MESSAGE);
-                logger.log(instructorId,"Export Policy" ,"Instructed exported policy for the course " + courseCode + "_grading_policy.csv successfully");
+                logger.log(instructorId,"Export Policy" ,"Instructed exported policy for the course " + courseCode + "_grading_policy.csv successfully","Faculty");
 
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(this, "Error writing file: " + e.getMessage(), "Export Error", JOptionPane.ERROR_MESSAGE);
-                logger.log(instructorId , "Export policy", "Instructor tried exporting data but failed to export");
+                logger.log(instructorId , "Export policy", "Instructor tried exporting data but failed to export","Faculty");
             }
         }
     }
@@ -391,12 +391,12 @@ public class GradingPolicyFrame extends JFrame {
             int percent = (Integer) percentSpinner.getValue();
             if (name.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
-                logger.log(instructorId,"Update Component" , "Instructor tried updating data but failed to update");
+                logger.log(instructorId,"Update Component" , "Instructor tried updating data but failed to update","Faculty");
                 return;
             }
             editListModel.addElement(new GradingComponent(name, percent));
             updateTotalLabel(totalLabelEdit);
-            logger.log(instructorId,"Update Component" , "Instructor updated policy for the course " + courseCode);
+            logger.log(instructorId,"Update Component" , "Instructor updated policy for the course " + courseCode,"Faculty");
         }
     }
 
@@ -454,7 +454,7 @@ public class GradingPolicyFrame extends JFrame {
         if (confirm == JOptionPane.YES_OPTION) {
             editListModel.removeElement(selected);
             updateTotalLabel(totalLabelEdit);
-            logger.log(instructorId,"Update Component" , "Instructor removed policy for the course " + courseCode);
+            logger.log(instructorId,"Update Component" , "Instructor removed policy for the course " + courseCode,"Faculty");
         }
     }
 
@@ -464,7 +464,7 @@ public class GradingPolicyFrame extends JFrame {
             JOptionPane.showMessageDialog(
                     this, "Total percentage must be 100%. Current total is " + total + "%.", "Save Error", JOptionPane.ERROR_MESSAGE
             );
-            logger.log(instructorId,"Policy Saving" , "Instructor saving policy for the course " + courseCode);
+            logger.log(instructorId,"Policy Saving" , "Instructor saving policy for the course " + courseCode,"Faculty");
             return;
         }
 
@@ -480,10 +480,10 @@ public class GradingPolicyFrame extends JFrame {
             loadDataIntoViewList();
             cardLayout.show(mainCardPanel, "VIEW");
             JOptionPane.showMessageDialog(this, "Policy saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            logger.log(instructorId,"Policy Saved" , "Instructor saving policy for the course " + courseCode);
+            logger.log(instructorId,"Policy Saved" , "Instructor saving policy for the course " + courseCode,"Faculty");
         } else {
             JOptionPane.showMessageDialog(this, "Failed to save policy to database.", "Database Error", JOptionPane.ERROR_MESSAGE);
-            logger.log(instructorId,"Policy Saving" , "Instructor saving policy for the course " + courseCode + ". Failing to save policy.");
+            logger.log(instructorId,"Policy Saving" , "Instructor saving policy for the course " + courseCode + ". Failing to save policy.","Faculty");
         }
     }
 

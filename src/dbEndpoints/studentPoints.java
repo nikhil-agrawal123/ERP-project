@@ -138,7 +138,7 @@ public class studentPoints {
                 LocalDate endD = LocalDate.parse(end);
                 LocalDate today = LocalDate.now();
 
-                if (today.isAfter(startD) || today.isBefore(endD)) {
+                if (today.isBefore(startD) || today.isAfter(endD)) {
                     System.out.println("Registration Blocked: Outside window (" + start + " to " + end + ")");
                     return false;
                 }

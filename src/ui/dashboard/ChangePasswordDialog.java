@@ -135,7 +135,7 @@ public class ChangePasswordDialog extends JDialog {
                     "All fields are required.",
                     "Validation Error",
                     JOptionPane.ERROR_MESSAGE);
-            logger.log(username,"Password Reset" ,"Student Tried resetting password");
+            logger.log(username,"Password Reset" ,"Student Tried resetting password","Admin");
             return;
         }
 
@@ -145,7 +145,7 @@ public class ChangePasswordDialog extends JDialog {
                     "New passwords do not match.",
                     "Validation Error",
                     JOptionPane.ERROR_MESSAGE);
-            logger.log(username,"Password Reset" ,"Student Tried resetting password but failed");
+            logger.log(username,"Password Reset" ,"Student Tried resetting password but failed","Admin");
 
             return;
         }
@@ -156,7 +156,7 @@ public class ChangePasswordDialog extends JDialog {
                     "Incorrect current password.",
                     "Authentication Error",
                     JOptionPane.ERROR_MESSAGE);
-            logger.log(username,"Password Reset" ,"Student Tried resetting - Current Password Error");
+            logger.log(username,"Password Reset" ,"Student Tried resetting - Current Password Error","Admin");
 
             return;
         }
@@ -168,14 +168,14 @@ public class ChangePasswordDialog extends JDialog {
                     "Success",
                     JOptionPane.INFORMATION_MESSAGE);
             dispose();
-            logger.log(username,"Password Reset" ,"Student Tried resetting successfully");
+            logger.log(username,"Password Reset" ,"Student Tried resetting successfully","Admin");
 
         } else {
             JOptionPane.showMessageDialog(this,
                     "Failed to update password. A database error occurred.",
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
-            logger.log(username,"Password Reset" ,"Student Tried resetting password but failed");
+            logger.log(username,"Password Reset" ,"Student Tried resetting password but failed","Admin");
 
         }
     }

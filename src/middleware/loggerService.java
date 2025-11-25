@@ -15,8 +15,8 @@ public class loggerService {
     /**
      * Logs a specific event.
      */
-    public void log(String userId, String action, String details) {
-        loggerRepository.logAction(userId, action, details);
+    public void log(String userId, String action, String details, String userType) {
+        loggerRepository.logAction(userId, action, details, userType);
     }
 
     /**

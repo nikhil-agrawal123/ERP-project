@@ -265,7 +265,7 @@ public class AddUser extends JPanel {
         submitButton.addActionListener(e -> {
             if (nameField.getText().isEmpty() || idField.getText().isEmpty() || studentIdField.getText().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Name, Roll Number, and User ID are required.", "Error", JOptionPane.ERROR_MESSAGE);
-                loggerService.log("Admin", "Add Student", "Admin Tried adding a student but failed");
+                loggerService.log("Admin", "Add Student", "Admin Tried adding a student but failed","Admin");
                 return;
             }
 
@@ -289,18 +289,18 @@ public class AddUser extends JPanel {
 
             if (success) {
                 JOptionPane.showMessageDialog(this, "Student added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                loggerService.log("Admin", "Add Student", "Admin Tried adding a student- successfully");
+                loggerService.log("Admin", "Add Student", "Admin Tried adding a student- successfully","Admin");
                 // Reset fields
                 nameField.setText("");
                 idField.setText("");
                 emailField.setText("");
                 studentIdField.setText("");
                 progDropdown.setSelectedIndex(0);
-                loggerService.log("Admin", "New Student" , "New user has been added");
+                loggerService.log("Admin", "New Student" , "New user has been added","Admin");
 
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to add student. User ID or Roll No might be duplicate.", "Error", JOptionPane.ERROR_MESSAGE);
-                loggerService.log("Admin", "New Student" , "New user creation failed");
+                loggerService.log("Admin", "New Student" , "New user creation failed","Admin");
             }
         });
 
@@ -409,7 +409,7 @@ public class AddUser extends JPanel {
 
             if (success) {
                 JOptionPane.showMessageDialog(this, "Faculty added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                loggerService.log("Admin", "Add Faculty", "Admin Tried adding a instructor successfully");
+                loggerService.log("Admin", "Add Faculty", "Admin Tried adding a instructor successfully","Admin");
                 nameField.setText("");
                 instIdField.setText("");
                 userIdField.setText("");
@@ -417,7 +417,7 @@ public class AddUser extends JPanel {
                 deptDropdown.setSelectedIndex(0);
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to add Faculty. ID might be duplicate.", "Error", JOptionPane.ERROR_MESSAGE);
-                loggerService.log("Admin" ,"Failed to add Faculty", "Failed to add Faculty");
+                loggerService.log("Admin" ,"Failed to add Faculty", "Failed to add Faculty","Admin");
             }
         });
 

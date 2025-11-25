@@ -254,7 +254,7 @@ public class StudentLoginFrame extends JFrame {
                     "Username and password cannot be empty.",
                     "Login Error",
                     JOptionPane.ERROR_MESSAGE);
-            logger.log(username,"Login Attempt" ,"User attempted with invalid credentials");
+            logger.log(username,"Login Attempt" ,"User attempted with invalid credentials","Student");
             return;
         }
 
@@ -263,12 +263,12 @@ public class StudentLoginFrame extends JFrame {
             StudentDashboard dashboard = new StudentDashboard(rollNumber, username);
             dashboard.setVisible(true);
             dispose();
-            logger.log(username,"Login Attempt" ,"User logged in");
+            logger.log(username,"Login Attempt" ,"User logged in","Student");
 
         } else {
             JOptionPane.showMessageDialog(this, "Incorrect username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
             numTry -= 1;
-            logger.log(username,"Login Attempt" ,"User attempted with invalid credentials");
+            logger.log(username,"Login Attempt" ,"User attempted with invalid credentials","Student");
         }
     }
 
@@ -282,7 +282,7 @@ public class StudentLoginFrame extends JFrame {
                 "Too many failed attempts. Account locked for 30 seconds.",
                 "Auth Error",
                 JOptionPane.ERROR_MESSAGE);
-        logger.log("Student","Login Attempt" ,"User attempted with invalid credentials locked login attempt");
+        logger.log("Student","Login Attempt" ,"User attempted with invalid credentials locked login attempt","Student");
 
 
         Timer lockoutTimer = new Timer(30000, e -> {
