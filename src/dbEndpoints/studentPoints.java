@@ -14,51 +14,6 @@ public class studentPoints {
         this.connector = new Connector();
     }
 
-    public List<StudentRegisteredCourse> findCoursesByStudent(String username) throws SQLException {
-        List<StudentRegisteredCourse> allCourses = new ArrayList<>();
-
-        String sql = """
-            SELECT
-                e.semester,
-                e.course_code,
-                e.course_name,
-                e.course_credits,
-                e.gradePoint,
-                c.offeredBy
-            FROM
-                users.enrollments e
-            JOIN
-                users.courses c ON e.course_code = c.course_code
-            WHERE
-                e.student_id = ?
-            ORDER BY
-                e.semester, e.course_name
-        """;
-
-        try (Connection connection = connector.connect();
-             PreparedStatement pstmt = connection.prepareStatement(sql)) {
-
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                // Create the data object from the query results
-                StudentRegisteredCourse course = new StudentRegisteredCourse(
-                        rs.getString("course_code"),
-                        rs.getString("course_name"),
-                        rs.getInt("course_credits"),
-                        rs.getString("offeredBy"),
-                        rs.getDouble("gradePoint"),
-                        rs.getInt("semester")
-
-                );
-                allCourses.add(course);
-            }
-        }
-
-        return allCourses;
-    }
-
     public List<StudentCgCredits> getCgCreditsByStudent(String username) throws SQLException {
         List<StudentCgCredits> allCgCredits = new ArrayList<>();
         String sql = "SELECT g.score, c.credits " +
@@ -300,6 +255,84 @@ public class studentPoints {
             }
         }
         return program;
+    }
+
+    public List<StudentRegisteredCourse> findCoursesByStudent(String username) throws SQLException {
+        List<StudentRegisteredCourse> allCourses = new ArrayList<>();
+        String sql = """
+            SELECT
+                e.section_id,
+                e.semester,
+                e.course_code,
+                e.course_name,
+                e.course_credits,
+                e.gradePoint,
+                e.grade,
+                c.course_title,
+                c.offeredBy
+            FROM
+                users.enrollments e
+            JOIN users.courses c ON e.course_code = c.course_code
+            JOIN users.sections s ON e.section_id = s.section_id
+            WHERE
+                e.student_id = ?
+            ORDER BY
+                e.semester DESC, e.course_name
+        """;
+
+        try (Connection connection = connector.connect();
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                // Handle potential string vs int semester issue gracefully or assume Int as per DB schema
+                int semesterInt = 0;
+                try { semesterInt = rs.getInt("semester"); } catch(Exception e) {}
+
+                StudentRegisteredCourse course = new StudentRegisteredCourse(
+                        rs.getInt("section_id"),
+                        semesterInt,
+                        rs.getString("course_code"),
+                        rs.getString("course_name"),
+                        rs.getInt("course_credits"),
+                        rs.getString("offeredBy"),
+                        rs.getDouble("gradePoint"),
+                        rs.getString("grade") // Fetch grade letter (e.g. 'X')
+                );
+                allCourses.add(course);
+            }
+        }
+        return allCourses;
+    }
+
+    // --- NEW DROP METHODS ---
+
+    public boolean hardDropCourse(String studentId, int sectionId,String courseCode) throws SQLException {
+        String sql = "DELETE FROM users.enrollments WHERE student_id = ? AND section_id = ? AND course_code = ?";
+        try (Connection conn = connector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, studentId);
+            pstmt.setInt(2, sectionId);
+            pstmt.setString(3, courseCode);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean lateDropCourse(String studentId, int sectionId) {
+        // Mark grade as 'X' and maybe completion as false (or true depending on logic)
+        String sql = "UPDATE users.enrollments SET grade = 'X', gradePoint = 0.0 WHERE student_id = ? AND section_id = ?";
+        try (Connection conn = connector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, studentId);
+            pstmt.setInt(2, sectionId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
 

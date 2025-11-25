@@ -1,43 +1,32 @@
 package dbClasses;
 
 public class StudentRegisteredCourse {
-    private String course_code;
-    private String course_name;
-    private int course_credits;
-    private String offeredBY;
+    private int sectionId; // --- NEW ---
+    private String courseCode;
+    private String courseName;
+    private int courseCredits;
+    private String offeredBy;
     private double gradePoint;
+    private String gradeLetter; // --- NEW: Stores 'A', 'B', 'X' ---
     private int semester;
 
-    public StudentRegisteredCourse(String course_code, String course_name, int course_credits, String offeredBY, double gradePoint, int semester) {
-        this.course_code = course_code;
-        this.course_name = course_name;
-        this.course_credits = course_credits;
-        this.offeredBY = offeredBY;
+    public StudentRegisteredCourse(int sectionId, int semester, String courseCode, String courseName, int courseCredits, String offeredBy, double gradePoint, String gradeLetter) {
+        this.sectionId = sectionId;
+        this.semester = semester;
+        this.courseCode = courseCode;
+        this.courseName = courseName;
+        this.courseCredits = courseCredits;
+        this.offeredBy = offeredBy;
         this.gradePoint = gradePoint;
-        this.semester = semester;
-    }
-    public String getCourseCode() {
-        return course_code;
-    }
-    public String getCourseName() {
-        return course_name;
-    }
-    public int getCourseCredits() {
-        return course_credits;
-    }
-    public String getOfferedBy() {
-        return offeredBY;
-    }
-    public double getGradePoint() {
-        return gradePoint;
+        this.gradeLetter = gradeLetter;
     }
 
-    public void setSemester(int semester) {
-        this.semester = semester;
-    }
-
-    public int getSemester() {
-        return semester;
-    }
-
+    public int getSectionId() { return sectionId; }
+    public String getCourseCode() { return courseCode; }
+    public String getCourseName() { return courseName; }
+    public int getCourseCredits() { return courseCredits; }
+    public String getOfferedBy() { return offeredBy; }
+    public double getGradePoint() { return gradePoint; }
+    public String getGradeLetter() { return gradeLetter; }
+    public int getSemester() { return semester; }
 }

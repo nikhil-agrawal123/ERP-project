@@ -2,6 +2,7 @@ package middleware;
 import dbClasses.StudentCgCredits;
 import dbEndpoints.studentPoints;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.*;
 import dbClasses.*;
 
@@ -93,5 +94,36 @@ public class studentService {
 
     public Map<String, String> getRegistrationSchedule() {
         return systemSettings.getRegistrationDates();
+    }
+
+    public String dropCourse(String studentId, int sectionId,String courseCode) throws SQLException {
+        // 1. Fetch Dates
+        Map<String, String> dates = systemSettings.getAllDates();
+        String dropStr = dates.get("drop_deadline");
+        String lateDropStr = dates.get("late_drop_deadline");
+
+        if (dropStr == null || lateDropStr == null) {
+            return "Error: Drop deadlines not set by Admin.";
+        }
+
+        LocalDate dropDeadline = LocalDate.parse(dropStr);
+        LocalDate lateDropDeadline = LocalDate.parse(lateDropStr);
+        LocalDate today = LocalDate.now();
+
+        // 2. Check Logic
+        if (today.isEqual(dropDeadline) || today.isBefore(dropDeadline)) {
+            // CASE 1: Standard Drop (Remove Record)
+            boolean success = student.hardDropCourse(studentId, sectionId,courseCode);
+            return success ? "Course dropped successfully (Removed from record)." : "Error dropping course.";
+
+        } else if (today.isEqual(lateDropDeadline) || today.isBefore(lateDropDeadline)) {
+            // CASE 2: Late Drop (Mark 'X')
+            boolean success = student.lateDropCourse(studentId, sectionId);
+            return success ? "Course late-dropped. Grade marked as 'X'." : "Error processing late drop.";
+
+        } else {
+            // CASE 3: Deadline Passed
+            return "Drop failed: The deadline for dropping courses has passed.";
+        }
     }
 }

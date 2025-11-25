@@ -102,4 +102,42 @@ public class SystemSettings {
         }
         return dates;
     }
+
+    public boolean updateDropDeadlines(String dropDate, String lateDropDate) {
+        return updateSettingsBatch(Map.of("drop_deadline", dropDate, "late_drop_deadline", lateDropDate));
+    }
+
+    public Map<String, String> getAllDates() {
+        Map<String, String> dates = new HashMap<>();
+        String sql = "SELECT setting_key, setting_value FROM users.system_settings WHERE setting_key IN ('reg_start', 'reg_end', 'drop_deadline', 'late_drop_deadline')";
+
+        try (Connection conn = dbConnector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                dates.put(rs.getString("setting_key"), rs.getString("setting_value"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return dates;
+    }
+
+    // Helper for batch updates
+    private boolean updateSettingsBatch(Map<String, String> settings) {
+        String sql = "INSERT INTO users.system_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)";
+        try (Connection conn = dbConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (Map.Entry<String, String> entry : settings.entrySet()) {
+                pstmt.setString(1, entry.getKey());
+                pstmt.setString(2, entry.getValue());
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

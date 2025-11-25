@@ -2,21 +2,23 @@ package ui.StudentFrame;
 
 import dbClasses.StudentRegisteredCourse;
 import middleware.studentService;
-import middleware.loggerService;
 import ui.components.*;
 import ui.service.PdfExportService;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 import java.io.File;
 
 public class StudentCoursesPanel extends JPanel {
@@ -25,7 +27,7 @@ public class StudentCoursesPanel extends JPanel {
     private studentService enrollmentService;
     private String username;
 
-    // --- UI Color Palette (Passed from StudentDashboard) ---
+    // --- UI Color Palette ---
     private Color bgColor;
     private Color sideMenuColor;
     private Color mainPanelColor;
@@ -37,11 +39,15 @@ public class StudentCoursesPanel extends JPanel {
     private Color textColor;
     private Color textSecondaryColor;
 
+    // --- Components ---
     private HeaderButton headerButton;
-
     private PdfExportService pdfExportService;
-    private loggerService loggerService;
     private Map<Integer, List<StudentRegisteredCourse>> semesterData;
+
+    // --- Layout Components (Promoted to Fields for Refresh) ---
+    private RoundedPanel tabBarContainer;
+    private JPanel semesterCardPanel;
+    private CardLayout semesterCardLayout;
 
     public StudentCoursesPanel(studentService enrollmentService, String username,
                                Color bgColor, Color sideMenuColor, Color mainPanelColor, Color cardColor,
@@ -61,24 +67,24 @@ public class StudentCoursesPanel extends JPanel {
         this.buttonColorGlow = buttonColorGlow;
         this.textColor = textColor;
         this.textSecondaryColor = textSecondaryColor;
-        this.loggerService = new loggerService();
 
-        // --- Initialize the external HeaderButton component ---
+        // --- Initialize Services & Helpers ---
         this.headerButton = new HeaderButton();
-
         this.pdfExportService = new PdfExportService();
-        this.semesterData = enrollmentService.getSemesterData(username);
+
+        // Initial Fetch
+        // this.semesterData = enrollmentService.getSemesterData(username); // Moved to refreshPanel
 
         // --- Configure this JPanel ---
-        setLayout(new BorderLayout(0, 15)); // 15px v-gap
+        setLayout(new BorderLayout(0, 15));
         setBackground(mainPanelColor);
-        setBorder(BorderFactory.createEmptyBorder(20, 40, 40, 40)); // Added more horizontal padding
+        setBorder(BorderFactory.createEmptyBorder(20, 40, 40, 40));
 
-        // --- 1. Top Header Container (Holds Title & Button) ---
+        // --- 1. Top Header Container ---
         JPanel topHeaderContainer = new JPanel(new BorderLayout());
         topHeaderContainer.setOpaque(false);
 
-        // 1a. Title and Subtitle Panel (Left Side)
+        // 1a. Title and Subtitle
         JPanel coursesTitlePanel = new JPanel();
         coursesTitlePanel.setLayout(new BoxLayout(coursesTitlePanel, BoxLayout.Y_AXIS));
         coursesTitlePanel.setOpaque(false);
@@ -97,61 +103,87 @@ public class StudentCoursesPanel extends JPanel {
         coursesTitlePanel.add(Box.createRigidArea(new Dimension(0, 5)));
         coursesTitlePanel.add(pageSubtitle);
 
-        // Add title to the WEST (Left)
         topHeaderContainer.add(coursesTitlePanel, BorderLayout.CENTER);
 
-        // 1b. Export Button (Right Side) - Using External Class
+        // 1b. Export Button
         RoundedButton exportPdf = headerButton.createHeaderButton("Export to PDF");
         exportPdf.addActionListener(e -> handleExportPdf());
 
-        JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 10)); // Align Right with some padding
+        JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 10));
         buttonWrapper.setOpaque(false);
         buttonWrapper.add(exportPdf);
 
-        // Add button to the EAST (Right)
         topHeaderContainer.add(buttonWrapper, BorderLayout.EAST);
 
-        // Add the complete header container to the main panel
         add(topHeaderContainer, BorderLayout.NORTH);
 
-        // 2. Main Content Area (Tabs + Table Cards)
-        JPanel mainCoursesContentPanel = new JPanel(new BorderLayout(0, 15)); // 15px gap between tabs and table
+        // --- 2. Main Content Area ---
+        JPanel mainCoursesContentPanel = new JPanel(new BorderLayout(0, 15));
         mainCoursesContentPanel.setOpaque(false);
         add(mainCoursesContentPanel, BorderLayout.CENTER);
 
-        // 3. Tab Bar Container
-        RoundedPanel tabBarContainer = new RoundedPanel(8, cardColor, cardColor, 0);
-        tabBarContainer.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
-        tabBarContainer.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5)); // Padding inside the tab bar
+        // --- 3. Tab Bar Container ---
+        this.tabBarContainer = new RoundedPanel(8, cardColor, cardColor, 0);
+        this.tabBarContainer.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        this.tabBarContainer.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         mainCoursesContentPanel.add(tabBarContainer, BorderLayout.NORTH);
 
-        // 4. Semester Card Panel (for tables)
-        CardLayout semesterCardLayout = new CardLayout();
-        JPanel semesterCardPanel = new JPanel(semesterCardLayout);
-        semesterCardPanel.setOpaque(false);
+        // --- 4. Semester Card Panel ---
+        this.semesterCardLayout = new CardLayout();
+        this.semesterCardPanel = new JPanel(semesterCardLayout);
+        this.semesterCardPanel.setOpaque(false);
         mainCoursesContentPanel.add(semesterCardPanel, BorderLayout.CENTER);
 
+        // Load Data and Build UI
+        refreshPanel();
+    }
+
+    /**
+     * Fetches fresh data from the database and rebuilds the tabs and tables.
+     */
+    private void refreshPanel() {
+        // 1. Clear existing UI components
+        tabBarContainer.removeAll();
+        semesterCardPanel.removeAll();
+
+        // 2. Fetch fresh data
+        this.semesterData = enrollmentService.getSemesterData(username);
+
         List<TabButton> semesterTabButtons = new ArrayList<>();
-        // Map<Integer, List<StudentRegisteredCourse>> semesterData is already fetched in constructor
-        String[] columnNames = {"Course Code", "Course Name", "Credits", "Offered By", "Grade Point"};
         String firstAvailableSem = "";
 
-        for (int i = 1; i < 9; i++) {
-            if (semesterData.containsKey(i)) {
-                String tabName = "Sem " + i;
+        // --- Dynamic Tab Generation ---
+        List<Integer> availableSemesters = new ArrayList<>(semesterData.keySet());
+        Collections.sort(availableSemesters);
+
+        if (availableSemesters.isEmpty()) {
+            JLabel noDataLabel = new JLabel("No registered courses found.", SwingConstants.CENTER);
+            noDataLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+            noDataLabel.setForeground(textSecondaryColor);
+            semesterCardPanel.add(noDataLabel, "EMPTY");
+            semesterCardLayout.show(semesterCardPanel, "EMPTY");
+        } else {
+            for (Integer i : availableSemesters) {
+                String tabName;
+                if (i == 0) {
+                    tabName = "Current / General";
+                } else {
+                    tabName = "Sem " + i;
+                }
+
                 if (firstAvailableSem.isEmpty()) {
                     firstAvailableSem = tabName;
                 }
 
-                // --- Create the NEW Tab Button ---
+                // Create Tab Button
                 TabButton tabButton = new TabButton(tabName);
                 semesterTabButtons.add(tabButton);
                 tabBarContainer.add(tabButton);
 
-                // --- Create the Table Content Card ---
+                // Prepare Data
                 List<StudentRegisteredCourse> coursesForThisSem = semesterData.get(i);
-                loggerService.log(username,"Courses accessed" , "Courses for the user were fetched","Student");
-                Object[][] data = new Object[coursesForThisSem.size()][5];
+                String[] columnNames = {"Course Code", "Course Name", "Credits", "Offered By", "Grade Point", "Action"};
+                Object[][] data = new Object[coursesForThisSem.size()][6];
 
                 for (int j = 0; j < coursesForThisSem.size(); j++) {
                     StudentRegisteredCourse course = coursesForThisSem.get(j);
@@ -159,32 +191,60 @@ public class StudentCoursesPanel extends JPanel {
                     data[j][1] = course.getCourseName();
                     data[j][2] = course.getCourseCredits();
                     data[j][3] = course.getOfferedBy();
-                    data[j][4] = (course.getGradePoint() == 0.0) ? "In Progress" : course.getGradePoint();
+
+                    // Determine Grade Display
+                    String gradeDisplay;
+                    if (course.getGradeLetter() != null && course.getGradeLetter().equals("X")) {
+                        gradeDisplay = "Withdrawn (X)";
+                    } else if (course.getGradePoint() == 0.0) {
+                        gradeDisplay = "In Progress";
+                    } else {
+                        gradeDisplay = String.valueOf(course.getGradePoint());
+                    }
+                    data[j][4] = gradeDisplay;
+                    data[j][5] = "Drop";
                 }
 
+                // Create Table
                 JTable semTable = createStyledTable(data, columnNames);
+
+                // Configure Button Column
+                semTable.getColumnModel().getColumn(5).setCellRenderer(new ButtonRenderer());
+                // Pass the UPDATED map to the editor
+                semTable.getColumnModel().getColumn(5).setCellEditor(new ButtonEditor(new JCheckBox(), semesterData, i));
+
+                // Width adjustments
+                semTable.getColumnModel().getColumn(0).setPreferredWidth(80);
+                semTable.getColumnModel().getColumn(1).setPreferredWidth(250);
+                semTable.getColumnModel().getColumn(5).setPreferredWidth(80);
+
                 JScrollPane scrollPane = createStyledTableScrollPane(semTable);
 
-                // --- Wrap ScrollPane in a RoundedPanel ---
-                RoundedPanel tableCard = new RoundedPanel(15, cardColor, cardColor, 0); // No border
+                RoundedPanel tableCard = new RoundedPanel(15, cardColor, cardColor, 0);
                 tableCard.setLayout(new BorderLayout());
                 tableCard.add(scrollPane, BorderLayout.CENTER);
 
                 semesterCardPanel.add(tableCard, tabName);
 
-                // --- Add ActionListener ---
+                // Tab Action
                 tabButton.addActionListener(e -> {
                     semesterCardLayout.show(semesterCardPanel, tabName);
                     setActiveSemesterTab(tabButton, semesterTabButtons);
                 });
             }
+
+            // Set default active tab
+            if (!semesterTabButtons.isEmpty()) {
+                setActiveSemesterTab(semesterTabButtons.get(0), semesterTabButtons);
+                semesterCardLayout.show(semesterCardPanel, firstAvailableSem);
+            }
         }
 
-        // 5. Set the default active tab
-        if (!semesterTabButtons.isEmpty()) {
-            setActiveSemesterTab(semesterTabButtons.get(0), semesterTabButtons);
-            semesterCardLayout.show(semesterCardPanel, firstAvailableSem);
-        }
+        // Refresh visuals
+        tabBarContainer.revalidate();
+        tabBarContainer.repaint();
+        semesterCardPanel.revalidate();
+        semesterCardPanel.repaint();
     }
 
     // --- Helper Methods ---
@@ -205,24 +265,13 @@ public class StudentCoursesPanel extends JPanel {
             boolean success = pdfExportService.exportStudentReport(this.semesterData, this.username, fileToSave);
 
             if (success) {
-                JOptionPane.showMessageDialog(this,
-                        "Report exported successfully to:\n" + fileToSave.getAbsolutePath(),
-                        "Export Successful",
-                        JOptionPane.INFORMATION_MESSAGE);
-                loggerService.log(username, "Pdf export service" , "Pdf was exported successfully","Student");
+                JOptionPane.showMessageDialog(this, "Report exported successfully!", "Export Successful", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(this,
-                        "Failed to export report. See console for errors.",
-                        "Export Failed",
-                        JOptionPane.ERROR_MESSAGE);
-                loggerService.log(username, "Pdf export service" , "Pdf was export failed","Student");
+                JOptionPane.showMessageDialog(this, "Failed to export report.", "Export Failed", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    /**
-     * Sets the active state for the custom semester tabs.
-     */
     private void setActiveSemesterTab(TabButton activeButton, List<TabButton> allTabs) {
         for (TabButton button : allTabs) {
             button.setActive(false);
@@ -234,6 +283,11 @@ public class StudentCoursesPanel extends JPanel {
         DefaultTableModel model = new DefaultTableModel(data, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
+                // Only editable if Action column AND Grade is 'In Progress'
+                if (column == 5) {
+                    String gradeStatus = (String) getValueAt(row, 4);
+                    return "In Progress".equals(gradeStatus);
+                }
                 return false;
             }
         };
@@ -241,21 +295,19 @@ public class StudentCoursesPanel extends JPanel {
         table.setBackground(cardColor);
         table.setForeground(textColor);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.setRowHeight(40); // Increased row height for more spacing
+        table.setRowHeight(45);
         table.setGridColor(borderColor);
         table.setFillsViewportHeight(true);
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(buttonColor.darker());
+        table.setSelectionBackground(cardColor);
         table.setSelectionForeground(textColor);
 
-        // --- NEW --- Use custom header renderer for left-alignment and padding
         table.getTableHeader().setDefaultRenderer(new LeftAlignedHeaderRenderer());
         table.getTableHeader().setReorderingAllowed(false);
-        table.getTableHeader().setPreferredSize(new Dimension(0, 50)); // Increased header height
+        table.getTableHeader().setPreferredSize(new Dimension(0, 50));
 
-        // --- NEW --- Use custom cell renderer for left-alignment and padding
         LeftAlignedCellRenderer cellRenderer = new LeftAlignedCellRenderer();
-        for (int i = 0; i < table.getColumnCount(); i++) {
+        for (int i = 0; i < table.getColumnCount() - 1; i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
         }
 
@@ -264,15 +316,13 @@ public class StudentCoursesPanel extends JPanel {
 
     private JScrollPane createStyledTableScrollPane(Component view) {
         JScrollPane scrollPane = new JScrollPane(view);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder()); // Remove default border
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(cardColor);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
-        // Make scroll pane seamless with card
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setBackground(cardColor);
 
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.getVerticalScrollBar().setUI(new StyledScrollBarUI());
         scrollPane.getHorizontalScrollBar().setUI(new StyledScrollBarUI());
 
@@ -280,6 +330,98 @@ public class StudentCoursesPanel extends JPanel {
     }
 
     // --- Inner Classes ---
+
+    class ButtonRenderer extends RoundedButton implements TableCellRenderer {
+        public ButtonRenderer() {
+            super("Drop", new Color(220, 80, 80), new Color(240, 100, 100), 8);
+            setFont(new Font("Segoe UI", Font.BOLD, 12));
+            setForeground(Color.WHITE);
+            setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            String gradeStatus = (String) table.getValueAt(row, 4);
+
+            if ("In Progress".equals(gradeStatus)) {
+                return this;
+            } else {
+                JLabel lbl = new JLabel("-");
+                lbl.setHorizontalAlignment(SwingConstants.CENTER);
+                lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                lbl.setForeground(textSecondaryColor);
+                lbl.setBackground(cardColor);
+                lbl.setOpaque(true);
+                return lbl;
+            }
+        }
+    }
+
+    class ButtonEditor extends DefaultCellEditor {
+        private RoundedButton button;
+        private int currentSemIndex;
+        private Map<Integer, List<StudentRegisteredCourse>> dataMap;
+        private int currentRow;
+        private boolean isPushed;
+
+        public ButtonEditor(JCheckBox checkBox, Map<Integer, List<StudentRegisteredCourse>> map, int semIndex) {
+            super(checkBox);
+            this.dataMap = map;
+            this.currentSemIndex = semIndex;
+
+            button = new RoundedButton("Drop", new Color(220, 80, 80), new Color(240, 100, 100), 8);
+            button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            button.setForeground(Color.WHITE);
+            button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+
+            button.addActionListener(e -> fireEditingStopped());
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            this.currentRow = row;
+            this.isPushed = true;
+            return button;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            if (isPushed) {
+                if (dataMap != null && dataMap.containsKey(currentSemIndex)) {
+                    List<StudentRegisteredCourse> courses = dataMap.get(currentSemIndex);
+                    if (currentRow >= 0 && currentRow < courses.size()) {
+                        StudentRegisteredCourse course = courses.get(currentRow);
+
+                        int confirm = JOptionPane.showConfirmDialog(button,
+                                "Are you sure you want to drop " + course.getCourseCode() + "?\n(Action depends on current deadline dates)",
+                                "Confirm Drop", JOptionPane.YES_NO_OPTION);
+
+                        if (confirm == JOptionPane.YES_OPTION) {
+                            String result = null;
+                            try {
+                                result = enrollmentService.dropCourse(username, course.getSectionId(),course.getCourseCode());
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                            JOptionPane.showMessageDialog(button, result);
+
+                            SwingUtilities.invokeLater(() -> refreshPanel());
+                        }
+                    }
+                }
+            }
+            isPushed = false;
+            return "Drop";
+        }
+
+        @Override
+        public boolean stopCellEditing() {
+            isPushed = false;
+            return super.stopCellEditing();
+        }
+    }
+
+    // --- Styling Inner Classes ---
 
     private class TabButton extends JButton {
         private boolean isActive = false;
@@ -294,25 +436,17 @@ public class StudentCoursesPanel extends JPanel {
             setFont(new Font("Segoe UI", Font.BOLD, 16));
             setCursor(new Cursor(Cursor.HAND_CURSOR));
             setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-
             setForeground(textSecondaryColor);
 
             addMouseListener(new MouseAdapter() {
-                @Override
                 public void mouseEntered(MouseEvent e) {
                     isHovered = true;
-                    if (!isActive) {
-                        setForeground(textColor);
-                    }
+                    if (!isActive) setForeground(textColor);
                     repaint();
                 }
-
-                @Override
                 public void mouseExited(MouseEvent e) {
                     isHovered = false;
-                    if (!isActive) {
-                        setForeground(textSecondaryColor);
-                    }
+                    if (!isActive) setForeground(textSecondaryColor);
                     repaint();
                 }
             });
@@ -339,7 +473,6 @@ public class StudentCoursesPanel extends JPanel {
                 g2.setColor(cardColor);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
             }
-
             super.paintComponent(g2);
             g2.dispose();
         }
@@ -353,8 +486,6 @@ public class StudentCoursesPanel extends JPanel {
             setFont(new Font("Segoe UI", Font.BOLD, 16));
             setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
         }
-
-        @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             setBackground(cardColor);
@@ -374,8 +505,6 @@ public class StudentCoursesPanel extends JPanel {
             setFont(new Font("Segoe UI", Font.PLAIN, 14));
             setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
         }
-
-        @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             if (isSelected) {
                 setBackground(buttonColor.darker());
@@ -389,96 +518,16 @@ public class StudentCoursesPanel extends JPanel {
         }
     }
 
-    private class RoundedPanel extends JPanel {
-        private int cornerRadius;
-        private Color backgroundColor;
-        private Color borderColor;
-        private int borderThickness;
-        private boolean useGradient = false;
-        private Color gradientStartColor;
-        private Color gradientEndColor;
-
-        public RoundedPanel(int radius, Color bgColor, Color borderColor, int borderThickness) {
-            super();
-            this.cornerRadius = radius;
-            this.backgroundColor = bgColor;
-            this.borderColor = borderColor;
-            this.borderThickness = borderThickness;
-            this.useGradient = false;
-            setOpaque(false);
-        }
-
-        public RoundedPanel(int radius, Color gradStart, Color gradEnd) {
-            super();
-            this.cornerRadius = radius;
-            this.gradientStartColor = gradStart;
-            this.gradientEndColor = gradEnd;
-            this.useGradient = true;
-            this.borderThickness = 0;
-            this.borderColor = gradStart;
-            this.backgroundColor = gradStart;
-            setOpaque(false);
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            if (useGradient) {
-                GradientPaint gp = new GradientPaint(
-                        0, getHeight(), gradientStartColor,
-                        getWidth(), 0, gradientEndColor
-                );
-                g2.setPaint(gp);
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
-
-            } else {
-                g2.setColor(backgroundColor);
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
-
-                if (borderThickness > 0) {
-                    g2.setColor(this.borderColor);
-                    g2.setStroke(new BasicStroke(this.borderThickness));
-                    float halfStroke = this.borderThickness / 2.0f;
-                    g2.draw(new RoundRectangle2D.Float(
-                            halfStroke,
-                            halfStroke,
-                            getWidth() - this.borderThickness,
-                            getHeight() - this.borderThickness,
-                            cornerRadius,
-                            cornerRadius
-                    ));
-                }
-            }
-            g2.dispose();
-        }
-    }
-
     private class StyledScrollBarUI extends BasicScrollBarUI {
-        @Override
-        protected void configureScrollBarColors() {
-            this.thumbColor = buttonColor;
-            this.trackColor = cardColor;
+        @Override protected void configureScrollBarColors() { this.thumbColor = buttonColor; this.trackColor = cardColor; }
+        @Override protected JButton createDecreaseButton(int orientation) { return createZeroButton(); }
+        @Override protected JButton createIncreaseButton(int orientation) { return createZeroButton(); }
+        private JButton createZeroButton() { JButton b = new JButton(); b.setPreferredSize(new Dimension(0,0)); return b; }
+        @Override protected void paintThumb(Graphics g, JComponent c, Rectangle r) {
+            g.setColor(thumbColor); ((Graphics2D)g).fill(new RoundRectangle2D.Float(r.x, r.y, r.width, r.height, 10, 10));
         }
-
-        @Override
-        protected JButton createDecreaseButton(int orientation) {
-            return createZeroButton();
-        }
-
-        @Override
-        protected JButton createIncreaseButton(int orientation) {
-            return createZeroButton();
-        }
-
-        private JButton createZeroButton() {
-            JButton jbutton = new JButton();
-            jbutton.setPreferredSize(new Dimension(0, 0));
-            jbutton.setMinimumSize(new Dimension(0, 0));
-            jbutton.setMaximumSize(new Dimension(0, 0));
-            return jbutton;
+        @Override protected void paintTrack(Graphics g, JComponent c, Rectangle r) {
+            g.setColor(trackColor); ((Graphics2D)g).fill(r);
         }
     }
 }
