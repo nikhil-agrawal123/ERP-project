@@ -1,12 +1,16 @@
 package middleware;
 
+import databaseConfig.Connector;
 import dbClasses.AddCourse;
 import dbClasses.AddFaculty;
 import dbClasses.NewStudent;
+import dbEndpoints.SystemSettings;
 import dbEndpoints.adminPoints;
 import dbEndpoints.AdminBackup;
+import dbEndpoints.studentPoints;
 
 import java.io.File;
+import java.sql.Connection;
 import java.sql.SQLException;
 import dbClasses.AddAdmin;
 
@@ -14,11 +18,15 @@ public class adminService {
     private final adminPoints adminPoints;
     private final AdminBackup adminBackup;
     private final loggerService loggerService;
+    private final SystemSettings systemSettings;
+    private final studentPoints studentService;
 
     public adminService() {
         this.adminPoints = new adminPoints();
         this.adminBackup = new AdminBackup();
         this.loggerService = new loggerService();
+        this.systemSettings = new SystemSettings();
+        this.studentService = new studentPoints();
     }
 
     public boolean addStudent(NewStudent newStudent) throws SQLException {
@@ -69,5 +77,44 @@ public class adminService {
             loggerService.log("CurrentAdmin", "ADD_COURSE_FAIL", "Failed to create: " + data.getCourseCode());
         }
         return success;
+    }
+
+    public boolean changeSystemSemester(String newSemester, int newYear) {
+        Connection conn = null;
+        try {
+            Connector dbConnector = new Connector();
+            conn = dbConnector.connect();
+            conn.setAutoCommit(false); // Start Transaction
+
+            // 1. Update System Settings
+            systemSettings.updateSystemSettings(newSemester, newYear, conn);
+
+            // 2. Logic: Increment Student Semesters?
+            // If it is NOT Summer, we promote students (e.g. Sem 1 -> Sem 2)
+            if (!"Summer".equalsIgnoreCase(newSemester)) {
+                studentService.incrementAllStudentSemesters(conn);
+                loggerService.log("CurrentAdmin", "SEM_CHANGE", "System moved to " + newSemester + " " + newYear + ". Students promoted.");
+            } else {
+                loggerService.log("CurrentAdmin", "SEM_CHANGE", "System moved to " + newSemester + " " + newYear + ". No promotion (Summer).");
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+            }
+        }
+    }
+
+    public String getCurrentSemesterLabel() {
+        return systemSettings.getCurrentSystemSemester();
     }
 }

@@ -114,9 +114,9 @@ CREATE TABLE IF NOT EXISTS `grades` (
 -- -----------------------------------------------------
 
 -- 0. Create user profiles first
-INSERT INTO `students` (`user_id`, `student_roll_no`, `full_name`, `program`, `enrollment_year`) VALUES
-                                                                                                     ('nikhil24380', '2024380', 'Nikhil Agrawal', 'Computer Science and Applied Mathematics', 2024),
-                                                                                                     ('rohan24390', '2024390', 'Rohan Verma', 'Mechanical Enginering', 2024)
+INSERT INTO `students` (`user_id`, `student_roll_no`, `full_name`, `program`, `enrollment_year`,`currentSem`) VALUES
+                                                                                                     ('nikhil24380', '2024380', 'Nikhil Agrawal', 'Computer Science and Applied Mathematics', 2024,3),
+                                                                                                     ('rohan24390', '2024390', 'Rohan Verma', 'Mechanical Enginering', 2024,3)
 ON DUPLICATE KEY UPDATE full_name=VALUES(full_name);
 
 INSERT INTO `instructors` (`user_id`, `instructor_id`, `full_name`, `department`, `email`) VALUES
@@ -262,9 +262,8 @@ CREATE TABLE `gradingPolicy` (
     PRIMARY KEY (`policy_id`)
 ) ENGINE = InnoDB;
 
-alter table gradingpolicy rename column
-
 CREATE TABLE IF NOT EXISTS `audit_logs` (
+
                                             `log_id` INT NOT NULL AUTO_INCREMENT,
                                             `user_id` VARCHAR(50) NOT NULL,      -- Who did it? (e.g., "admin01")
                                             `action_type` VARCHAR(50) NOT NULL,  -- What did they do? (e.g., "ADD_STUDENT")
@@ -295,3 +294,6 @@ CREATE TABLE IF NOT EXISTS `admins` (
 ) ENGINE = InnoDB;
 
 alter table users.admins add user_id VARCHAR(50) not null ;
+
+alter table students add column semester_name varchar(50) not null default "Monsoon";
+alter table students add column current_year int ;

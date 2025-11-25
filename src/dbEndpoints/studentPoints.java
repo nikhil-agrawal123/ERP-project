@@ -236,5 +236,15 @@ public class studentPoints {
         }
         return 0;
     }
+
+    public void incrementAllStudentSemesters(Connection conn) throws SQLException {
+        // Simply add 1 to the current_semester for every student
+        String sql = "UPDATE users.students SET currentSem = currentSem + 1";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            int rows = pstmt.executeUpdate();
+            System.out.println("Promoted " + rows + " students to next semester.");
+        }
+    }
 }
 

@@ -301,12 +301,21 @@ public class AdminDashboard extends JFrame {
             }
         });
 
+        JPanel newSemCard = createFunctionCard("Change Semester");
+        newSemCard.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                ChangeSemesterFrame frame = new ChangeSemesterFrame();
+                frame.setVisible(true);
+            }
+        });
+
         // Add cards to the new grid panel
         cardGridPanel.add(addUserCard);
         cardGridPanel.add(removeUsersCard);
         cardGridPanel.add(addCoursesCard);
         cardGridPanel.add(manageCoursesCard);
         cardGridPanel.add(maintenanceCard);
+        cardGridPanel.add(newSemCard);
 
         // Add the grid panel to the main panel, anchored to the top-left
         GridBagConstraints gbc = new GridBagConstraints();
