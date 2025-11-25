@@ -665,53 +665,77 @@ public class AddUser extends JPanel {
         field.setBackground(bgColor);
         field.setForeground(textColor);
         field.setCaretColor(buttonColor);
+
+        // --- KEY CHANGE: Increased internal padding (15) for a taller, more spacious look ---
         field.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(borderColor, 1),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+                BorderFactory.createEmptyBorder(12, 15, 12, 15)
         ));
+
         return field;
     }
 
     private void styleSpinner(JSpinner spinner) {
         spinner.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+
+        // Force a preferred height to match other fields
+        spinner.setPreferredSize(new Dimension(spinner.getPreferredSize().width, 50));
+        spinner.setBorder(BorderFactory.createLineBorder(borderColor, 1));
+
         JComponent editor = spinner.getEditor();
         if (editor instanceof JSpinner.DefaultEditor) {
             JTextField tf = ((JSpinner.DefaultEditor) editor).getTextField();
             tf.setBackground(bgColor);
             tf.setForeground(textColor);
             tf.setCaretColor(buttonColor);
+            // Center align the numbers
+            tf.setHorizontalAlignment(SwingConstants.CENTER);
         }
-        spinner.setBorder(BorderFactory.createLineBorder(borderColor, 1));
     }
 
     private JComboBox<String> createFormComboBox(String[] items) {
         JComboBox<String> comboBox = new JComboBox<>(items);
-        comboBox.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         comboBox.setForeground(textColor);
-        comboBox.setBackground(bgColor); // Darker bg
+        comboBox.setBackground(bgColor);
+
+        // --- KEY CHANGE: Set a fixed height (50px) for better visibility ---
+        comboBox.setPreferredSize(new Dimension(200, 50));
+
         comboBox.setBorder(BorderFactory.createLineBorder(borderColor, 1));
 
         comboBox.setUI(new BasicComboBoxUI() {
             @Override
             protected JButton createArrowButton() {
-                RoundedButton arrowButton = new RoundedButton("▼", buttonColor, buttonColorGlow, buttonColor.darker(), 8);
+                // Made arrow button slightly larger to match the new box height
+                RoundedButton arrowButton = new RoundedButton("▼", buttonColor, buttonColorGlow, buttonColor.darker(), 0);
                 arrowButton.setForeground(textColor);
-                arrowButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                arrowButton.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+                arrowButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                // Remove rounded corners on the arrow button so it fits flush right
+                arrowButton.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
                 return arrowButton;
             }
+
             @Override
             public void paintCurrentValue(Graphics g, Rectangle bounds, boolean hasFocus) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Background
                 g2.setColor(bgColor);
                 g2.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+                // Text
                 g2.setColor(textColor);
                 g2.setFont(new Font("Segoe UI", Font.PLAIN, 16));
                 String text = (String) comboBox.getSelectedItem();
+
+                // Center text vertically
                 if (text != null) {
                     FontMetrics fm = g2.getFontMetrics();
-                    g2.drawString(text, bounds.x + 10, bounds.y + fm.getAscent() + (bounds.height - fm.getHeight())/2);
+                    int x = bounds.x + 15; // Left padding
+                    int y = bounds.y + ((bounds.height - fm.getHeight()) / 2) + fm.getAscent();
+                    g2.drawString(text, x, y);
                 }
                 g2.dispose();
             }
