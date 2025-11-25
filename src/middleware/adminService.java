@@ -10,6 +10,8 @@ import dbEndpoints.AdminBackup;
 import dbEndpoints.studentPoints;
 
 import java.io.File;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.sql.Connection;
 import java.sql.SQLException;
 import dbClasses.AddAdmin;
@@ -91,8 +93,10 @@ public class adminService {
 
             // 2. Logic: Increment Student Semesters?
             // If it is NOT Summer, we promote students (e.g. Sem 1 -> Sem 2)
-            if (!"Summer".equalsIgnoreCase(newSemester)) {
-                studentService.incrementAllStudentSemesters(conn);
+            if (!"summer".equalsIgnoreCase(newSemester)) {
+                studentService.incrementAllStudentSemesters();
+                studentService.updateSemesterName(newSemester);
+                studentService.updateCurrentYear(newYear);
                 loggerService.log("CurrentAdmin", "SEM_CHANGE", "System moved to " + newSemester + " " + newYear + ". Students promoted.");
             } else {
                 loggerService.log("CurrentAdmin", "SEM_CHANGE", "System moved to " + newSemester + " " + newYear + ". No promotion (Summer).");
@@ -116,5 +120,24 @@ public class adminService {
 
     public String getCurrentSemesterLabel() {
         return systemSettings.getCurrentSystemSemester();
+    }
+
+    public boolean setRegistrationPeriod(Date startDate, Date endDate) {
+        if (startDate.after(endDate)) {
+            System.out.println("Error: Start date cannot be after End date.");
+            return false;
+        }
+
+        // Format to String (YYYY-MM-DD) for DB storage
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String startStr = sdf.format(startDate);
+        String endStr = sdf.format(endDate);
+
+        boolean success = systemSettings.updateRegistrationDates(startStr, endStr);
+
+        if (success) {
+            loggerService.log("CurrentAdmin", "REG_PERIOD_UPDATE", "Set to: " + startStr + " to " + endStr);
+        }
+        return success;
     }
 }

@@ -5,10 +5,14 @@ import java.sql.*;
 import java.util.*;
 import dbClasses.*;
 
+import dbEndpoints.SystemSettings;
+
 public class studentService {
     private studentPoints student;
+    private SystemSettings systemSettings;
 
     public studentService() {
+        this.systemSettings = new SystemSettings();
         this.student = new studentPoints();
     }
 
@@ -62,7 +66,12 @@ public class studentService {
     }
 
     public boolean RegisterCourse(List<studentAvailableCourses> courses, String username) {
-           return student.UpdateRegisteredCourses(courses, username);
+            for(studentAvailableCourses course : courses){
+                if(!CheckRegister(username,course.getCourse_code())){
+                    return false;
+                }
+            }
+            return student.UpdateRegisteredCourses(courses, username);
     }
 
     public boolean CheckRegister(String username, String courseCode) {
@@ -76,5 +85,13 @@ public class studentService {
             e.printStackTrace();
             return ""; // Return empty string if something goes wrong
         }
+    }
+
+    public String getCurrentSystemSemester() {
+        return systemSettings.getCurrentSystemSemester();
+    }
+
+    public Map<String, String> getRegistrationSchedule() {
+        return systemSettings.getRegistrationDates();
     }
 }

@@ -5,6 +5,8 @@ import dbClasses.*;
 import java.util.*;
 import java.sql.*;
 
+import java.time.LocalDate;
+
 public class studentPoints {
     private final Connector connector;
 
@@ -81,9 +83,6 @@ public class studentPoints {
     public List<studentAvailableCourses> AllCourses(String sem) throws  SQLException {
         List<studentAvailableCourses> allCourses = new ArrayList<>();
 
-        // --- THIS IS THE CORRECTED QUERY ---
-        // It now JOINS sections, courses, and instructors to get all the data
-        // and filters by the semester in the 'sections' table (s.semester).
         String sql = """
             SELECT 
                 s.semester,
@@ -128,6 +127,25 @@ public class studentPoints {
     }
 
     public boolean UpdateRegisteredCourses(List<studentAvailableCourses> selectedCourses, String studentId) {
+
+        Map<String,String> system = new SystemSettings().getRegistrationDates();
+        String start = system.get("reg_start");
+        String end = system.get("reg_end");
+
+        if (start != null && end != null) {
+            try {
+                LocalDate startD = LocalDate.parse(start); // Format yyyy-MM-dd
+                LocalDate endD = LocalDate.parse(end);
+                LocalDate today = LocalDate.now();
+
+                if (today.isAfter(startD) || today.isBefore(endD)) {
+                    System.out.println("Registration Blocked: Outside window (" + start + " to " + end + ")");
+                    return false;
+                }
+            } catch (Exception e) {
+                System.err.println("Error parsing registration dates: " + e.getMessage());
+            }
+        }
 
         String studentName = "";
         int sem = 0;
@@ -237,13 +255,32 @@ public class studentPoints {
         return 0;
     }
 
-    public void incrementAllStudentSemesters(Connection conn) throws SQLException {
+    public void incrementAllStudentSemesters() throws SQLException {
         // Simply add 1 to the current_semester for every student
         String sql = "UPDATE users.students SET currentSem = currentSem + 1";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connector.connect().prepareStatement(sql)) {
             int rows = pstmt.executeUpdate();
             System.out.println("Promoted " + rows + " students to next semester.");
+        }
+    }
+
+    public void updateSemesterName(String semName) throws SQLException {
+        String sql = "UPDATE users.students SET semester_name = ?";
+
+        try(PreparedStatement pstm = connector.connect().prepareStatement(sql)){
+            pstm.setString(1, semName);
+            int rows = pstm.executeUpdate();
+            System.out.println("Promoted " + rows + " students to next semester.");
+        }
+    }
+
+    public void updateCurrentYear(int currentYear) throws SQLException {
+        String sql = "UPDATE users.students SET current_year = ?";
+        try(PreparedStatement pstm = connector.connect().prepareStatement(sql)){
+            pstm.setInt(1, currentYear);
+            int rows = pstm.executeUpdate();
+            System.out.println("Promoted " + rows + " students to next year.");
         }
     }
 

@@ -2,7 +2,7 @@ package ui.AdminFrame;
 
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
-import middleware.adminService; // Import Service
+import middleware.adminService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,6 +12,7 @@ import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.plaf.basic.ComboPopup;
 import java.awt.*;
 import java.util.Calendar;
+import java.util.Date;
 
 public class ChangeSemesterFrame extends JFrame {
 
@@ -33,28 +34,37 @@ public class ChangeSemesterFrame extends JFrame {
     private JLabel infoLabel;
     private RoundedPanel infoPanel;
 
-    private adminService adminService; // Service
+    // --- New Components for Dates ---
+    private JSpinner startDateSpinner;
+    private JSpinner endDateSpinner;
+
+    private adminService adminService;
 
     public ChangeSemesterFrame() {
-        super("Change System Semester");
-        this.adminService = new adminService(); // Init
+        super("Academic Settings");
+        this.adminService = new adminService();
 
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(600, 650);
+        setSize(900, 850);
         setLocationRelativeTo(null);
         getContentPane().setBackground(bgColor);
         setLayout(new BorderLayout());
 
         add(createHeader(), BorderLayout.NORTH);
-        add(createMainContent(), BorderLayout.CENTER);
+
+        // Main Content inside a scroll pane to handle height
+        JScrollPane scrollPane = new JScrollPane(createMainContent());
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getVerticalScrollBar().setUI(new StyledScrollBarUI());
+        add(scrollPane, BorderLayout.CENTER);
     }
 
-    // ... (createHeader is unchanged) ...
     private JPanel createHeader() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(bgColor);
         header.setBorder(new EmptyBorder(25, 30, 10, 30));
-        JLabel title = new JLabel("Change Semester");
+        JLabel title = new JLabel("Academic Settings");
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
         title.setForeground(textColor);
         RoundedButton backBtn = new RoundedButton("Close", Buttonback, Buttonhover, borderColor.darker(), borderColor, 10);
@@ -72,7 +82,7 @@ public class ChangeSemesterFrame extends JFrame {
         mainPanel.setBackground(bgColor);
         mainPanel.setBorder(new EmptyBorder(20, 40, 40, 40));
 
-        // --- Current State Card ---
+        // --- SECTION 1: CURRENT STATUS ---
         RoundedPanel currentStatusCard = new RoundedPanel(15, cardColor, borderColor, 1);
         currentStatusCard.setLayout(new BorderLayout());
         currentStatusCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
@@ -82,7 +92,6 @@ public class ChangeSemesterFrame extends JFrame {
         lblCurrent.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblCurrent.setForeground(textSecondaryColor);
 
-        // --- FETCH LIVE DATA ---
         String currentSemText = adminService.getCurrentSemesterLabel();
         JLabel lblVal = new JLabel(currentSemText);
         lblVal.setFont(new Font("Segoe UI", Font.BOLD, 24));
@@ -91,10 +100,37 @@ public class ChangeSemesterFrame extends JFrame {
         currentStatusCard.add(lblCurrent, BorderLayout.NORTH);
         currentStatusCard.add(lblVal, BorderLayout.CENTER);
 
-        // --- Form Card ---
+        mainPanel.add(currentStatusCard);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+
+        // --- SECTION 2: CHANGE SEMESTER ---
+        mainPanel.add(createSectionHeader("Change Semester"));
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        mainPanel.add(createSemesterChangeCard());
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+
+        // --- SECTION 3: REGISTRATION PERIOD (NEW) ---
+        mainPanel.add(createSectionHeader("Course Registration Period"));
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        mainPanel.add(createRegistrationDateCard());
+
+        mainPanel.add(Box.createVerticalGlue());
+
+        return mainPanel;
+    }
+
+    private JLabel createSectionHeader(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        label.setForeground(textSecondaryColor);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return label;
+    }
+
+    private RoundedPanel createSemesterChangeCard() {
         RoundedPanel formCard = new RoundedPanel(15, cardColor, borderColor, 1);
         formCard.setLayout(new GridBagLayout());
-        formCard.setBorder(new EmptyBorder(30, 30, 30, 30));
+        formCard.setBorder(new EmptyBorder(25, 25, 25, 25));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 0, 10, 0);
@@ -102,104 +138,133 @@ public class ChangeSemesterFrame extends JFrame {
         gbc.weightx = 1.0;
         gbc.gridx = 0;
 
-        // Label: New Semester
         gbc.gridy = 0;
-        JLabel semLabel = new JLabel("Select New Semester");
-        semLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        semLabel.setForeground(textColor);
-        formCard.add(semLabel, gbc);
+        formCard.add(createLabel("Select New Semester"), gbc);
 
-        // Dropdown
         gbc.gridy = 1;
         String[] sems = {"Winter", "Summer", "Monsoon"};
         semesterDropdown = createStyledComboBox(sems);
         formCard.add(semesterDropdown, gbc);
 
-        // Label: Year
         gbc.gridy = 2;
-        gbc.insets = new Insets(20, 0, 10, 0);
-        JLabel yearLabel = new JLabel("Academic Year");
-        yearLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        yearLabel.setForeground(textColor);
-        formCard.add(yearLabel, gbc);
+        formCard.add(createLabel("Academic Year"), gbc);
 
-        // Spinner
         gbc.gridy = 3;
-        gbc.insets = new Insets(0, 0, 10, 0);
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        yearSpinner = new JSpinner(new SpinnerNumberModel(currentYear, 2020, 2035, 1)); // Default to current
+        yearSpinner = new JSpinner(new SpinnerNumberModel(currentYear + 1, 2020, 2035, 1));
         styleSpinner(yearSpinner);
         formCard.add(yearSpinner, gbc);
 
-        // --- Dynamic Info Panel ---
+        // Dynamic Info Panel
         gbc.gridy = 4;
-        gbc.insets = new Insets(30, 0, 20, 0);
-
         infoPanel = new RoundedPanel(10, inputBgColor, borderColor, 1);
         infoPanel.setLayout(new BorderLayout());
         infoPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
-
         infoLabel = new JLabel();
         infoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        updateInfoText("Winter"); // Default
-
+        updateInfoText("Winter");
         infoPanel.add(infoLabel, BorderLayout.CENTER);
         formCard.add(infoPanel, gbc);
 
-        // Action Listener
-        semesterDropdown.addActionListener(e -> {
-            String selected = (String) semesterDropdown.getSelectedItem();
-            updateInfoText(selected);
-        });
+        semesterDropdown.addActionListener(e -> updateInfoText((String) semesterDropdown.getSelectedItem()));
 
-        // --- Update Button ---
+        // Button
         gbc.gridy = 5;
-        gbc.insets = new Insets(10, 0, 0, 0);
+        gbc.insets = new Insets(20, 0, 0, 0);
         RoundedButton updateBtn = new RoundedButton("Update System Semester", buttonColor, buttonColorGlow, 10);
         updateBtn.setForeground(Color.WHITE);
         updateBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        updateBtn.setPreferredSize(new Dimension(0, 50));
+        updateBtn.setPreferredSize(new Dimension(0, 45));
 
         updateBtn.addActionListener(e -> {
             String newSem = (String) semesterDropdown.getSelectedItem();
             int newYear = (Integer) yearSpinner.getValue();
-
             int confirm = JOptionPane.showConfirmDialog(this,
-                    "Are you sure you want to move the system to " + newSem + " " + newYear + "?\nThis will update system settings and handle student promotions.",
-                    "Confirm Update", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-
+                    "Move system to " + newSem + " " + newYear + "?\nThis affects all student records.",
+                    "Confirm", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if(confirm == JOptionPane.YES_OPTION) {
-                // --- CALL SERVICE ---
                 boolean success = adminService.changeSystemSemester(newSem, newYear);
-
                 if (success) {
-                    JOptionPane.showMessageDialog(this, "System updated successfully to " + newSem + " " + newYear);
-                    dispose();
+                    JOptionPane.showMessageDialog(this, "System updated to " + newSem + " " + newYear);
                 } else {
-                    JOptionPane.showMessageDialog(this, "Update failed. Check database connection.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Update failed.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
-
         formCard.add(updateBtn, gbc);
 
-        mainPanel.add(currentStatusCard);
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 30)));
-        mainPanel.add(formCard);
-        mainPanel.add(Box.createVerticalGlue());
-
-        return mainPanel;
+        return formCard;
     }
 
-    // ... (updateInfoText, styling helpers, inner classes unchanged) ...
+    // --- NEW PANEL FOR DATES ---
+    private RoundedPanel createRegistrationDateCard() {
+        RoundedPanel card = new RoundedPanel(15, cardColor, borderColor, 1);
+        card.setLayout(new GridBagLayout());
+        card.setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 0, 10, 0);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        gbc.gridx = 0;
+
+        // Start Date
+        gbc.gridy = 0;
+        card.add(createLabel("Registration Start Date"), gbc);
+
+        gbc.gridy = 1;
+        startDateSpinner = new JSpinner(new SpinnerDateModel());
+        styleDateSpinner(startDateSpinner);
+        card.add(startDateSpinner, gbc);
+
+        // End Date
+        gbc.gridy = 2;
+        card.add(createLabel("Registration End Date"), gbc);
+
+        gbc.gridy = 3;
+        endDateSpinner = new JSpinner(new SpinnerDateModel());
+        styleDateSpinner(endDateSpinner);
+        card.add(endDateSpinner, gbc);
+
+        // Button
+        gbc.gridy = 4;
+        gbc.insets = new Insets(20, 0, 0, 0);
+        RoundedButton saveDatesBtn = new RoundedButton("Set Registration Window", buttonColor, buttonColorGlow, 10);
+        saveDatesBtn.setForeground(Color.WHITE);
+        saveDatesBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        saveDatesBtn.setPreferredSize(new Dimension(0, 45));
+
+        saveDatesBtn.addActionListener(e -> {
+            Date start = (Date) startDateSpinner.getValue();
+            Date end = (Date) endDateSpinner.getValue();
+
+            boolean success = adminService.setRegistrationPeriod(start, end);
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Registration period updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Error: Start Date must be before End Date.", "Date Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        card.add(saveDatesBtn, gbc);
+
+        return card;
+    }
+
     private void updateInfoText(String semester) {
         if ("Summer".equals(semester)) {
-            infoLabel.setText("<html><b style='color:#FFC107'>Note:</b> Summer semester is optional. <br>Student semester counts <b>will NOT</b> be incremented.</html>");
+            infoLabel.setText("<html><b style='color:#FFC107'>Note:</b> Summer semester is optional. Student semester counts <b>will NOT</b> be incremented.</html>");
             infoLabel.setForeground(Color.LIGHT_GRAY);
         } else {
-            infoLabel.setText("<html><b style='color:#529f94'>Standard Term:</b> <br>All active students will be promoted to the next semester count (e.g. Sem 1 -> Sem 2).</html>");
+            infoLabel.setText("<html><b style='color:#529f94'>Standard Term:</b> Active students will be promoted to the next semester (e.g. Sem 1 -> Sem 2).</html>");
             infoLabel.setForeground(textColor);
         }
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lbl.setForeground(textColor);
+        return lbl;
     }
 
     private void styleSpinner(JSpinner spinner) {
@@ -212,6 +277,17 @@ public class ChangeSemesterFrame extends JFrame {
             tf.setCaretColor(buttonColor);
         }
         spinner.setBorder(BorderFactory.createLineBorder(borderColor, 1));
+    }
+
+    private void styleDateSpinner(JSpinner spinner) {
+        styleSpinner(spinner);
+        JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(spinner, "yyyy-MM-dd");
+        spinner.setEditor(dateEditor);
+        // Style the text field inside the editor again as setEditor might reset it
+        JTextField tf = dateEditor.getTextField();
+        tf.setBackground(inputBgColor);
+        tf.setForeground(textColor);
+        tf.setCaretColor(buttonColor);
     }
 
     private JComboBox<String> createStyledComboBox(String[] items) {

@@ -297,3 +297,7 @@ alter table users.admins add user_id VARCHAR(50) not null ;
 
 alter table students add column semester_name varchar(50) not null default "Monsoon";
 alter table students add column current_year int ;
+
+INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_value`) VALUES
+                                                                          ('reg_start', '2025-08-01'),
+                                                                          ('reg_end', '2025-08-15');

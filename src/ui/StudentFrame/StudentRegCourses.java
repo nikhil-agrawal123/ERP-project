@@ -1,30 +1,29 @@
 package ui.StudentFrame;
 
 import dbClasses.studentAvailableCourses;
+import dbEndpoints.SystemSettings;
 import ui.dashboard.StudentDashboard;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
-import middleware.studentService;
-import middleware.loggerService;
 
-import java.util.List;
+import middleware.studentService;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxUI;
-import javax.swing.plaf.basic.BasicScrollBarUI; // For styled scrollbar
+import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
-import java.net.URI;
-import java.awt.Desktop;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-/**
- * A refactored class for course registration, matching the StudentDashboard UI.
- */
 public class StudentRegCourses extends JFrame {
 
-    // --- UI COLOR PALETTE FROM StudentDashboard ---
+    // --- UI Color Palette ---
     private Color bgColor = new Color(42, 48, 60);
     private Color mainPanelColor = new Color(42, 48, 60);
     private Color cardColor = new Color(54, 59, 74);
@@ -36,17 +35,25 @@ public class StudentRegCourses extends JFrame {
     private Color Buttonback = new Color(38, 44, 58);
     private Color Buttonhover = new Color(25, 30, 40);
 
-    private studentService student;
-    private loggerService logger;
+    // New colors for notification
+    private Color notifBgColor = new Color(255, 193, 7, 40); // Amber with transparency
+    private Color notifBorderColor = new Color(255, 193, 7);
+    private Color notifTextColor = new Color(255, 213, 79);
 
-    // --- Icons for our custom checkbox (will be styled with new colors) ---
+    private studentService student;
+    private Color sideMenuColor = new Color(60, 60, 60);
+
     private ImageIcon uncheckedIcon;
     private ImageIcon checkedIcon;
 
     private String rollNumber;
     private String username;
+    private String currentSystemSem; // Dynamic Semester
 
     private JPanel centerContentPanel;
+    private JComboBox<String> termDropdown;
+
+    private studentService studentService;
 
     public StudentRegCourses(String rollNumber, String username) {
         super("Course Registration - " + username);
@@ -57,51 +64,48 @@ public class StudentRegCourses extends JFrame {
         this.uncheckedIcon = createCheckBoxIcon(false);
         this.checkedIcon = createCheckBoxIcon(true);
         this.student = new studentService();
-        this.logger = new loggerService();
 
-        // --- Standard Frame Setup (using new colors) ---
+        this.studentService = new studentService();
+
+        // --- FETCH DYNAMIC DATA ---
+        this.currentSystemSem = student.getCurrentSystemSemester();
+        Map<String, String> dates = student.getRegistrationSchedule();
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1280, 800); // Match dashboard size
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // Match dashboard state
+        setSize(1280, 800);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         setResizable(true);
         getContentPane().setBackground(bgColor);
-        setLayout(new BorderLayout()); // Simplified to just BorderLayout
+        setLayout(new BorderLayout());
 
         try {
             ImageIcon image = new ImageIcon(getClass().getResource("/logo.jpg"));
             setIconImage(image.getImage());
-        } catch (Exception e) {
-            System.out.println("Logo not found: " + e.getMessage());
-        }
+        } catch (Exception ignored) {}
 
-        // --- Main Content Panel (replaces old 'mainPanel') ---
         JPanel contentPanel = new JPanel(new BorderLayout(20, 20));
         contentPanel.setBackground(mainPanelColor);
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 35, 40, 40)); // Added more padding
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 35, 40, 40));
 
-
-        // --- Top Panel for Controls ---
+        // --- Top Panel ---
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
-        topPanel.setOpaque(false); // Use parent's background
+        topPanel.setOpaque(false);
         topPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 
-
-        // --- Header Panel for Back Button and Title ---
+        // 1. Header (Back + Title)
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
 
-        // --- Top-Left Back Button (using RoundedButton) ---
         RoundedButton backButton = createHeaderButton("← Back to Dashboard");
         backButton.addActionListener(e -> {
             new StudentDashboard(rollNumber, username).setVisible(true);
             dispose();
         });
 
-        // --- Title (matching dashboard style) ---
         JLabel titleLabel = new JLabel("Available Courses for Registration");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 36)); // Larger font
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
         titleLabel.setForeground(textColor);
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -109,27 +113,38 @@ public class StudentRegCourses extends JFrame {
         headerPanel.add(titleLabel, BorderLayout.CENTER);
         headerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // --- Dropdown (styled to match) ---
-        String[] semesters = {"Select Term" ,"Monsoon 2025"};
-        JComboBox<String> termDropdown = new JComboBox<>(semesters);
-        styleComboBox(termDropdown); // Apply custom styling
+        // 2. Notification Banner (NEW)
+        JPanel notifPanel = createNotificationBanner(dates);
+        notifPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        Dimension dropSize = new Dimension(300, 45); // Larger, fixed size
+        // 3. Dropdown (Dynamic)
+        // We add the current system semester as the default option
+        String[] semesters = {"Select Term", currentSystemSem};
+        termDropdown = new JComboBox<>(semesters);
+        styleComboBox(termDropdown);
+
+        // Set default selection to the current semester if available
+        if (currentSystemSem != null && !currentSystemSem.equals("Unknown 0000")) {
+            termDropdown.setSelectedItem(currentSystemSem);
+        }
+
+        Dimension dropSize = new Dimension(300, 45);
         termDropdown.setPreferredSize(dropSize);
         termDropdown.setMaximumSize(dropSize);
 
-        // --- Wrapper for dropdown to align it left ---
         JPanel dropdownWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT));
         dropdownWrapper.setOpaque(false);
         dropdownWrapper.add(termDropdown);
         dropdownWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        // Add to Top Panel
         topPanel.add(headerPanel);
-        topPanel.add(Box.createRigidArea(new Dimension(0, 25)));
+        topPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        topPanel.add(notifPanel); // Add banner
+        topPanel.add(Box.createRigidArea(new Dimension(0, 15)));
         topPanel.add(dropdownWrapper);
         topPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // --- Separator ---
         JSeparator titleSeparator = new JSeparator(SwingConstants.HORIZONTAL);
         titleSeparator.setForeground(borderColor);
         titleSeparator.setBackground(mainPanelColor);
@@ -137,8 +152,7 @@ public class StudentRegCourses extends JFrame {
         titleSeparator.setAlignmentX(Component.LEFT_ALIGNMENT);
         topPanel.add(titleSeparator);
 
-
-        // --- Main Content Area (Scrollable panel) ---
+        // --- Center Content ---
         centerContentPanel = new JPanel();
         centerContentPanel.setLayout(new BoxLayout(centerContentPanel, BoxLayout.Y_AXIS));
         centerContentPanel.setBackground(mainPanelColor);
@@ -148,29 +162,25 @@ public class StudentRegCourses extends JFrame {
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(mainPanelColor);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.getVerticalScrollBar().setUI(new StyledScrollBarUI());
 
+        // --- Dropdown Logic ---
+        termDropdown.addActionListener(e -> {
+            String selectedItem = (String) termDropdown.getSelectedItem();
+            centerContentPanel.removeAll();
 
-        // --- Dropdown Action Listener ---
-        termDropdown.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String selectedItem = (String) termDropdown.getSelectedItem();
-                centerContentPanel.removeAll();
-                if (!selectedItem.equals("Select Term")) {
-                    System.out.println("User selected: " + selectedItem);
-                    loadCourses(selectedItem);
-                } else {
-                    showPromptCard();
-                }
-                centerContentPanel.revalidate();
-                centerContentPanel.repaint();
+            // Dynamic Check
+            if (selectedItem != null && selectedItem.equals(currentSystemSem)) {
+                loadCourses(currentSystemSem);
+            } else {
+                showPromptCard();
             }
+            centerContentPanel.revalidate();
+            centerContentPanel.repaint();
         });
 
-        // --- Bottom Panel for Buttons ---
+        // --- Bottom Panel ---
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         bottomPanel.setOpaque(false);
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
@@ -178,222 +188,195 @@ public class StudentRegCourses extends JFrame {
         RoundedButton registerButton = createActionButton("Register Selected Courses");
         bottomPanel.add(registerButton);
 
-        registerButton.addActionListener(e -> {
-            System.out.println("Register button clicked. Registering selected courses:");
-            Component[] components = centerContentPanel.getComponents();
-            int selectedCount = 0;
+        registerButton.addActionListener(e -> handleRegistration());
 
-            java.util.List<studentAvailableCourses> selectedCourses = new java.util.ArrayList<>();
-
-            for (Component comp : components) {
-                if (comp instanceof RoundedPanel) {
-                    RoundedPanel tilePanel = (RoundedPanel) comp;
-                    // Find the checkbox (it's a JLabel with an icon)
-                    for (Component tileComp : tilePanel.getComponents()) {
-                        if (tileComp instanceof JLabel && ((JLabel) tileComp).getIcon() != null) {
-                            JLabel checkBoxLabel = (JLabel) tileComp;
-                            Object selectedProp = checkBoxLabel.getClientProperty("selected");
-
-                            if (selectedProp != null && (boolean) selectedProp) {
-
-                                studentAvailableCourses courseObject = (studentAvailableCourses) checkBoxLabel.getClientProperty("courseObject");
-                                selectedCourses.add(courseObject);
-
-                                selectedCount++;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            boolean checking = false;
-
-            if (selectedCount == 0) {
-                JOptionPane.showMessageDialog(this,
-                        "You have not selected any courses to register.",
-                        "No Courses Selected",
-                        JOptionPane.INFORMATION_MESSAGE);
-                logger.log(username,"Register Courses", "User tries registering for 0 courses");
-            } else {
-                List<String> courseNames = new java.util.ArrayList<>();
-                for (studentAvailableCourses c : selectedCourses) {
-                    if(student.CheckRegister(c.getCourse_code(), username)){
-                        courseNames.add(c.getCourse_name());
-                        checking = true;
-                    }else{
-                        JOptionPane.showMessageDialog(this,
-                                "Same course can't be registered multiple times." ,
-                                "Registration unsuccessful",
-                                JOptionPane.INFORMATION_MESSAGE);
-                        logger.log(username,"Register Course","User Tries registering same course multiple times.");
-
-                        break;
-                    }
-                }
-
-                if(checking){
-                    String courseList = String.join(", ", courseNames);
-                    System.out.println("Registering: " + courseList);
-
-                    if(student.RegisterCourse(selectedCourses, username)){
-                        JOptionPane.showMessageDialog(this,
-                                "Successfully registered " + selectedCount + " course(s):\n" + courseList,
-                                "Registration Complete",
-                                JOptionPane.INFORMATION_MESSAGE);
-                        logger.log(username,"Register Courses" ,"Successfully registered " + selectedCount + " course(s)");
-                        new StudentDashboard(rollNumber, username).setVisible(true);
-                        dispose();
-                    }else{
-                        JOptionPane.showMessageDialog(this,
-                                "Registration unsuccessful " + selectedCount + " course(s):\n" + courseList,
-                                "Registration unsuccessful",
-                                JOptionPane.INFORMATION_MESSAGE);
-                        logger.log(username,"Register Courses" ,"Failed to register courses");
-                    }
-                }
-            }
-        });
-
-        // --- Add all panels to the main content panel ---
         contentPanel.add(topPanel, BorderLayout.NORTH);
         contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.add(bottomPanel, BorderLayout.SOUTH);
 
-        // Add the main content panel to the frame
         add(contentPanel, BorderLayout.CENTER);
 
-        // Initial state
-        showPromptCard();
+        // Trigger initial load if semester is set
+        if (currentSystemSem != null && !currentSystemSem.equals("Unknown 0000")) {
+            loadCourses(currentSystemSem);
+        } else {
+            showPromptCard();
+        }
     }
 
-    /**
-     * Shows a prompt card in the center panel.
-     */
-    private void showPromptCard() {
-        centerContentPanel.removeAll();
+    // --- NEW: Notification Banner ---
+    private JPanel createNotificationBanner(Map<String, String> dates) {
+        RoundedPanel banner = new RoundedPanel(10, notifBgColor, notifBorderColor, 1);
+        banner.setLayout(new BorderLayout());
+        banner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        banner.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+        String start = dates.getOrDefault("reg_start", "TBA");
+        String end = dates.getOrDefault("reg_end", "TBA");
+
+        JLabel label = new JLabel("Registration Window: " + start + " to " + end);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        label.setForeground(notifTextColor);
+        label.setIcon(UIManager.getIcon("OptionPane.warningIcon")); // Default icon or load custom
+
+        banner.add(label, BorderLayout.CENTER);
+        return banner;
+    }
+
+    private void handleRegistration() {
+        Component[] components = centerContentPanel.getComponents();
+        Map<String, String> dates = student.getRegistrationSchedule();
+        String start = dates.get("reg_start");
+        String end = dates.get("reg_end");
+
+        int selectedCount = 0;
+        List<studentAvailableCourses> selectedCourses = new ArrayList<>();
+
+        for (Component comp : components) {
+            if (comp instanceof RoundedPanel) {
+                RoundedPanel tilePanel = (RoundedPanel) comp;
+                for (Component tileComp : tilePanel.getComponents()) {
+                    if (tileComp instanceof JLabel && ((JLabel) tileComp).getIcon() != null) {
+                        JLabel checkBoxLabel = (JLabel) tileComp;
+                        Object selectedProp = checkBoxLabel.getClientProperty("selected");
+                        if (selectedProp != null && (boolean) selectedProp) {
+                            studentAvailableCourses courseObject = (studentAvailableCourses) checkBoxLabel.getClientProperty("courseObject");
+                            selectedCourses.add(courseObject);
+                            selectedCount++;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        LocalDate startD = LocalDate.parse(start);
+        LocalDate endD = LocalDate.parse(end);
+        LocalDate today = LocalDate.now();
+
+        if(! (today.isBefore(endD) && today.isAfter(startD))) {
+            JOptionPane.showMessageDialog(this, "Registration failed registeration has not begin.", "Error", JOptionPane.ERROR_MESSAGE);
+        }else{
+            if (selectedCount == 0) {
+                JOptionPane.showMessageDialog(this, "You have not selected any courses.", "No Selection", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                boolean success = student.RegisterCourse(selectedCourses, username);
+                if (success) {
+                    JOptionPane.showMessageDialog(this, "Successfully registered for " + selectedCount + " courses!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    // Refresh
+                    termDropdown.setSelectedItem(termDropdown.getSelectedItem());
+                } else {
+                    JOptionPane.showMessageDialog(this, "Registration failed. Check capacity or duplicates.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+    }
+
+    // --- Existing Load/Card Logic ---
+
+    private void loadCourses(String semester) {
+        List<studentAvailableCourses> courses = student.AllCourses(semester);
+        if (courses.isEmpty()) {
+            showEmptyMessage(semester);
+        } else {
+            courses.forEach(course -> {
+                JPanel coursePanel = createCourseTilePanel(course);
+                centerContentPanel.add(coursePanel);
+                centerContentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+            });
+        }
+    }
+
+    private void showEmptyMessage(String sem) {
         RoundedPanel promptPanel = new RoundedPanel(15, cardColor, borderColor, 1);
         promptPanel.setLayout(new BorderLayout());
         promptPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
-        promptPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200)); // Constrain height
+        promptPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
-        JLabel promptLabel = new JLabel("Please select a term from the dropdown above to view available courses.", SwingConstants.CENTER);
+        JLabel promptLabel = new JLabel("No courses available for " + sem, SwingConstants.CENTER);
         promptLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         promptLabel.setForeground(textSecondaryColor);
 
         promptPanel.add(promptLabel, BorderLayout.CENTER);
-
         centerContentPanel.add(promptPanel);
-        centerContentPanel.revalidate();
-        centerContentPanel.repaint();
     }
 
+    private void showPromptCard() {
+        RoundedPanel promptPanel = new RoundedPanel(15, cardColor, borderColor, 1);
+        promptPanel.setLayout(new BorderLayout());
+        promptPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+        promptPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
-    /**
-     * Populates the centerContentPanel with styled course tiles.
-     */
-    private void loadCourses(String semester) {
+        JLabel promptLabel = new JLabel("Please select a term to view courses.", SwingConstants.CENTER);
+        promptLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        promptLabel.setForeground(textSecondaryColor);
 
-        List<studentAvailableCourses> courses = student.AllCourses(semester);
-        logger.log(username,"Fetch courses", "User fetched all courses");
-        courses.forEach(course -> {
-            JPanel coursePanel = createCourseTilePanel(course);
-            centerContentPanel.add(coursePanel);
-            centerContentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        });
+        promptPanel.add(promptLabel, BorderLayout.CENTER);
+        centerContentPanel.add(promptPanel);
     }
 
+    // --- createCourseTilePanel, Icons, Styling Helpers (Same as before) ---
+    // (Pasted here for completeness, ensuring no missing methods)
 
-    /**
-     * Creates a styled course tile using RoundedPanel.
-     */
-    private JPanel createCourseTilePanel(studentAvailableCourses course) { // <-- FIX 1: Change parameter
-        // Use the new RoundedPanel as the base
+    private JPanel createCourseTilePanel(studentAvailableCourses course) {
         RoundedPanel tilePanel = new RoundedPanel(15, cardColor, borderColor, 1);
-        tilePanel.setPreferredSize(new Dimension(1000, 160));
-        tilePanel.setLayout(new BorderLayout(15, 10)); // Gaps
-        tilePanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25)); // Padding
-        tilePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160)); // Fixed height
-        tilePanel.setMinimumSize(new Dimension(800, 160)); // Min size
+        tilePanel.setLayout(new BorderLayout(15, 10));
+        tilePanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
+        tilePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
 
-        // --- Get data from the object ---
-        String code = course.getCourse_code();
-        String name = course.getCourse_name();
-        String credits = String.valueOf(course.getCourse_credits());
-        String instructor = course.getOfferedBY();
-        int strength = course.getCapacity();
-        int currentRegis = course.getEnrolledCount();
-
-        // --- Top Panel (Code + Name + Details Link) ---
+        // Top
         JPanel topInfoPanel = new JPanel();
         topInfoPanel.setLayout(new BoxLayout(topInfoPanel, BoxLayout.X_AXIS));
         topInfoPanel.setOpaque(false);
 
-        JLabel codeLabel = new JLabel(code);
-        codeLabel.setFont(new Font("Segoe UI Mono", Font.BOLD, 16)); // Monospaced font
+        JLabel codeLabel = new JLabel(course.getCourse_code());
+        codeLabel.setFont(new Font("Segoe UI Mono", Font.BOLD, 16));
         codeLabel.setForeground(Color.WHITE);
-        codeLabel.setBackground(buttonColor); // Use theme accent
+        codeLabel.setBackground(buttonColor);
         codeLabel.setOpaque(true);
         codeLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        JLabel nameLabel = new JLabel(name);
-        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 24)); // Larger font
+        JLabel nameLabel = new JLabel(course.getCourse_name());
+        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         nameLabel.setForeground(textColor);
-        nameLabel.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15)); // Spacing
+        nameLabel.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
 
         topInfoPanel.add(codeLabel);
         topInfoPanel.add(nameLabel);
-        topInfoPanel.add(Box.createHorizontalGlue()); // Pushes link to the right
+        topInfoPanel.add(Box.createHorizontalGlue());
 
-        JLabel detailsLink = createClickableLink(
-                "Check course details ↗",
-                "https://techtree.iiitd.edu.in/viewDescription/filename?=" + code
-        );
-        topInfoPanel.add(detailsLink);
-
-
-        // --- Bottom Panel (Details) ---
+        // Bottom
         JPanel bottomInfoPanel = new JPanel();
         bottomInfoPanel.setLayout(new BoxLayout(bottomInfoPanel, BoxLayout.X_AXIS));
         bottomInfoPanel.setOpaque(false);
-        bottomInfoPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0)); // Top margin
 
-        JPanel creditsPanel = createDetailPanel("Credits", credits);
-        JPanel instructorPanel = createDetailPanel("Instructor", instructor);
-        JPanel capacityPanel = createDetailPanel("Capacity", String.valueOf(strength));
-        JPanel enrolledPanel = createDetailPanel("Enrolled", String.valueOf(currentRegis    ));
-
-        bottomInfoPanel.add(creditsPanel);
+        bottomInfoPanel.add(createDetailPanel("Credits", String.valueOf(course.getCourse_credits())));
         bottomInfoPanel.add(Box.createRigidArea(new Dimension(40, 0)));
-        bottomInfoPanel.add(instructorPanel);
-        bottomInfoPanel.add(Box.createHorizontalGlue()); // Push all details left
-        bottomInfoPanel.add(capacityPanel);
-        bottomInfoPanel.add(Box.createHorizontalGlue());
-        bottomInfoPanel.add(enrolledPanel);
+        bottomInfoPanel.add(createDetailPanel("Instructor", course.getOfferedBY()));
+        bottomInfoPanel.add(Box.createRigidArea(new Dimension(40, 0)));
+        bottomInfoPanel.add(createDetailPanel("Seats", course.getEnrolledCount() + " / " + course.getCapacity()));
         bottomInfoPanel.add(Box.createHorizontalGlue());
 
-
-        // --- Custom Checkbox (JLabel) ---
-        JLabel checkBoxLabel = new JLabel();
-        checkBoxLabel.setIcon(uncheckedIcon); // Set default state
+        // Checkbox
+        JLabel checkBoxLabel = new JLabel(uncheckedIcon);
         checkBoxLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
         checkBoxLabel.putClientProperty("selected", false);
-        checkBoxLabel.putClientProperty("courseObject", course); // <-- This is the key change
+        checkBoxLabel.putClientProperty("courseObject", course);
 
-        checkBoxLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 10));
+        if (course.getEnrolledCount() >= course.getCapacity()) {
+            checkBoxLabel.setEnabled(false);
+            codeLabel.setBackground(sideMenuColor);
+            nameLabel.setForeground(textSecondaryColor);
+        } else {
+            checkBoxLabel.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent e) {
+                    boolean isSelected = (boolean) checkBoxLabel.getClientProperty("selected");
+                    checkBoxLabel.setIcon(!isSelected ? checkedIcon : uncheckedIcon);
+                    checkBoxLabel.putClientProperty("selected", !isSelected);
+                }
+            });
+        }
 
-        checkBoxLabel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                boolean isSelected = (boolean) checkBoxLabel.getClientProperty("selected");
-                isSelected = !isSelected;
-                checkBoxLabel.setIcon(isSelected ? checkedIcon : uncheckedIcon);
-                checkBoxLabel.putClientProperty("selected", isSelected);
-            }
-        });
-
-        // --- Add components to tile ---
         tilePanel.add(topInfoPanel, BorderLayout.NORTH);
         tilePanel.add(bottomInfoPanel, BorderLayout.CENTER);
         tilePanel.add(checkBoxLabel, BorderLayout.EAST);
@@ -401,259 +384,101 @@ public class StudentRegCourses extends JFrame {
         return tilePanel;
     }
 
-    /**
-     * Programmatically draws an icon for our custom checkbox, using the new theme.
-     */
-    private ImageIcon createCheckBoxIcon(boolean isChecked) {
-        int width = 24; // Slightly larger
-        int height = 24;
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = image.createGraphics();
-
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // --- Draw the Box ---
-        g2.setColor(textSecondaryColor); // Use muted color for the box
-        g2.setStroke(new BasicStroke(2));
-        g2.draw(new RoundRectangle2D.Float(1, 1, width - 3, height - 3, 8, 8)); // More rounded
-
-        if (isChecked) {
-            // --- Fill the Box ---
-            g2.setColor(buttonColor); // Use theme's accent color
-            g2.fill(new RoundRectangle2D.Float(1, 1, width - 3, height - 3, 8, 8));
-
-            // --- Draw the Checkmark ---
-            g2.setColor(textColor); // White check
-            g2.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-            g2.drawLine(7, 12, 11, 17); // Left part of V
-            g2.drawLine(11, 17, 18, 8); // Right part of V
-        }
-
-        g2.dispose();
-        return new ImageIcon(image);
-    }
-
-    /**
-     * Helper to create a small "detail" block (e.g., "Credits" and "4").
-     * Styled to match the new theme.
-     */
     private JPanel createDetailPanel(String title, String value) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
-
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        titleLabel.setForeground(textSecondaryColor); // Muted foreground
-        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        valueLabel.setForeground(textColor); // Main foreground
-        valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panel.add(titleLabel);
+        JLabel t = new JLabel(title);
+        t.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        t.setForeground(textSecondaryColor);
+        JLabel v = new JLabel(value);
+        v.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        v.setForeground(textColor);
+        panel.add(t);
         panel.add(Box.createRigidArea(new Dimension(0, 5)));
-        panel.add(valueLabel);
-
+        panel.add(v);
         return panel;
     }
 
-    // --- HELPER METHODS COPIED FROM StudentDashboard ---
+    private ImageIcon createCheckBoxIcon(boolean isChecked) {
+        int w = 24; int h = 24;
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = img.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(textSecondaryColor);
+        g2.setStroke(new BasicStroke(2));
+        g2.draw(new RoundRectangle2D.Float(1, 1, w-3, h-3, 8, 8));
+        if (isChecked) {
+            g2.setColor(buttonColor);
+            g2.fill(new RoundRectangle2D.Float(1, 1, w-3, h-3, 8, 8));
+            g2.setColor(textColor);
+            g2.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.drawLine(7, 12, 11, 17); g2.drawLine(11, 17, 18, 8);
+        }
+        g2.dispose();
+        return new ImageIcon(img);
+    }
 
-    /**
-     * Creates a styled header button (solid, dark background).
-     */
     private RoundedButton createHeaderButton(String text) {
-        RoundedButton button = new RoundedButton(
-                text,
-                Buttonback, // normal
-                Buttonhover,   // hover
-                borderColor.darker(), // pressed
-                8
-        );
-        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        button.setForeground(textColor);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        button.setPreferredSize(null);
-        return button;
+        RoundedButton b = new RoundedButton(text, Buttonback, Buttonhover, borderColor.darker(), 8);
+        b.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        b.setForeground(textColor);
+        b.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        b.setPreferredSize(null);
+        return b;
     }
 
-    /**
-     * Creates a styled action button (gradient background).
-     */
     private RoundedButton createActionButton(String text) {
-        RoundedButton button = new RoundedButton(
-                text,
-                buttonColor,      // Gradient Start (--primary)
-                buttonColorGlow,  // Gradient End (--primary-glow)
-                8                 // Arc radius
-        );
-        button.setFont(new Font("Segoe UI", Font.BOLD, 16)); // Slightly larger
-        button.setForeground(textColor);
-        button.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25)); // More padding
-        button.setPreferredSize(null);
-        return button;
+        RoundedButton b = new RoundedButton(text, buttonColor, buttonColorGlow, 8);
+        b.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        b.setForeground(textColor);
+        b.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
+        b.setPreferredSize(null);
+        return b;
     }
 
-    /**
-     * Creates a clickable hyperlink-style JLabel.
-     */
-    private JLabel createClickableLink(String text, String url) {
-        JLabel linkLabel = new JLabel("<html><u>" + text + "</u></html>"); // Underlined
-        linkLabel.setForeground(buttonColor); // Use accent color
-        linkLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        linkLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        linkLabel.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent evt) {
-                try {
-                    if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                        Desktop.getDesktop().browse(new URI(url));
-                        logger.log(username,"Redirect" ,"Successfully redirected to external link");
-                    } else {
-                        showError("Cannot open link. OS does not support Desktop.browse.");
-                        logger.log(username,"Warning" ,"Warning: Cannot open link.");
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    showError("Could not open link: " + e.getMessage());
-                    logger.log(username,"Warning" ,"Warning: Could not open link.");
-                }
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                linkLabel.setForeground(buttonColorGlow); // Brighter on hover
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                linkLabel.setForeground(buttonColor);
-            }
-        });
-
-        return linkLabel;
-    }
-
-    /**
-     * Helper to show a formatted error message.
-     */
-    private void showError(String message) {
-        JOptionPane.showMessageDialog(this,
-                message,
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
-    }
-
-    /**
-     * Applies modern styling to a JComboBox.
-     */
-    private void styleComboBox(JComboBox<String> comboBox) {
-        comboBox.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        comboBox.setForeground(textColor);
-        comboBox.setBackground(cardColor); // Dark card color
-        comboBox.setBorder(BorderFactory.createLineBorder(borderColor, 1));
-        comboBox.setFocusable(false);
-
-        // --- Custom Renderer ---
-        comboBox.setRenderer(new DefaultListCellRenderer() {
-            @Override
+    private void styleComboBox(JComboBox<String> box) {
+        box.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        box.setForeground(textColor);
+        box.setBackground(cardColor);
+        box.setBorder(BorderFactory.createLineBorder(borderColor, 1));
+        box.setFocusable(false);
+        box.setRenderer(new DefaultListCellRenderer() {
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                setText(value.toString());
                 setBackground(isSelected ? buttonColor : cardColor);
                 setForeground(isSelected ? textColor : textSecondaryColor);
                 setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
                 return this;
             }
         });
-
-        // --- Custom UI (to style arrow) ---
-        comboBox.setUI(new BasicComboBoxUI() {
-            @Override
+        box.setUI(new BasicComboBoxUI() {
             protected JButton createArrowButton() {
-                // Create a button with the new theme
-                RoundedButton arrowButton = new RoundedButton("▼",
-                        buttonColor, buttonColor.brighter(), buttonColor.darker(), 8);
-                arrowButton.setForeground(textColor);
-                arrowButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                arrowButton.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-                return arrowButton;
+                RoundedButton b = new RoundedButton("▼", buttonColor, buttonColor.brighter(), buttonColor.darker(), 8);
+                b.setForeground(textColor);
+                b.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+                return b;
             }
-
-            @Override
             public void paintCurrentValue(Graphics g, Rectangle bounds, boolean hasFocus) {
-                // Custom painting to get padding
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                g2.setColor(cardColor);
-                g2.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-
-                String text = (String) comboBox.getSelectedItem();
-                FontMetrics fm = g2.getFontMetrics();
-
-                g2.setColor(textColor);
-                g2.setFont(new Font("Segoe UI", Font.BOLD, 16));
-                g2.drawString(text, bounds.x + 15, bounds.y + fm.getAscent() + (bounds.height - fm.getHeight()) / 2);
-
-                g2.dispose();
+                g.setColor(cardColor);
+                g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+                g.setColor(textColor);
+                g.setFont(new Font("Segoe UI", Font.BOLD, 16));
+                g.drawString((String)box.getSelectedItem(), bounds.x + 15, bounds.y + 30);
             }
         });
     }
 
-    // --- INNER CLASS ---
-    /**
-     * Inner class for a custom styled scrollbar.
-     * Copied directly from StudentDashboard.
-     */
     private class StyledScrollBarUI extends BasicScrollBarUI {
-        @Override
-        protected void configureScrollBarColors() {
-            this.thumbColor = buttonColor;      // Accent color for the thumb
-            this.trackColor = cardColor;      // Dark card color for the track
-            this.thumbDarkShadowColor = buttonColor;
-            this.thumbHighlightColor = buttonColor;
-            this.thumbLightShadowColor = buttonColor;
+        @Override protected void configureScrollBarColors() { this.thumbColor = buttonColor; this.trackColor = cardColor; }
+        @Override protected JButton createDecreaseButton(int orientation) { return createZeroButton(); }
+        @Override protected JButton createIncreaseButton(int orientation) { return createZeroButton(); }
+        private JButton createZeroButton() { JButton b = new JButton(); b.setPreferredSize(new Dimension(0,0)); return b; }
+        @Override protected void paintThumb(Graphics g, JComponent c, Rectangle r) {
+            g.setColor(thumbColor); ((Graphics2D)g).fill(new RoundRectangle2D.Float(r.x, r.y, r.width, r.height, 10, 10));
         }
-
-        @Override
-        protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(thumbColor);
-            // Draw a rounded rectangle for the thumb
-            g2.fill(new RoundRectangle2D.Float(thumbBounds.x + 2, thumbBounds.y, thumbBounds.width - 4, thumbBounds.height, 10, 10));
-            g2.dispose();
-        }
-
-        @Override
-        protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(trackColor);
-            g2.fill(trackBounds);
-            g2.dispose();
-        }
-
-        @Override
-        protected JButton createDecreaseButton(int orientation) {
-            return createZeroButton();
-        }
-
-        @Override
-        protected JButton createIncreaseButton(int orientation) {
-            return createZeroButton();
-        }
-
-        private JButton createZeroButton() {
-            JButton jbutton = new JButton();
-            jbutton.setPreferredSize(new Dimension(0, 0));
-            jbutton.setMinimumSize(new Dimension(0, 0));
-            jbutton.setMaximumSize(new Dimension(0, 0));
-            return jbutton;
+        @Override protected void paintTrack(Graphics g, JComponent c, Rectangle r) {
+            g.setColor(trackColor); ((Graphics2D)g).fill(r);
         }
     }
 }
