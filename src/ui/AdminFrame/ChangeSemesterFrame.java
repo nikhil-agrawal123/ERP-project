@@ -16,6 +16,7 @@ import java.util.Date;
 
 public class ChangeSemesterFrame extends JFrame {
 
+    // --- UI Color Palette ---
     private Color bgColor = new Color(42, 48, 60);
     private Color cardColor = new Color(54, 59, 74);
     private Color borderColor = new Color(64, 69, 89);
