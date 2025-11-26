@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import dbClasses.GradingComponent;
+import dbClasses.GradeRange;
 
 /**
  * Service to handle Grading Policy logic and JSON conversion.
@@ -37,5 +38,21 @@ public class gradingService {
     public boolean savePolicy(String courseCode, String courseName, String instructorId, String semester, List<GradingComponent> components) {
         String json = gson.toJson(components);
         return repository.savePolicyJson(courseCode, courseName, instructorId, semester, json);
+    }
+
+    public List<GradeRange> getGradeCutoffs(String courseCode, String instructorId, String semester) {
+        String json = repository.getCutoffsJson(courseCode, instructorId, semester);
+
+        if (json == null || json.isEmpty()) {
+            return null; // Return null so UI knows to load defaults
+        }
+
+        Type listType = new TypeToken<ArrayList<GradeRange>>(){}.getType();
+        return gson.fromJson(json, listType);
+    }
+
+    public boolean saveGradeCutoffs(String courseCode, String courseName, String instructorId, String semester, List<GradeRange> ranges) {
+        String json = gson.toJson(ranges);
+        return repository.saveCutoffsJson(courseCode, courseName, instructorId, semester, json);
     }
 }

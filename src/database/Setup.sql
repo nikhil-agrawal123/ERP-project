@@ -308,3 +308,14 @@ INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_value`) VALUES
                                                                           ('late_drop_deadline', '2025-10-15'); -- Late Drop (Grade 'X')
 
 alter table users.gradingpolicy rename courseBreakdown
+
+CREATE TABLE IF NOT EXISTS `grade_cutoffs` (
+                                               `cutoff_id` INT NOT NULL AUTO_INCREMENT,
+                                               `course_code` VARCHAR(50) NOT NULL,
+                                               `course_name` VARCHAR(100) NOT NULL,
+                                               `instructor_id` VARCHAR(50) NOT NULL,
+                                               `semester` VARCHAR(50) NOT NULL,
+                                               `cutoffs_json` JSON NOT NULL,
+                                               PRIMARY KEY (`cutoff_id`),
+                                               UNIQUE INDEX `unique_cutoff_idx` (`course_code`, `instructor_id`, `semester`)
+) ENGINE = InnoDB;
