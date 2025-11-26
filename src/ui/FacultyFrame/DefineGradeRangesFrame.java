@@ -18,8 +18,8 @@ import java.util.List;
 public class DefineGradeRangesFrame extends JFrame {
 
     // --- UI Color Palette ---
-    private Color accentColor = new Color(52, 159, 148);      // Teal Accent
     private Color bgColor = new Color(42, 48, 60);
+    private Color accentColor = new Color(52, 159, 148);
     private Color cardColor = new Color(54, 59, 74);
     private Color borderColor = new Color(64, 69, 89);
     private Color buttonColor = new Color(52, 159, 148);
@@ -27,7 +27,6 @@ public class DefineGradeRangesFrame extends JFrame {
     private Color textColor = new Color(255, 255, 255);
     private Color textSecondaryColor = new Color(179, 179, 179);
     private Color inputBgColor = new Color(40, 44, 55);
-    private Color dangerColor = new Color(220, 80, 80); // For the F grade row
 
     private String courseCode;
     private String courseName;
@@ -36,8 +35,11 @@ public class DefineGradeRangesFrame extends JFrame {
 
     private List<GradeRange> gradeRanges;
     private List<JTextField> scoreFields;
-    private gradingService gradingService;
+    private gradingService gradingService; // Service
 
+    /**
+     * Updated constructor to accept section details.
+     */
     public DefineGradeRangesFrame(String courseCode, String courseName, String instructorId, String semester) {
         super("Grade Thresholds - " + courseName);
         this.courseCode = courseCode;
@@ -53,11 +55,12 @@ public class DefineGradeRangesFrame extends JFrame {
         if (savedRanges != null && !savedRanges.isEmpty()) {
             this.gradeRanges = savedRanges;
         } else {
-            this.gradeRanges = loadDefaultRanges();
+            this.gradeRanges = loadDefaultRanges(); // Use defaults if no DB entry
         }
 
+        // --- Frame Setup ---
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(600, 850);
+        setSize(550, 800);
         setLocationRelativeTo(null);
         getContentPane().setBackground(bgColor);
         setLayout(new BorderLayout());
@@ -68,11 +71,13 @@ public class DefineGradeRangesFrame extends JFrame {
         add(createFooter(), BorderLayout.SOUTH);
     }
 
+    // ... (createHeader, createMainContent, addGradeRow, createFooter methods remain mostly the same) ...
+
     private JPanel createHeader() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(bgColor);
         header.setBorder(new EmptyBorder(25, 30, 10, 30));
-        JLabel title = new JLabel("Grade Point Cutoffs");
+        JLabel title = new JLabel("Grade Cutoffs");
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
         title.setForeground(textColor);
         RoundedButton backBtn = new RoundedButton("Close", borderColor, borderColor.brighter(), borderColor.darker(), 8);
@@ -91,7 +96,7 @@ public class DefineGradeRangesFrame extends JFrame {
         mainContainer.setBackground(bgColor);
         mainContainer.setBorder(new EmptyBorder(10, 30, 10, 30));
 
-        JLabel infoLabel = new JLabel("<html>Define the <b>minimum percentage</b> required for each Grade Point (10-5).<br>Scores below the lowest cutoff will automatically be marked as <b>F (0-4)</b>.</html>");
+        JLabel infoLabel = new JLabel("<html>Define the <b>minimum percentage</b> required for each grade.<br>Values must be in descending order (e.g., A > B).</html>");
         infoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         infoLabel.setForeground(textSecondaryColor);
         infoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -111,10 +116,9 @@ public class DefineGradeRangesFrame extends JFrame {
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.insets = new Insets(8, 0, 8, 0);
 
-        // -- Header Row --
         gbc.gridy = 0;
         gbc.gridx = 0; gbc.weightx = 0.5;
-        JLabel h1 = new JLabel("Grade Point"); // Changed Label
+        JLabel h1 = new JLabel("Grade");
         h1.setFont(new Font("Segoe UI", Font.BOLD, 14));
         h1.setForeground(textSecondaryColor);
         card.add(h1, gbc);
@@ -134,15 +138,10 @@ public class DefineGradeRangesFrame extends JFrame {
         card.add(sep, gbc);
         gbc.gridwidth = 1;
 
-        // -- Dynamic Rows (10 to 5) --
         for (GradeRange range : gradeRanges) {
             gbc.gridy++;
             addGradeRow(card, gbc, range);
         }
-
-        // -- Hardcoded F Row (0-4) --
-        gbc.gridy++;
-        addHardcodedFailRow(card, gbc);
 
         mainContainer.add(card);
         mainContainer.add(Box.createVerticalGlue());
@@ -157,7 +156,6 @@ public class DefineGradeRangesFrame extends JFrame {
 
     private void addGradeRow(JPanel panel, GridBagConstraints gbc, GradeRange range) {
         gbc.gridx = 0;
-        // Display "10", "9", etc.
         JLabel lblGrade = new JLabel(range.getGradeLetter());
         lblGrade.setFont(new Font("Segoe UI", Font.BOLD, 22));
         lblGrade.setForeground(textColor);
@@ -166,6 +164,14 @@ public class DefineGradeRangesFrame extends JFrame {
         gbc.gridx = 1;
         JTextField scoreField = new JTextField(String.valueOf(range.getMinScore()));
         styleTextField(scoreField);
+
+        if (range.getGradeLetter().equals("F")) {
+            scoreField.setText("0");
+            scoreField.setEnabled(false);
+            scoreField.setBackground(cardColor);
+            scoreField.setBorder(BorderFactory.createLineBorder(borderColor));
+            scoreField.setForeground(textSecondaryColor);
+        }
 
         scoreField.addKeyListener(new KeyAdapter() {
             public void keyTyped(KeyEvent e) {
@@ -186,43 +192,6 @@ public class DefineGradeRangesFrame extends JFrame {
         panel.add(fieldWrapper, gbc);
     }
 
-    // --- NEW: Hardcoded F Row ---
-    private void addHardcodedFailRow(JPanel panel, GridBagConstraints gbc) {
-        // Separator
-        JSeparator sep = new JSeparator();
-        sep.setForeground(borderColor);
-        sep.setBackground(cardColor);
-
-        gbc.insets = new Insets(15, 0, 15, 0);
-        gbc.gridx = 0; gbc.gridwidth = 2;
-        panel.add(sep, gbc);
-
-        // Reset insets
-        gbc.insets = new Insets(8, 0, 8, 0);
-        gbc.gridwidth = 1;
-        gbc.gridy++;
-
-        // Label "F (0-4)"
-        gbc.gridx = 0;
-        JLabel lblFail = new JLabel("F (0-4)");
-        lblFail.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        lblFail.setForeground(dangerColor); // Red color for Fail
-        panel.add(lblFail, gbc);
-
-        // Value "Below X"
-        gbc.gridx = 1;
-        JLabel lblRange = new JLabel("<html><i>Below lowest cutoff</i></html>");
-        lblRange.setFont(new Font("Segoe UI", Font.ITALIC, 16));
-        lblRange.setForeground(textSecondaryColor);
-        lblRange.setHorizontalAlignment(SwingConstants.RIGHT);
-
-        JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        wrapper.setOpaque(false);
-        wrapper.add(lblRange);
-
-        panel.add(wrapper, gbc);
-    }
-
     private JPanel createFooter() {
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 30, 20));
         footer.setBackground(bgColor);
@@ -237,6 +206,7 @@ public class DefineGradeRangesFrame extends JFrame {
         return footer;
     }
 
+    // --- SAVE LOGIC ---
     private void saveRanges() {
         List<GradeRange> newRanges = new ArrayList<>();
         for (int i = 0; i < gradeRanges.size(); i++) {
@@ -246,17 +216,17 @@ public class DefineGradeRangesFrame extends JFrame {
             try {
                 val = Integer.parseInt(textVal);
                 if (val > 100) {
-                    JOptionPane.showMessageDialog(this, "Score cannot exceed 100 (Grade Point " + letter + ")", "Input Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Score cannot exceed 100 (Grade " + letter + ")", "Input Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Invalid number for Grade Point " + letter, "Input Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid number for Grade " + letter, "Input Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             newRanges.add(new GradeRange(letter, val));
         }
 
-        // Validation: Descending Order
+        // Validation
         for (int i = 0; i < newRanges.size() - 1; i++) {
             int current = newRanges.get(i).getMinScore();
             int next = newRanges.get(i+1).getMinScore();
@@ -268,6 +238,7 @@ public class DefineGradeRangesFrame extends JFrame {
             }
         }
 
+        // --- CALL SERVICE ---
         boolean success = gradingService.saveGradeCutoffs(courseCode, courseName, instructorId, semester, newRanges);
 
         if (success) {
@@ -278,19 +249,23 @@ public class DefineGradeRangesFrame extends JFrame {
         }
     }
 
-    // --- Default 1-10 Scale ---
     private List<GradeRange> loadDefaultRanges() {
         List<GradeRange> list = new ArrayList<>();
-        list.add(new GradeRange("10", 90));
-        list.add(new GradeRange("9", 80));
-        list.add(new GradeRange("8", 70));
-        list.add(new GradeRange("7", 60));
-        list.add(new GradeRange("6", 50));
-        list.add(new GradeRange("5", 40));
-        // 4,3,2,1,0 are implicit "F" if < 40
+        list.add(new GradeRange("A+", 97));
+        list.add(new GradeRange("A", 93));
+        list.add(new GradeRange("A-", 90));
+        list.add(new GradeRange("B+", 87));
+        list.add(new GradeRange("B", 83));
+        list.add(new GradeRange("B-", 80));
+        list.add(new GradeRange("C+", 77));
+        list.add(new GradeRange("C", 73));
+        list.add(new GradeRange("C-", 70));
+        list.add(new GradeRange("D", 60));
+        list.add(new GradeRange("F", 0));
         return list;
     }
 
+    // ... (styleTextField, StyledScrollBarUI unchanged) ...
     private void styleTextField(JTextField field) {
         field.setFont(new Font("Segoe UI", Font.BOLD, 18));
         field.setPreferredSize(new Dimension(80, 40));
@@ -315,6 +290,7 @@ public class DefineGradeRangesFrame extends JFrame {
     }
 
     public static void main(String[] args) {
+        // Test Mode
         SwingUtilities.invokeLater(() -> new DefineGradeRangesFrame("CS101", "Intro to Programming", "inst1", "Monsoon 2025").setVisible(true));
     }
 }
