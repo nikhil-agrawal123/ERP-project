@@ -278,7 +278,6 @@ CREATE TABLE IF NOT EXISTS `system_settings` (
                                                  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                                  PRIMARY KEY (`setting_key`)
 ) ENGINE = InnoDB;
-
 -- Insert default maintenance state (FALSE = Live)
 INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_value`)
 VALUES ('maintenance_mode', 'false');
