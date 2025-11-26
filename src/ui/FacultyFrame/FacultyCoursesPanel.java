@@ -321,7 +321,8 @@ public class FacultyCoursesPanel extends JPanel {
 
         RoundedButton viewStudentsButton = new RoundedButton("View Enrolled Students", buttonColor, buttonColorGlow, 10);
         RoundedButton updateScoresButton = new RoundedButton("Update Scores", buttonColor, buttonColorGlow, 10);
-        RoundedButton setGradingPolicyButton = new RoundedButton("Set Grading Policy", buttonColor, buttonColorGlow, 10);
+        RoundedButton setCourseBreakdown = new RoundedButton("Set Course Breakdown", buttonColor, buttonColorGlow, 10);
+        RoundedButton setGradingPolicy = new RoundedButton("Set Grading Policy", buttonColor, buttonColorGlow, 10);
 
         Font buttonFont = new Font("Segoe UI", Font.BOLD, 15);
         Border buttonBorder = BorderFactory.createEmptyBorder(12, 22, 12, 22);
@@ -341,17 +342,25 @@ public class FacultyCoursesPanel extends JPanel {
             updateScoresFrame.setVisible(true);
         });
 
-        setGradingPolicyButton.setFont(buttonFont);
-        setGradingPolicyButton.setBorder(buttonBorder);
-        setGradingPolicyButton.addActionListener(e ->
+        setCourseBreakdown.setFont(buttonFont);
+        setCourseBreakdown.setBorder(buttonBorder);
+        setCourseBreakdown.addActionListener(e ->
         {
-            GradingPolicyFrame gradingPolicyFrame = new GradingPolicyFrame(course.getCourseCode(), course.getCourseName(),"INST-CS-501", semester);
+            CourseBreakdown gradingPolicyFrame = new CourseBreakdown(course.getCourseCode(), course.getCourseName(),"INST-CS-501", semester);
             gradingPolicyFrame.setVisible(true);
+        });
+
+        setGradingPolicy.setFont(buttonFont);
+        setGradingPolicy.setBorder(buttonBorder);
+        setGradingPolicy.addActionListener(e ->{
+            DefineGradeRangesFrame gradeRangesFrame = new DefineGradeRangesFrame(course.getCourseCode(),course.getCourseName());
+            gradeRangesFrame.setVisible(true);
         });
 
         buttonPanel.add(viewStudentsButton);
         buttonPanel.add(updateScoresButton);
-        buttonPanel.add(setGradingPolicyButton);
+        buttonPanel.add(setCourseBreakdown);
+        buttonPanel.add(setGradingPolicy);
 
         gbc.gridx = 0;
         gbc.gridy = 4;

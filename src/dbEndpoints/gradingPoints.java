@@ -16,7 +16,7 @@ public class gradingPoints {
     public String getPolicyJson(String courseCode, String instructorId, String semester) {
         String sql = """
             SELECT grading_policy
-            FROM users.gradingpolicy 
+            FROM users.coursebreakdown 
             WHERE course_code = ? AND instructor_id = ? AND semester = ?
         """;
 
@@ -41,7 +41,7 @@ public class gradingPoints {
     public boolean savePolicyJson(String courseCode, String courseName, String instructorId, String semester, String jsonPolicy) {
 
         // 1. CHECK: Does a policy already exist for this combination?
-        String checkSql = "SELECT policy_id FROM users.gradingpolicy WHERE course_code = ? AND instructor_id = ? AND semester = ?";
+        String checkSql = "SELECT policy_id FROM users.coursebreakdown WHERE course_code = ? AND instructor_id = ? AND semester = ?";
 
         boolean exists = false;
 
@@ -62,7 +62,7 @@ public class gradingPoints {
             if (exists) {
                 // --- UPDATE EXISTING ---
                 String updateSql = """
-                     UPDATE users.gradingpolicy 
+                     UPDATE users.coursebreakdown 
                      SET grading_policy = ?, course_name = ?
                      WHERE course_code = ? AND instructor_id = ? AND semester = ?
                  """;
@@ -77,7 +77,7 @@ public class gradingPoints {
             } else {
                 // --- INSERT NEW ---
                 String insertSql = """
-                     INSERT INTO users.gradingpolicy 
+                     INSERT INTO users.coursebreakdown 
                      (course_code, course_name, instructor_id, semester, grading_policy)
                      VALUES (?, ?, ?, ?, ?)
                  """;

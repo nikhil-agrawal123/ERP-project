@@ -307,3 +307,5 @@ alter table users.audit_logs add column user_type varchar(50) not null
 INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_value`) VALUES
                                                                           ('drop_deadline', '2025-09-01'),      -- Standard Drop (Delete)
                                                                           ('late_drop_deadline', '2025-10-15'); -- Late Drop (Grade 'X')
+
+alter table users.gradingpolicy rename courseBreakdown

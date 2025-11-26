@@ -17,7 +17,7 @@ import middleware.loggerService;
 
 import dbClasses.GradingComponent;
 
-public class GradingPolicyFrame extends JFrame {
+public class CourseBreakdown extends JFrame {
 
     // --- UI Color Palette ---
     private Color bgColor = new Color(42, 48, 60);
@@ -51,8 +51,8 @@ public class GradingPolicyFrame extends JFrame {
     private DefaultListModel<GradingComponent> editListModel;
     private JLabel totalLabelEdit;
 
-    public GradingPolicyFrame(String courseCode, String courseName, String instructorId, String semester) {
-        super("Grading Policy - " + courseName);
+    public CourseBreakdown(String courseCode, String courseName, String instructorId, String semester) {
+        super("Course Breakdown - " + courseName);
 
         this.courseCode = courseCode;
         this.courseName = courseName;
@@ -70,7 +70,7 @@ public class GradingPolicyFrame extends JFrame {
         setLayout(new BorderLayout(0, 0));
 
         // --- Title ---
-        JLabel title = new JLabel("Grading Policy: " + courseName + " (" + semester + ")", SwingConstants.LEFT);
+        JLabel title = new JLabel("Course Breakdown: " + courseName + " (" + semester + ")", SwingConstants.LEFT);
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
         title.setForeground(textColor);
         title.setOpaque(false);
@@ -281,7 +281,7 @@ public class GradingPolicyFrame extends JFrame {
 
     private void importPolicyFromCsv() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Import Grading Policy (CSV)");
+        fileChooser.setDialogTitle("Import Course Breakdown (CSV)");
         fileChooser.setFileFilter(new FileNameExtensionFilter("CSV Files", "csv"));
 
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -337,7 +337,7 @@ public class GradingPolicyFrame extends JFrame {
         }
 
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Export Grading Policy");
+        fileChooser.setDialogTitle("Export Course Breakdown");
         fileChooser.setSelectedFile(new File(courseCode + "_grading_policy.csv"));
         fileChooser.setFileFilter(new FileNameExtensionFilter("CSV Files", "csv"));
 

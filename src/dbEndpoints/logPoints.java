@@ -19,7 +19,7 @@ public class logPoints {
      * Record an action in the database.
      */
     public void logAction(String userId, String actionType, String description, String user_type) {
-        String sql = "INSERT INTO users.audit_logs (user_id, action_type, description) VALUES (?, ?, ?,?)";
+        String sql = "INSERT INTO users.audit_logs (user_id, action_type, description,user_type) VALUES (?, ?, ?,?)";
 
         try (Connection conn = dbConnector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
