@@ -330,8 +330,6 @@ public class StudentRegCourses extends JFrame {
 
         if(today.isAfter(endD) || today.isBefore(startD)) {
             JOptionPane.showMessageDialog(this, "Registration failed registration has not begin.", "Error", JOptionPane.ERROR_MESSAGE);
-        }else if(today.isAfter(endD)){
-            JOptionPane.showMessageDialog(this, "Registration failed registration has ended.", "Error", JOptionPane.ERROR_MESSAGE);
         }
         else{
             if (selectedCount == 0) {

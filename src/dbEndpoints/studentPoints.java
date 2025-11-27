@@ -188,7 +188,7 @@ public class studentPoints {
         }
     }
 
-    public int Check(String userid, String course){
+    public boolean Check(String userid, String course){
         String sql = """
             SELECT COUNT(*)
             FROM users.enrollments
@@ -202,12 +202,14 @@ public class studentPoints {
             pstm.setString(2, course);
             ResultSet rs = pstm.executeQuery();
             if (rs.next()) {
-                return rs.getInt(1);
+                if( rs.getInt(1) > 0){
+                    return false;
+                }
             }
         }catch (SQLException e){
             e.printStackTrace();
         }
-        return 0;
+        return true;
     }
 
     public void incrementAllStudentSemesters() throws SQLException {

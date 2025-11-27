@@ -76,7 +76,7 @@ public class studentService {
     }
 
     public boolean CheckRegister(String username, String courseCode) {
-        return student.Check(username, courseCode) != 0;
+        return student.Check(username, courseCode) ;
     }
 
     public String getStudentProgram(String rollNumber) {
