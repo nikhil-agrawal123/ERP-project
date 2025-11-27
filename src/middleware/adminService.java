@@ -5,7 +5,7 @@ import dbClasses.AddCourse;
 import dbClasses.AddFaculty;
 import dbClasses.NewStudent;
 import dbEndpoints.SystemSettings;
-import dbEndpoints.adminPoints;
+import dbEndpoints.AdminPoints;
 import dbEndpoints.AdminBackup;
 import dbEndpoints.studentPoints;
 
@@ -17,14 +17,14 @@ import java.sql.SQLException;
 import dbClasses.AddAdmin;
 
 public class adminService {
-    private final adminPoints adminPoints;
+    private final AdminPoints adminPoints;
     private final AdminBackup adminBackup;
     private final loggerService loggerService;
     private final SystemSettings systemSettings;
     private final studentPoints studentService;
 
     public adminService() {
-        this.adminPoints = new adminPoints();
+        this.adminPoints = new AdminPoints();
         this.adminBackup = new AdminBackup();
         this.loggerService = new loggerService();
         this.systemSettings = new SystemSettings();

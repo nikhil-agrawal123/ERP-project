@@ -4,6 +4,7 @@ import ui.AdminFrame.*;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import ui.landing.LandingFrame;
+import ui.AdminFrame.AdminPublishResult;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
@@ -309,6 +310,14 @@ public class AdminDashboard extends JFrame {
             }
         });
 
+        JPanel releaseResultsCard = createFunctionCard("Release Results");
+        releaseResultsCard.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                AdminPublishResult frame = new AdminPublishResult();
+                frame.setVisible(true);
+            }
+        });
+
         // Add cards to the new grid panel
         cardGridPanel.add(addUserCard);
         cardGridPanel.add(removeUsersCard);
@@ -316,6 +325,7 @@ public class AdminDashboard extends JFrame {
         cardGridPanel.add(manageCoursesCard);
         cardGridPanel.add(maintenanceCard);
         cardGridPanel.add(newSemCard);
+        cardGridPanel.add(releaseResultsCard);
 
         // Add the grid panel to the main panel, anchored to the top-left
         GridBagConstraints gbc = new GridBagConstraints();

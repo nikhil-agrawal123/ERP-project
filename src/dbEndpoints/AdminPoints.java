@@ -10,10 +10,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class adminPoints {
+public class AdminPoints {
     private Connector connector;
 
-    public adminPoints() {
+    public AdminPoints() {
         this.connector = new  Connector();
     }
 
