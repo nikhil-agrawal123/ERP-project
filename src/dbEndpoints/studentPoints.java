@@ -299,7 +299,7 @@ public class studentPoints {
                         rs.getInt("course_credits"),
                         rs.getString("offeredBy"),
                         rs.getDouble("gradePoint"),
-                        rs.getString("grade") // Fetch grade letter (e.g. 'X')
+                        rs.getString("grade")
                 );
                 allCourses.add(course);
             }
