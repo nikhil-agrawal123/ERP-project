@@ -328,9 +328,9 @@ public class StudentRegCourses extends JFrame {
         LocalDate endD = LocalDate.parse(end);
         LocalDate today = LocalDate.now();
 
-        if(! (today.isBefore(endD) && today.isAfter(startD))) {
+        if(today.isAfter(endD) || today.isBefore(startD)) {
             JOptionPane.showMessageDialog(this, "Registration failed registration has not begin.", "Error", JOptionPane.ERROR_MESSAGE);
-        } else if(today.isAfter(endD)){
+        }else if(today.isAfter(endD)){
             JOptionPane.showMessageDialog(this, "Registration failed registration has ended.", "Error", JOptionPane.ERROR_MESSAGE);
         }
         else{

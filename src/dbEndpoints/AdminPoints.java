@@ -8,7 +8,10 @@ import middleware.facultyService;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AdminPoints {
     private Connector connector;
@@ -218,5 +221,137 @@ public class AdminPoints {
                 try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
             }
         }
+    }
+
+    public List<CourseDTO> searchCourses(String query) {
+        List<CourseDTO> list = new ArrayList<>();
+        String sql = """
+            SELECT 
+                s.section_id, 
+                c.course_code, c.course_title, c.department, c.credits,
+                s.instructor_id, i.full_name,
+                s.semester, s.year, s.capacity,
+                (SELECT COUNT(*) FROM users.enrollments e WHERE e.section_id = s.section_id) as enrolled
+            FROM users.sections s
+            JOIN users.courses c ON s.course_code = c.course_code
+            JOIN users.instructors i ON s.instructor_id = i.user_id
+            WHERE 
+                c.course_title LIKE ? OR 
+                c.course_code LIKE ? OR 
+                i.full_name LIKE ?
+            ORDER BY s.year DESC, s.semester, c.course_title
+        """;
+
+        try (Connection conn = connector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            String search = "%" + query + "%";
+            pstmt.setString(1, search);
+            pstmt.setString(2, search);
+            pstmt.setString(3, search);
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                list.add(new CourseDTO(
+                        rs.getInt("section_id"),
+                        rs.getString("course_code"),
+                        rs.getString("course_title"),
+                        rs.getString("department"),
+                        rs.getInt("credits"),
+                        rs.getString("instructor_id"),
+                        rs.getString("full_name"),
+                        rs.getString("semester"),
+                        rs.getInt("year"),
+                        rs.getInt("capacity"),
+                        rs.getInt("enrolled")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<CourseDTO> getCourseCatalog() {
+        List<CourseDTO> list = new ArrayList<>();
+        String sql = "SELECT course_code, course_title, department, credits FROM users.courses ORDER BY course_code";
+
+        try (Connection conn = connector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                // We use the DTO, leaving Section-specific fields (Instructor, Year, etc.) as null/0
+                list.add(new CourseDTO(
+                        0, // No Section ID
+                        rs.getString("course_code"),
+                        rs.getString("course_title"),
+                        rs.getString("department"),
+                        rs.getInt("credits"),
+                        "N/A", // No Instructor in Catalog
+                        "N/A",
+                        "N/A", // No Semester in Catalog
+                        0,
+                        0,
+                        0
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+
+    public List<CourseDTO> getAllCourseOfferings(String semesterFilter) {
+        List<CourseDTO> list = new ArrayList<>();
+
+        String sql = """
+            SELECT 
+                s.section_id, 
+                c.course_code, 
+                c.course_title, 
+                c.department, 
+                c.credits,
+                s.instructor_id, 
+                i.full_name,
+                s.semester, 
+                s.year, 
+                s.capacity,
+                (SELECT COUNT(*) FROM users.enrollments e WHERE e.section_id = s.section_id) as enrolled
+            FROM users.sections s
+            JOIN users.courses c ON s.course_code = c.course_code
+            LEFT JOIN users.instructors i ON s.instructor_id = i.user_id
+            WHERE c.semester = ?
+            ORDER BY s.year DESC, s.semester, c.course_code
+        """;
+
+        try (Connection conn = connector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1,  semesterFilter);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String fullSem = rs.getString("semester");
+
+                list.add(new CourseDTO(
+                        rs.getInt("section_id"),
+                        rs.getString("course_code"),
+                        rs.getString("course_title"),
+                        rs.getString("department"),
+                        rs.getInt("credits"),
+                        rs.getString("instructor_id"),
+                        rs.getString("full_name"),
+                        fullSem,
+                        rs.getInt("year"),
+                        rs.getInt("capacity"),
+                        rs.getInt("enrolled")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

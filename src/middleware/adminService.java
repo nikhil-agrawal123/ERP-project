@@ -1,9 +1,7 @@
 package middleware;
 
 import databaseConfig.Connector;
-import dbClasses.AddCourse;
-import dbClasses.AddFaculty;
-import dbClasses.NewStudent;
+import dbClasses.*;
 import dbEndpoints.SystemSettings;
 import dbEndpoints.AdminPoints;
 import dbEndpoints.AdminBackup;
@@ -14,7 +12,7 @@ import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.sql.Connection;
 import java.sql.SQLException;
-import dbClasses.AddAdmin;
+import java.util.List;
 
 public class adminService {
     private final AdminPoints adminPoints;
@@ -147,5 +145,17 @@ public class adminService {
         }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         return systemSettings.updateDropDeadlines(sdf.format(dropDate), sdf.format(lateDropDate));
+    }
+
+    public List<CourseDTO> getAllCourseOfferings(String semesterFilter) {
+        return adminPoints.getAllCourseOfferings(semesterFilter);
+    }
+
+    public List<CourseDTO> searchCourses(String query) {
+        return adminPoints.searchCourses(query == null ? "" : query);
+    }
+
+    public List<CourseDTO> getCourseCatalog() {
+        return adminPoints.getCourseCatalog();
     }
 }
