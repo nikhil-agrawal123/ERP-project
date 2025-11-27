@@ -1,7 +1,6 @@
 package dbEndpoints;
 
 import databaseConfig.Connector;
-import ui.components.RoundedPanel;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

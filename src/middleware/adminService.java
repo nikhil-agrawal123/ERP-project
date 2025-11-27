@@ -143,7 +143,7 @@ public class adminService {
 
     public boolean setDropDeadlines(java.util.Date dropDate, java.util.Date lateDropDate) {
         if (dropDate.after(lateDropDate)) {
-            return false; // Logical error
+            return false;
         }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         return systemSettings.updateDropDeadlines(sdf.format(dropDate), sdf.format(lateDropDate));

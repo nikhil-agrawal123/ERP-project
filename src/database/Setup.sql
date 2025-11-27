@@ -338,3 +338,5 @@ CREATE TABLE `student_component_scores` (
                                                     REFERENCES `enrollments` (`enrollment_id`)
                                                     ON DELETE CASCADE
 ) ENGINE = InnoDB;
+
+alter table courses add column department varchar(100) not null
