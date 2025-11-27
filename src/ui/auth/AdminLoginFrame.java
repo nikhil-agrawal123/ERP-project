@@ -256,7 +256,7 @@ public class AdminLoginFrame extends JFrame {
                 JOptionPane.ERROR_MESSAGE);
 
         Timer lockoutTimer = new Timer(30000, e -> {
-            numTry = 3;
+            numTry = 5;
             loginButton.setEnabled(true);
             usernameField.setEnabled(true);
             passwordField.setEnabled(true);

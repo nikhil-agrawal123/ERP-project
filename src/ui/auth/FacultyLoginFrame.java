@@ -18,7 +18,7 @@ import ui.dashboard.FacultyDashboard;
 import ui.landing.LandingFrame;
 
 public class FacultyLoginFrame extends JFrame {
-    private int numTry = 3;
+    private int numTry = 5;
 
     private services facultyService;
     private maintenanceService maintenance;
@@ -279,7 +279,7 @@ public class FacultyLoginFrame extends JFrame {
         logger.log(usernameField.getText() ,"Login Attempt" ,"User tried logging in with invalid credentials login locked","Faculty");
 
         Timer lockoutTimer = new Timer(30000, e -> {
-            numTry = 3;
+            numTry = 5;
             loginButton.setEnabled(true);
             usernameField.setEnabled(true);
             passwordField.setEnabled(true);
