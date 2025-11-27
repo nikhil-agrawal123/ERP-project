@@ -6,7 +6,7 @@ import java.util.List;
 
 public class AdminBackup {
     private static final String DB_USER = "root";
-    private static final String DB_PASS = "Nikhil@123";
+    private static final String DB_PASS = "password";
     private static final String DB_NAME = "users";
     private static final String DB_NAME_AUTH = "auth"; // Backup both if needed
     private static final String MYSQL_PATH = "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\";

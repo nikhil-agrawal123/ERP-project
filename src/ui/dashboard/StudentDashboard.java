@@ -684,7 +684,6 @@ public class StudentDashboard extends JFrame {
         profileMenu.setBackground(popoverColor);
         profileMenu.setBorder(BorderFactory.createLineBorder(bgColor));
         profileMenu.add(createMenuItem("Manage Account"));
-        profileMenu.add(createMenuItem("Notifications"));
     }
 
     private JMenuItem createMenuItem(String text) {
@@ -714,11 +713,6 @@ public class StudentDashboard extends JFrame {
                     profileFrame.setVisible(true);
                 });
 
-            } else if (text.equals("Notifications")) {
-                SwingUtilities.invokeLater(() -> {
-                    Notifications notifFrame = new Notifications(rollNumber, username);
-                    notifFrame.setVisible(true);
-                });
             }
         });
         return item;
