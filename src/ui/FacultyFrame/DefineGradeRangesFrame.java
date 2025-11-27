@@ -4,6 +4,7 @@ import dbClasses.GradeRange;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import middleware.gradingService;
+import middleware.maintenanceService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -35,7 +36,8 @@ public class DefineGradeRangesFrame extends JFrame {
 
     private List<GradeRange> gradeRanges;
     private List<JTextField> scoreFields;
-    private gradingService gradingService; // Service
+    private gradingService gradingService;
+    private maintenanceService maintenanceService;
 
     /**
      * Updated constructor to accept section details.
@@ -49,6 +51,7 @@ public class DefineGradeRangesFrame extends JFrame {
 
         this.scoreFields = new ArrayList<>();
         this.gradingService = new gradingService();
+        this.maintenanceService = new maintenanceService();
 
         // --- Load Data ---
         List<GradeRange> savedRanges = gradingService.getGradeCutoffs(courseCode, instructorId, semester);
@@ -201,7 +204,13 @@ public class DefineGradeRangesFrame extends JFrame {
         saveBtn.setForeground(Color.WHITE);
         saveBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
         saveBtn.setPreferredSize(new Dimension(150, 45));
-        saveBtn.addActionListener(e -> saveRanges());
+        saveBtn.addActionListener(e -> {
+            if(!maintenanceService.isMaintenanceActive()){
+                saveRanges();
+            }else {
+                JOptionPane.showMessageDialog(footer, "System Under Maintenance");
+            }
+        });
         footer.add(saveBtn);
         return footer;
     }

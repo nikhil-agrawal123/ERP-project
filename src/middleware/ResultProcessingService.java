@@ -93,12 +93,21 @@ public class ResultProcessingService {
                 // Check against cutoffs (Assuming descending order 10 -> 0)
                 for (GradeRange r : cutoffs) {
                     if (total >= r.getMinScore()) {
-                        // Convert "10" (String) to 10.0 (Double) for CG
+                        letter = r.getGradeLetter();
                         try {
-                            gp = Double.parseDouble(r.getGradeLetter());
-                            letter = getLetterForCG(gp);
+                                gp = switch (letter) {
+                                case "F" -> 4;
+                                case "A+" -> 10;
+                                case "A" -> 10;
+                                case "A-" -> 9;
+                                case "B" -> 8;
+                                case "B-" -> 7;
+                                case "C" -> 6;
+                                case "D" -> 5;
+                                default -> gp;
+                            };
+
                         } catch(Exception e) {
-                            // Fallback if pure Letter grades were used
                             letter = r.getGradeLetter();
                         }
                         break; // Match found
@@ -113,16 +122,6 @@ public class ResultProcessingService {
         return updateCount;
     }
 
-    private String getLetterForCG(double cg) {
-        if(cg >= 10) return "A";
-        if(cg >= 9) return "A-";
-        if(cg >= 8) return "B";
-        if(cg >= 7) return "B-";
-        if(cg >= 6) return "C";
-        if(cg >= 5) return "C-";
-        return "F";
-    }
-
     private void updateEnrollment(int enrollId, String letter, double gp, Connection conn) throws SQLException {
         // Updates the official grade columns and marks course as completed
         String sql = "UPDATE users.enrollments SET grade = ?, gradePoint = ?, completion = 1 WHERE enrollment_id = ?";
@@ -131,6 +130,26 @@ public class ResultProcessingService {
             pstmt.setDouble(2, gp);
             pstmt.setInt(3, enrollId);
             pstmt.executeUpdate();
+        }
+    }
+
+    private void updateGrade(String student_roll_no , String course_code, String semester, int year, double score, int credit){
+        String sql = "INSERT INTO users.grades VALUES (?,?,?,?,?,?)";
+
+        try(Connection conn = dbConnector.connect();
+            PreparedStatement pstm = conn.prepareStatement(sql);
+        ){
+            pstm.setString(1, student_roll_no);
+            pstm.setString(2, course_code);
+            pstm.setString(3, semester);
+            pstm.setInt(4, year);
+            pstm.setDouble(5, score);
+            pstm.setInt(6, credit);
+
+            pstm.executeUpdate();
+
+        }catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }

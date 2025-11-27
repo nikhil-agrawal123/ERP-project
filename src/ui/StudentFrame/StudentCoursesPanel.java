@@ -182,8 +182,8 @@ public class StudentCoursesPanel extends JPanel {
 
                 // Prepare Data
                 List<StudentRegisteredCourse> coursesForThisSem = semesterData.get(i);
-                String[] columnNames = {"Course Code", "Course Name", "Credits", "Offered By", "Grade Point", "Action"};
-                Object[][] data = new Object[coursesForThisSem.size()][6];
+                String[] columnNames = {"Course Code", "Course Name", "Credits", "Offered By", "Grade Point","Letter Grade", "Action"};
+                Object[][] data = new Object[coursesForThisSem.size()][7];
 
                 for (int j = 0; j < coursesForThisSem.size(); j++) {
                     StudentRegisteredCourse course = coursesForThisSem.get(j);
@@ -202,21 +202,22 @@ public class StudentCoursesPanel extends JPanel {
                         gradeDisplay = String.valueOf(course.getGradePoint());
                     }
                     data[j][4] = gradeDisplay;
-                    data[j][5] = "Drop";
+                    data[j][5] = course.getGradeLetter();
+                    data[j][6] = "Drop";
                 }
 
                 // Create Table
                 JTable semTable = createStyledTable(data, columnNames);
 
                 // Configure Button Column
-                semTable.getColumnModel().getColumn(5).setCellRenderer(new ButtonRenderer());
+                semTable.getColumnModel().getColumn(6).setCellRenderer(new ButtonRenderer());
                 // Pass the UPDATED map to the editor
-                semTable.getColumnModel().getColumn(5).setCellEditor(new ButtonEditor(new JCheckBox(), semesterData, i));
+                semTable.getColumnModel().getColumn(6).setCellEditor(new ButtonEditor(new JCheckBox(), semesterData, i));
 
                 // Width adjustments
                 semTable.getColumnModel().getColumn(0).setPreferredWidth(80);
                 semTable.getColumnModel().getColumn(1).setPreferredWidth(250);
-                semTable.getColumnModel().getColumn(5).setPreferredWidth(80);
+                semTable.getColumnModel().getColumn(6).setPreferredWidth(80);
 
                 JScrollPane scrollPane = createStyledTableScrollPane(semTable);
 

@@ -21,7 +21,6 @@ public class Course {
         this.courseCode = courseCode;
         this.courseName = courseName;
         this.facultyId = facultyId;
-        // Set defaults for other fields
         this.semester = "Unknown";
         this.program = "Unknown";
         this.studentCount = 0;
