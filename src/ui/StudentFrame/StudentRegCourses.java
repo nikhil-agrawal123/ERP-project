@@ -406,7 +406,7 @@ public class StudentRegCourses extends JFrame {
         bottomInfoPanel.add(Box.createRigidArea(new Dimension(40, 0)));
         bottomInfoPanel.add(createDetailPanel("Instructor", course.getOfferedBY()));
         bottomInfoPanel.add(Box.createRigidArea(new Dimension(40, 0)));
-        bottomInfoPanel.add(createDetailPanel("Seats", course.getEnrolledCount() + " / " + course.getCapacity()));
+        bottomInfoPanel.add(createDetailPanel("Seats", course.getEnrolledCount()+1 + " / " + course.getCapacity()));
         bottomInfoPanel.add(Box.createHorizontalGlue());
 
         // Checkbox

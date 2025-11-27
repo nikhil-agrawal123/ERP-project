@@ -82,6 +82,7 @@ public class PdfExportService {
                     table.addHeaderCell(createHeaderCell("Credits"));
                     table.addHeaderCell(createHeaderCell("Offered By"));
                     table.addHeaderCell(createHeaderCell("Grade"));
+                    table.addHeaderCell(createHeaderCell("Letter Grade"));
 
                     // --- 5. Add Table Rows (Data) ---
                     for (StudentRegisteredCourse course : courses) {
@@ -94,6 +95,8 @@ public class PdfExportService {
                         String grade = (course.getGradePoint() == 0.0) ? "In Progress" : String.valueOf(course.getGradePoint());
                         table.addCell(new Cell().add(new Paragraph(grade)
                                 .setTextAlignment(TextAlignment.CENTER)));
+                        String letterGrade = course.getGradeLetter();
+                        table.addCell(new Cell().add(new Paragraph(letterGrade).setTextAlignment(TextAlignment.CENTER)));
                     }
 
                     document.add(table); // Add the completed table to the document
