@@ -14,6 +14,7 @@ import ui.components.RoundedPanel;
 
 import middleware.gradingService;
 import middleware.loggerService;
+import middleware.maintenanceService;
 
 import dbClasses.GradingComponent;
 
@@ -39,6 +40,7 @@ public class CourseBreakdown extends JFrame {
     private List<GradingComponent> policyComponents;
     private gradingService gradingService;
     private loggerService logger;
+    private maintenanceService maintenanceService;
 
     private CardLayout cardLayout;
     private JPanel mainCardPanel;
@@ -61,6 +63,7 @@ public class CourseBreakdown extends JFrame {
 
         this.gradingService = new gradingService();
         this.logger = new loggerService();
+        this.maintenanceService = new maintenanceService();
         this.policyComponents = gradingService.getPolicy(courseCode, instructorId, semester);
 
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -139,8 +142,12 @@ public class CourseBreakdown extends JFrame {
         editButton.setForeground(Color.WHITE);
         editButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
         editButton.addActionListener(e -> {
-            loadDataIntoEditList();
-            cardLayout.show(mainCardPanel, "EDIT");
+            if(!maintenanceService.isMaintenanceActive()){
+                loadDataIntoEditList();
+                cardLayout.show(mainCardPanel, "EDIT");
+            }else{
+                JOptionPane.showMessageDialog(mainCardPanel, "System under maintenance");
+            }
         });
 
         JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
@@ -197,7 +204,13 @@ public class CourseBreakdown extends JFrame {
         saveButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
         saveButton.setForeground(Color.WHITE);
         saveButton.setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
-        saveButton.addActionListener(e -> savePolicy());
+        saveButton.addActionListener(e -> {
+            if(!maintenanceService.isMaintenanceActive()){
+                savePolicy();
+            }else{
+                JOptionPane.showMessageDialog(mainCardPanel, "System under maintenance");
+            }
+        });
 
         RoundedButton cancelButton = new RoundedButton("Cancel", borderColor, borderColor.brighter(), 10);
         cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
@@ -217,21 +230,43 @@ public class CourseBreakdown extends JFrame {
         // Standard Action Buttons
         RoundedButton addButton = new RoundedButton("Add", buttonColor, buttonColorGlow, 10);
         styleControlButton(addButton);
-        addButton.addActionListener(e -> addComponent());
+        addButton.addActionListener(e -> {
+            if(!maintenanceService.isMaintenanceActive()){
+                addComponent();
+            }else{
+                JOptionPane.showMessageDialog(mainCardPanel, "System under maintenance");
+            }
+        });
 
         RoundedButton editButton = new RoundedButton("Edit", borderColor, borderColor.brighter(), 10);
         styleControlButton(editButton);
-        editButton.addActionListener(e -> editComponent());
+        editButton.addActionListener(e -> {
+            if(!maintenanceService.isMaintenanceActive()){
+                editComponent();
+            }else{
+                JOptionPane.showMessageDialog(mainCardPanel, "System under maintenance");
+            }
+        });
 
         RoundedButton removeButton = new RoundedButton("Remove", dangerColor, dangerHoverColor, 10);
         styleControlButton(removeButton);
-        removeButton.addActionListener(e -> removeComponent());
+        removeButton.addActionListener(e -> {
+            if(!maintenanceService.isMaintenanceActive()){
+                removeComponent();
+            }else{
+                JOptionPane.showMessageDialog(mainCardPanel, "System under maintenance");
+            }
+        });
 
-        // --- NEW: Import/Export Buttons ---
-        // We use a separator color or just the border color for "Tools"
         RoundedButton importButton = new RoundedButton("Import CSV", borderColor, borderColor.brighter(), 10);
         styleControlButton(importButton);
-        importButton.addActionListener(e -> importPolicyFromCsv());
+        importButton.addActionListener(e -> {
+            if(!maintenanceService.isMaintenanceActive()){
+                importPolicyFromCsv();
+            }else {
+                JOptionPane.showMessageDialog(mainCardPanel, "System under maintenance");
+            }
+        });
 
         RoundedButton exportButton = new RoundedButton("Export CSV", borderColor, borderColor.brighter(), 10);
         styleControlButton(exportButton);
