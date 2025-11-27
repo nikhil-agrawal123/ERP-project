@@ -8,6 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import dbClasses.*;
 
@@ -105,7 +107,7 @@ public class facultyPoints {
         List<EnrolledStudent> studentList = new ArrayList<>();
 
         String sql = """
-            SELECT DISTINCT st.full_name, st.student_roll_no, st.student_email
+            SELECT DISTINCT st.full_name, st.student_roll_no, st.student_email, e.enrollment_id
             FROM users.sections sec
             JOIN users.enrollments e ON sec.section_id = e.section_id
             JOIN users.students st ON e.student_id = st.user_id
@@ -125,7 +127,8 @@ public class facultyPoints {
                 studentList.add(new EnrolledStudent(
                         rs.getString("full_name"),
                         rs.getString("student_roll_no"),
-                        rs.getString("student_email")
+                        rs.getString("student_email"),
+                        rs.getInt("enrollment_id")
                 ));
             }
 
@@ -151,5 +154,66 @@ public class facultyPoints {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public boolean saveStudentScore(int enrollmentId, String componentName, double score) {
+        String sql = """
+            INSERT INTO users.student_component_scores (enrollment_id, component_name, score_obtained)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE score_obtained = VALUES(score_obtained)
+        """;
+
+        try (Connection conn = connector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, enrollmentId);
+            pstmt.setString(2, componentName);
+            pstmt.setDouble(3, score);
+
+            return pstmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Fetches all saved scores for a list of enrollments.
+     * Returns a Map: EnrollmentID -> Map<ComponentName, Score>
+     */
+    public Map<Integer, Map<String, Double>> getStudentScores(List<Integer> enrollmentIds) {
+        Map<Integer, Map<String, Double>> scoresMap = new HashMap<>();
+
+        if (enrollmentIds.isEmpty()) return scoresMap;
+
+        // Construct "IN (?, ?, ?)" clause dynamically
+        StringBuilder builder = new StringBuilder();
+        for(int i=0; i<enrollmentIds.size(); i++) builder.append("?,");
+        String placeholders = builder.deleteCharAt(builder.length()-1).toString();
+
+        String sql = "SELECT enrollment_id, component_name, score_obtained FROM users.student_component_scores WHERE enrollment_id IN (" + placeholders + ")";
+
+        try (Connection conn = connector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            for(int i=0; i<enrollmentIds.size(); i++) {
+                pstmt.setInt(i+1, enrollmentIds.get(i));
+            }
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                int eid = rs.getInt("enrollment_id");
+                String comp = rs.getString("component_name");
+                double val = rs.getDouble("score_obtained");
+
+                scoresMap.putIfAbsent(eid, new HashMap<>());
+                scoresMap.get(eid).put(comp, val);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return scoresMap;
     }
 }

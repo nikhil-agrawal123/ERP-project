@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class facultyService {
     private static final Logger log = LoggerFactory.getLogger(facultyService.class);
@@ -61,5 +62,24 @@ public class facultyService {
     public String getFullNmae(String instructor_id){
         logger.log("Admin" ,"Fetch Name" ,"Admin fetched instructor name with id" + instructor_id,"Faculty");
         return faculty.getFacultyName(instructor_id);
+    }
+
+    public boolean saveBatchScores(Map<Integer, Map<String, Double>> scoresData) {
+        boolean success = true;
+        for (Map.Entry<Integer, Map<String, Double>> entry : scoresData.entrySet()) {
+            int enrollmentId = entry.getKey();
+            Map<String, Double> studentScores = entry.getValue();
+
+            for (Map.Entry<String, Double> scoreEntry : studentScores.entrySet()) {
+                boolean s = faculty.saveStudentScore(enrollmentId, scoreEntry.getKey(), scoreEntry.getValue());
+                if (!s) success = false;
+            }
+        }
+        return success;
+    }
+
+    public Map<Integer, Map<String, Double>> getExistingScores(List<EnrolledStudent> students) {
+        List<Integer> ids = students.stream().map(EnrolledStudent::getEnrollmentId).collect(Collectors.toList());
+        return faculty.getStudentScores(ids);
     }
 }

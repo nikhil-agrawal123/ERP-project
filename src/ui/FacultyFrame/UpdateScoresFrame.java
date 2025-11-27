@@ -7,19 +7,18 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 import java.io.BufferedWriter;
 import java.io.File;
-
-
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
+import java.util.HashMap;
+import java.util.Map;
 
 // --- Your Custom Components ---
 import dbClasses.GradingComponent;
+import dbClasses.GradeRange;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 
@@ -47,13 +46,13 @@ public class UpdateScoresFrame extends JFrame {
 
     private gradingService gradingService;
     private facultyService facultyService;
-    private List<GradingComponent> policyComponents;
 
-    /**
-     * @param courseCode   e.g. "CS101"
-     * @param instructorId e.g. "inst1" (needed to find the correct policy)
-     * @param semester     e.g. "Monsoon 2025"
-     */
+    private List<GradingComponent> policyComponents;
+    private List<GradeRange> gradeCutoffs;
+
+    // --- FIX 1: Use Integer for Enrollment IDs to match Database/Service ---
+    private Map<Integer, Integer> rowToEnrollmentIdMap;
+
     public UpdateScoresFrame(String courseCode, String instructorId, String semester) {
         super("Update Scores for " + courseCode);
         this.courseCode = courseCode;
@@ -62,9 +61,11 @@ public class UpdateScoresFrame extends JFrame {
 
         this.gradingService = new gradingService();
         this.facultyService = new facultyService();
+        this.rowToEnrollmentIdMap = new HashMap<>();
 
-        // --- 1. Fetch Policy ---
+        // --- 1. Fetch Policy & Cutoffs ---
         this.policyComponents = gradingService.getPolicy(courseCode, instructorId, semester);
+        this.gradeCutoffs = gradingService.getGradeCutoffs(courseCode, instructorId, semester);
 
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -120,7 +121,7 @@ public class UpdateScoresFrame extends JFrame {
 
             JLabel warningLabel = new JLabel("<html><center>No grading policy has been set for this course.<br>Please set a policy in the 'Grading Policy' section first.</center></html>");
             warningLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-            warningLabel.setForeground(new Color(220, 80, 80)); // Danger color
+            warningLabel.setForeground(new Color(220, 80, 80));
 
             emptyStatePanel.add(warningLabel);
             mainPanel.add(emptyStatePanel, BorderLayout.CENTER);
@@ -154,33 +155,48 @@ public class UpdateScoresFrame extends JFrame {
     }
 
     private JPanel createDynamicTablePanel() {
-        // 1. Define Columns dynamically
+        // 1. Define Columns
         Vector<String> columnNames = new Vector<>();
         columnNames.add("Roll Number");
         columnNames.add("Student Name");
 
-        // Add columns from Policy
         for (GradingComponent comp : policyComponents) {
-            // Header format: "Quiz (10%)"
             columnNames.add(comp.getName() + " (" + comp.getPercentage() + "%)");
         }
         columnNames.add("Total (100%)");
+        columnNames.add("CG");
+        columnNames.add("Letter Grade");
 
-        // 2. Fetch Students
+        // 2. Fetch Students & EXISTING SCORES
         List<EnrolledStudent> students = facultyService.getClassList(courseCode, semester);
+
+        // --- FIX 2: Expect Integer Keys from Service ---
+        Map<Integer, Map<String, Double>> existingScores = facultyService.getExistingScores(students);
 
         // 3. Create Data Vector
         Vector<Vector<Object>> data = new Vector<>();
+        int rowIndex = 0;
+
         for (EnrolledStudent student : students) {
+            // --- FIX 3: Use Integer ID ---
+            int enrollmentId = student.getEnrollmentId();
+            rowToEnrollmentIdMap.put(rowIndex++, enrollmentId);
+
             Vector<Object> row = new Vector<>();
             row.add(student.getRollNumber());
             row.add(student.getStudentName());
 
-            // Initialize scores to 0 (or fetch from DB if we had a method for that)
-            for (int i = 0; i < policyComponents.size(); i++) {
-                row.add(0.0); // Default score
+            // --- FIX 4: Lookup using Integer Key ---
+            Map<String, Double> myScores = existingScores.getOrDefault(enrollmentId, new HashMap<>());
+
+            // Populate scores columns
+            for (GradingComponent comp : policyComponents) {
+                Double savedVal = myScores.getOrDefault(comp.getName(), 0.0);
+                row.add(savedVal);
             }
-            row.add(0.0); // Default Total
+            row.add(0.0); // Total (will recalculate)
+            row.add("-"); // Letter
+            row.add("0"); // CG
             data.add(row);
         }
 
@@ -188,38 +204,44 @@ public class UpdateScoresFrame extends JFrame {
         tableModel = new DefaultTableModel(data, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                // Only score columns are editable (indices 2 to size+1)
                 return column >= 2 && column < (2 + policyComponents.size());
             }
 
             @Override
             public void setValueAt(Object aValue, int row, int col) {
+                // Infinite Recursion Prevention
+                int firstCalculatedColumnIndex = 2 + policyComponents.size();
+                if (col >= firstCalculatedColumnIndex) {
+                    super.setValueAt(aValue, row, col);
+                    return;
+                }
+
                 double doubleVal = 0.0;
                 try {
                     doubleVal = Double.parseDouble(aValue.toString());
                     if (doubleVal < 0) doubleVal = 0.0;
 
-                    // Validate against max percentage?
-                    // Optional: get max for this column
                     int policyIndex = col - 2;
                     if (policyIndex >= 0 && policyIndex < policyComponents.size()) {
                         double max = policyComponents.get(policyIndex).getPercentage();
                         if (doubleVal > max) doubleVal = max;
                     }
-
                 } catch (NumberFormatException e) {
-                    // ignore invalid input
+                    // ignore
                 }
 
                 super.setValueAt(doubleVal, row, col);
-
-                // Auto-calculate Total
-                calculateTotal(row);
+                calculateRowMetrics(row);
             }
         };
 
         scoresTable = new JTable(tableModel);
         styleTable(scoresTable);
+
+        // Initial Calculation (updates Total column based on loaded data)
+        for(int i=0; i<tableModel.getRowCount(); i++) {
+            calculateRowMetrics(i);
+        }
 
         JScrollPane scrollPane = new JScrollPane(scoresTable);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -235,23 +257,53 @@ public class UpdateScoresFrame extends JFrame {
         return panel;
     }
 
-    private void calculateTotal(int row) {
+    private void calculateRowMetrics(int row) {
         double total = 0;
         int numComponents = policyComponents.size();
 
-        // Score columns start at index 2
         for (int i = 0; i < numComponents; i++) {
             Object val = tableModel.getValueAt(row, 2 + i);
+            double scorePart = 0;
             if (val instanceof Number) {
-                total += ((Number) val).doubleValue();
+                scorePart = ((Number) val).doubleValue();
             } else {
-                try {
-                    total += Double.parseDouble(val.toString());
-                } catch (Exception ignored) {}
+                try { scorePart = Double.parseDouble(val.toString()); } catch (Exception ignored) {}
+            }
+            total += scorePart;
+        }
+
+        int totalColIdx = 2 + numComponents;
+        tableModel.setValueAt(Math.round(total * 100.0) / 100.0, row, totalColIdx);
+
+        String letter = "F";
+        String cg = "0";
+
+        if (gradeCutoffs != null && !gradeCutoffs.isEmpty()) {
+            for (GradeRange range : gradeCutoffs) {
+                if (total >= range.getMinScore()) {
+                    cg = range.getGradeLetter();
+                    letter = getLetterForCG(cg);
+                    break;
+                }
             }
         }
-        // Update Total column (last column)
-        tableModel.setValueAt(total, row, tableModel.getColumnCount() - 1);
+
+        tableModel.setValueAt(letter, row, totalColIdx + 1);
+        tableModel.setValueAt(cg, row, totalColIdx + 2);
+    }
+
+    private String getLetterForCG(String cg) {
+        switch (cg) {
+            case "A+": return "10";
+            case "A": return "10";
+            case "A-": return "9";
+            case "B": return "8";
+            case "B-": return "7";
+            case "C": return "6";
+            case "D": return "5";
+            case "X" : return "-";
+            default: return "F";
+        }
     }
 
     private void saveScores() {
@@ -259,14 +311,33 @@ public class UpdateScoresFrame extends JFrame {
             scoresTable.getCellEditor().stopCellEditing();
         }
 
-        // Iterate through table and save...
-        // This part requires a 'saveScores' service method that does a batch update
-        // to the 'grades' table.
+        // --- FIX 5: Map uses Integer Keys ---
+        Map<Integer, Map<String, Double>> dataToSave = new HashMap<>();
 
-        JOptionPane.showMessageDialog(this,
-                "Scores saved locally (Database implementation pending).",
-                "Save Successful",
-                JOptionPane.INFORMATION_MESSAGE);
+        int numComponents = policyComponents.size();
+
+        for (int row = 0; row < tableModel.getRowCount(); row++) {
+            int enrollmentId = rowToEnrollmentIdMap.get(row);
+            Map<String, Double> studentScores = new HashMap<>();
+
+            for (int i = 0; i < numComponents; i++) {
+                String compName = policyComponents.get(i).getName();
+                Object val = tableModel.getValueAt(row, 2 + i);
+                double score = 0.0;
+                try { score = Double.parseDouble(val.toString()); } catch (Exception e) {}
+
+                studentScores.put(compName, score);
+            }
+            dataToSave.put(enrollmentId, studentScores);
+        }
+
+        boolean success = facultyService.saveBatchScores(dataToSave);
+
+        if(success) {
+            JOptionPane.showMessageDialog(this, "Scores saved to database.", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Error saving scores.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void styleTable(JTable table) {
@@ -356,16 +427,13 @@ public class UpdateScoresFrame extends JFrame {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setColor(thumbColor);
-            g2.fill(new RoundRectangle2D.Float(thumbBounds.x + 2, thumbBounds.y + 2, thumbBounds.width - 4, thumbBounds.height - 4, 10, 10));
+            g2.fillRoundRect(thumbBounds.x + 2, thumbBounds.y + 2, thumbBounds.width - 4, thumbBounds.height - 4, 10, 10);
             g2.dispose();
         }
         @Override
         protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(trackColor);
-            g2.fill(trackBounds);
-            g2.dispose();
+            g.setColor(trackColor);
+            g.fillRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height);
         }
     }
 }

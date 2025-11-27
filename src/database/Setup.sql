@@ -320,3 +320,28 @@ CREATE TABLE IF NOT EXISTS `grade_cutoffs` (
                                                PRIMARY KEY (`cutoff_id`),
                                                UNIQUE INDEX `unique_cutoff_idx` (`course_code`, `instructor_id`, `semester`)
 ) ENGINE = InnoDB;
+
+alter table users.enrollments add column enrollment_id int not null auto_increment primary key ;
+
+
+CREATE TABLE `student_component_scores` (
+                                            `score_id` INT NOT NULL AUTO_INCREMENT,
+
+                                             `enrollment_id` INT NOT NULL,
+
+                                            `component_name` VARCHAR(100) NOT NULL, -- e.g., "Midterm", "Quiz 1"
+                                            `score_obtained` DECIMAL(5, 2) NOT NULL,
+                                            PRIMARY KEY (`score_id`),
+                                            UNIQUE INDEX `unique_score_idx` (`enrollment_id`, `component_name`),
+
+                                            CONSTRAINT `fk_scores_enrollment`
+                                                FOREIGN KEY (`enrollment_id`)
+                                                    REFERENCES `enrollments` (`enrollment_id`)
+                                                    ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+alter table users.student_component_scores add column enrollment_id int not null;
+
+alter table users.student_component_scores alter column enrollmentid int;
+
+alter table users.student_component_scores add constraint `fk_scores_enrollment` foreign key (`enrollment_id`) references   `enrollments` (`enrollment_id`)

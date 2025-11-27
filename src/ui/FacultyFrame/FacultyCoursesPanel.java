@@ -353,7 +353,7 @@ public class FacultyCoursesPanel extends JPanel {
         setGradingPolicy.setFont(buttonFont);
         setGradingPolicy.setBorder(buttonBorder);
         setGradingPolicy.addActionListener(e ->{
-            DefineGradeRangesFrame gradeRangesFrame = new DefineGradeRangesFrame(course.getCourseCode(),course.getCourseName(),facultySvc.facultyId(facultyUsername),course.getSemester());
+            DefineGradeRangesFrame gradeRangesFrame = new DefineGradeRangesFrame(course.getCourseCode(),course.getCourseName(),facultyUsername,course.getSemester());
             gradeRangesFrame.setVisible(true);
         });
 
