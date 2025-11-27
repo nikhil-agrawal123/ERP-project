@@ -308,7 +308,6 @@ INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_value`) VALUES
                                                                           ('drop_deadline', '2025-09-01'),      -- Standard Drop (Delete)
                                                                           ('late_drop_deadline', '2025-10-15'); -- Late Drop (Grade 'X')
 
-alter table users.gradingpolicy rename courseBreakdown
 
 CREATE TABLE IF NOT EXISTS `grade_cutoffs` (
                                                `cutoff_id` INT NOT NULL AUTO_INCREMENT,
@@ -339,9 +338,3 @@ CREATE TABLE `student_component_scores` (
                                                     REFERENCES `enrollments` (`enrollment_id`)
                                                     ON DELETE CASCADE
 ) ENGINE = InnoDB;
-
-alter table users.student_component_scores add column enrollment_id int not null;
-
-alter table users.student_component_scores alter column enrollmentid int;
-
-alter table users.student_component_scores add constraint `fk_scores_enrollment` foreign key (`enrollment_id`) references   `enrollments` (`enrollment_id`)

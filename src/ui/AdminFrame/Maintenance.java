@@ -260,12 +260,21 @@ public class Maintenance extends JFrame {
 
         ModernToggle subToggle = new ModernToggle();
         subToggle.setSelected(true); // Default to allowed
+
+        // --- FIXED MOUSE LISTENER ---
         subToggle.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                // Only react if the toggle is visually enabled
                 if(subToggle.isEnabled()) {
-                    boolean isAllowed = subToggle.isSelected();
-                    if(isAllowed) {
+                    // 1. Calculate the NEW state (flip the current state)
+                    boolean newState = !subToggle.isSelected();
+
+                    // 2. Apply the new state to the toggle (triggers animation)
+                    subToggle.setSelected(newState);
+
+                    // 3. Update the text label based on the NEW state
+                    if(newState) {
                         stateText.setText("Allowed");
                         stateText.setForeground(accentColor); // Teal
                     } else {
