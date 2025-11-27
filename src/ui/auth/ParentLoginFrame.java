@@ -24,7 +24,7 @@ public class ParentLoginFrame extends JFrame {
     private RoundedButton loginButton;
     private RoundedButton backButton;
 
-    private int numTry = 3;
+    private int numTry = 5;
     private services parentLogin;
 
     // --- NEW UI COLOR PALETTE ---
@@ -253,7 +253,7 @@ public class ParentLoginFrame extends JFrame {
                 JOptionPane.ERROR_MESSAGE);
 
         Timer lockoutTimer = new Timer(30000, e -> {
-            numTry = 3;
+            numTry = 5;
             loginButton.setEnabled(true);
             usernameField.setEnabled(true);
             passwordField.setEnabled(true);

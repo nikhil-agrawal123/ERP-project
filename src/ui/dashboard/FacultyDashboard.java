@@ -1,6 +1,7 @@
 package ui.dashboard;
 
 import ui.FacultyFrame.FacultyCoursesPanel;
+import ui.FacultyFrame.FacultyProfile;
 import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import ui.landing.LandingFrame;
@@ -450,7 +451,6 @@ public class FacultyDashboard extends JFrame {
         profileMenu.setBackground(popoverColor);
         profileMenu.setBorder(BorderFactory.createLineBorder(bgColor));
         profileMenu.add(createMenuItem("Manage Account"));
-        profileMenu.add(createMenuItem("View Preferences"));
     }
 
     /**
@@ -477,13 +477,11 @@ public class FacultyDashboard extends JFrame {
 
         item.addActionListener(e -> {
             if (text.equals("Manage Account")) {
-                JOptionPane.showMessageDialog(FacultyDashboard.this,
-                        "Faculty Account Management not yet implemented.",
-                        "Info", JOptionPane.INFORMATION_MESSAGE);
-            } else if (text.equals("View Preferences")) {
-                JOptionPane.showMessageDialog(FacultyDashboard.this,
-                        "Faculty Preferences not yet implemented.",
-                        "Info", JOptionPane.INFORMATION_MESSAGE);
+                // UPDATED: Open Faculty Profile
+                SwingUtilities.invokeLater(() -> {
+                    FacultyProfile profileFrame = new FacultyProfile(facultyID, username);
+                    profileFrame.setVisible(true);
+                });
             }
         });
         return item;

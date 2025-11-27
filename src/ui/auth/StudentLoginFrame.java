@@ -42,7 +42,7 @@ public class StudentLoginFrame extends JFrame {
     private Color inputBgColor = new Color(41, 47, 61);     // --background (for contrast)
     private loggerService logger;
 
-    private int numTry = 3;
+    private int numTry = 5;
 
     public StudentLoginFrame() {
         super("Student Login");
@@ -286,7 +286,7 @@ public class StudentLoginFrame extends JFrame {
 
 
         Timer lockoutTimer = new Timer(30000, e -> {
-            numTry = 3;
+            numTry = 5;
             loginButton.setEnabled(true);
             usernameField.setEnabled(true);
             passwordField.setEnabled(true);
