@@ -5,14 +5,12 @@ import ui.components.RoundedButton;
 import ui.components.RoundedPanel;
 import middleware.adminService;
 import dbClasses.CourseDTO;
-import dbClasses.AddCourse;
+import dbClasses.AddCourse; // Matches your Backend/Service
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicComboBoxUI;
-import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.BasicScrollBarUI;
-import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -45,8 +43,8 @@ public class AdminManageCourses extends JFrame {
     private Color dangerColor = new Color(220, 80, 80);
 
     // Manage Button Colors
-    private Color manageButtonColor = new Color(156, 39, 176);
-    private Color manageButtonColorGlow = new Color(186, 104, 200);
+    private Color manageButtonColor = new Color(66, 133, 244);
+    private Color manageButtonColorGlow = new Color(100, 160, 155);
 
     // --- Components ---
     private DefaultTableModel tableModel;
@@ -169,7 +167,7 @@ public class AdminManageCourses extends JFrame {
     }
 
     private void createTable() {
-        // Columns for CATALOG (No Instructor/Semester)
+        // Columns for CATALOG
         String[] columns = {"Code", "Course Name", "Department", "Credits", "Action"};
 
         tableModel = new DefaultTableModel(columns, 0) {
@@ -223,13 +221,10 @@ public class AdminManageCourses extends JFrame {
     private void loadData(String query) {
         tableModel.setRowCount(0);
 
-        // Fetch based on query or get all
         if (query == null || query.isEmpty()) {
             courseList = adminService.getCourseCatalog();
         } else {
-            // Using catalog search
-            courseList = adminService.getCourseCatalog();
-            // Ideally: courseList = adminService.searchCatalog(query); if implemented
+            courseList = adminService.searchCourses(query);
         }
 
         for (CourseDTO c : courseList) {
@@ -277,7 +272,7 @@ public class AdminManageCourses extends JFrame {
         JTextField credField = addField(d, "Credits:", gbc);
         credField.setText(String.valueOf(course.getCredits()));
 
-        // Update Button (Dummy)
+        // Update Button
         gbc.gridy++;
         gbc.insets = new Insets(25, 15, 5, 15);
         RoundedButton upBtn = new RoundedButton("Update Course", buttonColor, buttonColorGlow, 10);
@@ -286,17 +281,14 @@ public class AdminManageCourses extends JFrame {
         upBtn.setPreferredSize(new Dimension(0, 40));
 
         upBtn.addActionListener(e -> {
-            // Simulation
-            JOptionPane.showMessageDialog(d, "Course Updated:\n" +
-                    "Name: " + nameField.getText() + "\n" +
-                    "Dept: " + deptField.getText() + "\n" +
-                    "Credits: " + credField.getText());
+            // Simulate update for catalog
+            // Note: We need an updateCourseCatalog method in service for this specific view if not present
+            JOptionPane.showMessageDialog(d, "Updated (Simulation):\n" + nameField.getText());
             d.dispose();
-            // loadData(""); // Refresh if backend connected
         });
         d.add(upBtn, gbc);
 
-        // Delete Button (Dummy)
+        // Delete Button
         gbc.gridy++;
         gbc.insets = new Insets(10, 15, 15, 15);
         RoundedButton delBtn = new RoundedButton("Delete Course", dangerColor, new Color(240, 100, 100), 10);
@@ -307,7 +299,7 @@ public class AdminManageCourses extends JFrame {
         delBtn.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(d, "Delete " + course.getCourseCode() + "?", "Confirm", JOptionPane.YES_NO_OPTION);
             if(confirm == JOptionPane.YES_OPTION) {
-                JOptionPane.showMessageDialog(d, "Course Deleted (Simulation)");
+                JOptionPane.showMessageDialog(d, "Deleted (Simulation)");
                 d.dispose();
             }
         });
@@ -413,13 +405,12 @@ public class AdminManageCourses extends JFrame {
 
     // --- Inner Classes ---
     class ButtonRenderer extends JButton implements TableCellRenderer {
-        public ButtonRenderer() { setOpaque(false); setFont(new Font("Segoe UI", Font.BOLD, 12));setBorder(new EmptyBorder(5,10,5,10)); }
+        public ButtonRenderer() { setOpaque(false); setFont(new Font("Segoe UI", Font.BOLD, 12)); setForeground(Color.BLUE); setBorder(new EmptyBorder(5,10,5,10)); }
         public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) { setText("Manage"); return this; }
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D)g.create(); g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            // Use Manage Colors
             g2.setColor(hoveredRow == ((JTable)SwingUtilities.getAncestorOfClass(JTable.class, this)).convertRowIndexToModel(((JTable)SwingUtilities.getAncestorOfClass(JTable.class, this)).getEditingRow() == -1 ? 0 : ((JTable)SwingUtilities.getAncestorOfClass(JTable.class, this)).getEditingRow()) ? manageButtonColorGlow : manageButtonColor);
-            g2.setColor(buttonColor);
+            g2.setColor(manageButtonColor);
             g2.fillRoundRect(0,0,getWidth(),getHeight(),8,8); super.paintComponent(g); g2.dispose();
         }
     }
@@ -439,10 +430,13 @@ public class AdminManageCourses extends JFrame {
             return b;
         }
         public Object getCellEditorValue() {
-            // FIX: Use the courseList to retrieve data
+            // FIX: Robust row checking
             if (courseList != null && r >= 0 && r < courseList.size()) {
-                CourseDTO course = courseList.get(r);
-                showManageDialog(course);
+                // Ensure the table is not editing before showing dialog to prevent focus issues
+                SwingUtilities.invokeLater(() -> {
+                    CourseDTO course = courseList.get(r);
+                    showManageDialog(course);
+                });
             }
             return "Manage";
         }

@@ -274,7 +274,7 @@ public class AdminPoints {
 
     public List<CourseDTO> getCourseCatalog() {
         List<CourseDTO> list = new ArrayList<>();
-        String sql = "SELECT course_code, course_title, department, credits FROM users.courses ORDER BY course_code";
+        String sql = "SELECT course_code, course_title, department, credits, offeredBy,currenCap FROM users.courses ORDER BY course_code";
 
         try (Connection conn = connector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -288,12 +288,12 @@ public class AdminPoints {
                         rs.getString("course_title"),
                         rs.getString("department"),
                         rs.getInt("credits"),
-                        "N/A", // No Instructor in Catalog
+                        rs.getString("offeredBy"),
                         "N/A",
                         "N/A", // No Semester in Catalog
                         0,
                         0,
-                        0
+                        rs.getInt("currenCap")
                 ));
             }
         } catch (SQLException e) {

@@ -241,28 +241,33 @@ public class AdminAddcourse extends JFrame {
             }
 
             try {
-                int credits = Integer.parseInt((String) comboCredits.getSelectedItem());
                 int capacity = Integer.parseInt(capStr);
-                int year = (Integer) yearSpinner.getValue();
+                int credits = Integer.parseInt((String) comboCredits.getSelectedItem());
 
-                AddCourse data = new AddCourse(
-                        code,
-                        name,
-                        credits,
-                        (String) comboDepartment.getSelectedItem(),
-                        instId,
-                        (String) comboSemester.getSelectedItem(),
-                        year,
-                        capacity
-                );
+                if(capacity < 0 || credits < 0) {
+                    JOptionPane.showMessageDialog(this, "Capacity and credits can not be negative", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                } else{
+                    int year = (Integer) yearSpinner.getValue();
 
-                boolean success = adminService.createCourseOffering(data);
+                    AddCourse data = new AddCourse(
+                            code,
+                            name,
+                            credits,
+                            (String) comboDepartment.getSelectedItem(),
+                            instId,
+                            (String) comboSemester.getSelectedItem(),
+                            year,
+                            capacity
+                    );
 
-                if(success) {
-                    JOptionPane.showMessageDialog(this, "Course '" + name + "' created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    goBack();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Failed to create course.\nCheck if Instructor ID exists and is valid.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                    boolean success = adminService.createCourseOffering(data);
+
+                    if(success) {
+                        JOptionPane.showMessageDialog(this, "Course '" + name + "' created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        goBack();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to create course.\nCheck if Instructor ID exists and is valid.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
 
             } catch (NumberFormatException ex) {
