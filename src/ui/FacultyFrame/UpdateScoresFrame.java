@@ -50,8 +50,8 @@ public class UpdateScoresFrame extends JFrame {
     private List<GradingComponent> policyComponents;
     private List<GradeRange> gradeCutoffs;
 
-    // Map to link Table Row Index -> Enrollment ID (NOW STRING)
-    private Map<Integer, String> rowToEnrollmentIdMap;
+    // --- FIX 1: Use Integer for Enrollment IDs to match Database/Service ---
+    private Map<Integer, Integer> rowToEnrollmentIdMap;
 
     public UpdateScoresFrame(String courseCode, String instructorId, String semester) {
         super("Update Scores for " + courseCode);
@@ -164,12 +164,13 @@ public class UpdateScoresFrame extends JFrame {
             columnNames.add(comp.getName() + " (" + comp.getPercentage() + "%)");
         }
         columnNames.add("Total (100%)");
-        columnNames.add("Letter Grade");
         columnNames.add("CG");
+        columnNames.add("Letter Grade");
 
         // 2. Fetch Students & EXISTING SCORES
         List<EnrolledStudent> students = facultyService.getClassList(courseCode, semester);
-        // Updated to handle String ID keys
+
+        // --- FIX 2: Expect Integer Keys from Service ---
         Map<Integer, Map<String, Double>> existingScores = facultyService.getExistingScores(students);
 
         // 3. Create Data Vector
@@ -177,16 +178,15 @@ public class UpdateScoresFrame extends JFrame {
         int rowIndex = 0;
 
         for (EnrolledStudent student : students) {
-            // Map row to ID (String) for saving later
-            // Assumes getEnrollmentId() returns String based on your requirement
-            String enrollmentId = String.valueOf(student.getEnrollmentId());
+            // --- FIX 3: Use Integer ID ---
+            int enrollmentId = student.getEnrollmentId();
             rowToEnrollmentIdMap.put(rowIndex++, enrollmentId);
 
             Vector<Object> row = new Vector<>();
             row.add(student.getRollNumber());
             row.add(student.getStudentName());
 
-            // Get scores for this student (using String ID)
+            // --- FIX 4: Lookup using Integer Key ---
             Map<String, Double> myScores = existingScores.getOrDefault(enrollmentId, new HashMap<>());
 
             // Populate scores columns
@@ -238,7 +238,7 @@ public class UpdateScoresFrame extends JFrame {
         scoresTable = new JTable(tableModel);
         styleTable(scoresTable);
 
-        // Initial Calculation
+        // Initial Calculation (updates Total column based on loaded data)
         for(int i=0; i<tableModel.getRowCount(); i++) {
             calculateRowMetrics(i);
         }
@@ -257,14 +257,10 @@ public class UpdateScoresFrame extends JFrame {
         return panel;
     }
 
-    /**
-     * Calculates Total, Letter Grade, and CG based on components.
-     */
     private void calculateRowMetrics(int row) {
         double total = 0;
         int numComponents = policyComponents.size();
 
-        // 1. Sum Components
         for (int i = 0; i < numComponents; i++) {
             Object val = tableModel.getValueAt(row, 2 + i);
             double scorePart = 0;
@@ -276,11 +272,9 @@ public class UpdateScoresFrame extends JFrame {
             total += scorePart;
         }
 
-        // 2. Update Total Column
         int totalColIdx = 2 + numComponents;
         tableModel.setValueAt(Math.round(total * 100.0) / 100.0, row, totalColIdx);
 
-        // 3. Determine Grade & CG based on Cutoffs
         String letter = "F";
         String cg = "0";
 
@@ -294,19 +288,20 @@ public class UpdateScoresFrame extends JFrame {
             }
         }
 
-        // 4. Update Letter & CG Columns
         tableModel.setValueAt(letter, row, totalColIdx + 1);
         tableModel.setValueAt(cg, row, totalColIdx + 2);
     }
 
     private String getLetterForCG(String cg) {
         switch (cg) {
-            case "10": return "A";
-            case "9": return "A-";
-            case "8": return "B";
-            case "7": return "B-";
-            case "6": return "C";
-            case "5": return "C-";
+            case "A+": return "10";
+            case "A": return "10";
+            case "A-": return "9";
+            case "B": return "8";
+            case "B-": return "7";
+            case "C": return "6";
+            case "D": return "5";
+            case "X" : return "-";
             default: return "F";
         }
     }
@@ -316,13 +311,13 @@ public class UpdateScoresFrame extends JFrame {
             scoresTable.getCellEditor().stopCellEditing();
         }
 
-        // Prepare data map: EnrollmentID (String) -> {Component -> Score}
+        // --- FIX 5: Map uses Integer Keys ---
         Map<Integer, Map<String, Double>> dataToSave = new HashMap<>();
 
         int numComponents = policyComponents.size();
 
         for (int row = 0; row < tableModel.getRowCount(); row++) {
-            int enrollmentId = Integer.parseInt(rowToEnrollmentIdMap.get(row));
+            int enrollmentId = rowToEnrollmentIdMap.get(row);
             Map<String, Double> studentScores = new HashMap<>();
 
             for (int i = 0; i < numComponents; i++) {
