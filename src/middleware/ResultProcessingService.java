@@ -93,12 +93,21 @@ public class ResultProcessingService {
                 // Check against cutoffs (Assuming descending order 10 -> 0)
                 for (GradeRange r : cutoffs) {
                     if (total >= r.getMinScore()) {
-                        // Convert "10" (String) to 10.0 (Double) for CG
+                        letter = r.getGradeLetter();
                         try {
-                            gp = Double.parseDouble(r.getGradeLetter());
-                            letter = getLetterForCG(gp);
+                                gp = switch (letter) {
+                                case "F" -> 4;
+                                case "A+" -> 10;
+                                case "A" -> 10;
+                                case "A-" -> 9;
+                                case "B" -> 8;
+                                case "B-" -> 7;
+                                case "C" -> 6;
+                                case "D" -> 5;
+                                default -> gp;
+                            };
+
                         } catch(Exception e) {
-                            // Fallback if pure Letter grades were used
                             letter = r.getGradeLetter();
                         }
                         break; // Match found
