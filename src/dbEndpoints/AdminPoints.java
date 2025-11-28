@@ -375,4 +375,64 @@ public class AdminPoints {
         }
         return list;
     }
+
+    public boolean updateCourseOffering(int sectionId, String courseCode, String instructorId, int capacity, int credits) {
+        // SQL to update the schedule details
+        String sqlSection = "UPDATE users.sections SET instructor_id = ?, capacity = ? WHERE section_id = ?";
+
+        // SQL to update the catalog details (affects all sections of this course)
+        String sqlCourse = "UPDATE users.courses SET credits = ? WHERE course_code = ?";
+
+        Connection conn = null;
+        try {
+            conn = connector.connect();
+            conn.setAutoCommit(false); // Start Transaction
+
+            // 1. Update Section details
+            try (PreparedStatement p1 = conn.prepareStatement(sqlSection)) {
+                p1.setString(1, instructorId);
+                p1.setInt(2, capacity);
+                p1.setInt(3, sectionId);
+                p1.executeUpdate();
+            }
+
+            // 2. Update Course Credits
+            try (PreparedStatement p2 = conn.prepareStatement(sqlCourse)) {
+                p2.setInt(1, credits);
+                p2.setString(2, courseCode);
+                p2.executeUpdate();
+            }
+
+            conn.commit(); // Commit if both succeed
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            if (conn != null) {
+                try { conn.rollback(); } catch (Exception ex) {} // Rollback on error
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (Exception ex) {}
+            }
+        }
+    }
+
+    public boolean deleteCourseOffering(int sectionId) {
+        String sql = "DELETE FROM users.sections WHERE section_id = ?";
+
+        try (Connection conn = connector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, sectionId);
+
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

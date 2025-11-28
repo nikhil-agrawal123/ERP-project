@@ -158,4 +158,16 @@ public class adminService {
     public List<CourseDTO> getCourseCatalog() {
         return adminPoints.getCourseCatalog();
     }
+
+    public boolean updateCourseOffering(int id, String code, String instructor, int cap, int credits) {
+        boolean success = adminPoints.updateCourseOffering(id, code, instructor, cap, credits);
+        if (success) loggerService.log("CurrentAdmin", "UPDATE_COURSE", "Updated: " + code,"Admin");
+        return success;
+    }
+
+    public boolean deleteCourseOffering(int id) {
+        boolean success = adminPoints.deleteCourseOffering(id);
+        if (success) loggerService.log("CurrentAdmin", "DELETE_COURSE", "Removed ID: " + id,"Admin");
+        return success;
+    }
 }

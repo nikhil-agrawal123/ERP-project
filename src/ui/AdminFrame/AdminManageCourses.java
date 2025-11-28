@@ -150,15 +150,8 @@ public class AdminManageCourses extends JFrame {
         searchBtn.setPreferredSize(new Dimension(90, 40));
         searchBtn.addActionListener(e -> loadData(searchField.getText()));
 
-        RoundedButton addBtn = new RoundedButton("+ Add Course", buttonColor, buttonColorGlow, 10);
-        addBtn.setForeground(Color.WHITE);
-        addBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        addBtn.setPreferredSize(new Dimension(140, 40));
-        addBtn.addActionListener(e -> showAddDialog());
-
         rightHeader.add(searchField);
         rightHeader.add(searchBtn);
-        rightHeader.add(addBtn);
 
         header.add(leftHeader, BorderLayout.WEST);
         header.add(rightHeader, BorderLayout.EAST);
@@ -244,7 +237,7 @@ public class AdminManageCourses extends JFrame {
     // --- MANAGE DIALOG ---
     private void showManageDialog(CourseDTO course) {
         JDialog d = new JDialog(this, "Manage: " + course.getCourseCode(), true);
-        d.setSize(500, 600);
+        d.setSize(600, 900); // Increased height to fit new fields
         d.setLocationRelativeTo(this);
         d.getContentPane().setBackground(mainPanelColor);
         d.setLayout(new GridBagLayout());
@@ -265,7 +258,7 @@ public class AdminManageCourses extends JFrame {
         gbc.gridy++;
         d.add(codeLabel, gbc);
 
-        // Fields
+        // --- Editable Fields ---
         JTextField nameField = addField(d, "Course Name:", gbc);
         nameField.setText(course.getCourseName());
 
@@ -275,8 +268,22 @@ public class AdminManageCourses extends JFrame {
         JTextField credField = addField(d, "Credits:", gbc);
         credField.setText(String.valueOf(course.getCredits()));
 
-        JTextField offeredBYField = addField(d, "Offered By:", gbc);
-        offeredBYField.setText(course.getInstructorId());
+        JTextField instField = addField(d, "Instructor ID:", gbc);
+        instField.setText(course.getInstructorId());
+
+        JTextField capField = addField(d, "Capacity:", gbc);
+        capField.setText(String.valueOf(course.getCapacity()));
+
+        // --- Read-Only Fields (Info) ---
+        JTextField semField = addField(d, "Semester:", gbc);
+        semField.setText(course.getSemester());
+        semField.setEditable(false);
+        semField.setForeground(textSecondaryColor);
+
+        JTextField enrollField = addField(d, "Enrolled Students:", gbc);
+        enrollField.setText(String.valueOf(course.getEnrolled()));
+        enrollField.setEditable(false);
+        enrollField.setForeground(textSecondaryColor);
 
         // Update Button
         gbc.gridy++;
@@ -287,77 +294,61 @@ public class AdminManageCourses extends JFrame {
         upBtn.setPreferredSize(new Dimension(0, 40));
 
         upBtn.addActionListener(e -> {
-            // Simulate update for catalog
-            // Note: We need an updateCourseCatalog method in service for this specific view if not present
-            JOptionPane.showMessageDialog(d, "Updated (Simulation):\n" + nameField.getText());
-            d.dispose();
+            try {
+                boolean success = adminService.updateCourseOffering(
+                        course.getId(),
+                        course.getCourseCode(),
+                        instField.getText(),
+                        Integer.parseInt(capField.getText()),
+                        Integer.parseInt(credField.getText())
+                );
+
+                if(success) {
+                    JOptionPane.showMessageDialog(d, "Course Updated Successfully!");
+                    d.dispose();
+                    loadData(""); // Refresh table
+                } else {
+                    JOptionPane.showMessageDialog(d, "Update Failed.", "Some data is faulty", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch(NumberFormatException ex) {
+                JOptionPane.showMessageDialog(d, "Credits and Capacity must be numbers.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+            }
         });
         d.add(upBtn, gbc);
 
         // Delete Button
         gbc.gridy++;
         gbc.insets = new Insets(10, 15, 15, 15);
-        RoundedButton delBtn = new RoundedButton("Delete Course", dangerColor, new Color(240, 100, 100), 10);
+        RoundedButton delBtn = new RoundedButton("Delete Course Offering", dangerColor, new Color(240, 100, 100), 10);
         delBtn.setForeground(Color.WHITE);
         delBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
         delBtn.setPreferredSize(new Dimension(0, 40));
 
         delBtn.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(d, "Delete " + course.getCourseCode() + "?", "Confirm", JOptionPane.YES_NO_OPTION);
-            if(confirm == JOptionPane.YES_OPTION) {
-                JOptionPane.showMessageDialog(d, "Deleted (Simulation)");
-                d.dispose();
+            // Check enrollment count before deleting
+            if(course.getEnrolled() > 0){
+                JOptionPane.showMessageDialog(d,
+                        "Cannot delete course.\nThere are " + course.getEnrolled() + " students enrolled.",
+                        "Delete Restriction", JOptionPane.WARNING_MESSAGE);
+            } else {
+                int confirm = JOptionPane.showConfirmDialog(d,
+                        "Delete offering for " + course.getCourseCode() + "?\nThis cannot be undone.",
+                        "Confirm Delete", JOptionPane.YES_NO_OPTION);
+
+                if(confirm == JOptionPane.YES_OPTION) {
+                    boolean success = adminService.deleteCourseOffering(course.getId());
+                    if (success) {
+                        JOptionPane.showMessageDialog(d, "Course Offering Deleted.");
+                        d.dispose();
+                        loadData(""); // Refresh table
+                    } else {
+                        JOptionPane.showMessageDialog(d, "Delete Failed.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             }
         });
         d.add(delBtn, gbc);
 
-        d.setVisible(true);
-    }
-
-    private void showAddDialog() {
-        JDialog d = new JDialog(this, "Add New Course", true);
-        d.setSize(500, 600);
-        d.setLocationRelativeTo(this);
-        d.getContentPane().setBackground(mainPanelColor);
-        d.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 15, 10, 15);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridx = 0; gbc.gridy = 0;
-
-        JTextField codeF = addField(d, "Course Code:", gbc);
-        JTextField nameF = addField(d, "Course Name:", gbc);
-        JTextField credF = addField(d, "Credits:", gbc);
-        JTextField offeredBYF = addField(d, "Offered By:", gbc);
-
-        gbc.gridy++;
-        JLabel dl = new JLabel("Department:"); dl.setForeground(textSecondaryColor); d.add(dl, gbc);
-        String[] depts = {"Computer Science", "Electronics", "Mathematics", "Physics", "Social Sciences", "Design"};
-        JComboBox<String> deptBox = new JComboBox<>(depts); styleComboBox(deptBox);
-        gbc.gridy++; d.add(deptBox, gbc);
-
-        // No Section details here anymore
-
-        RoundedButton save = new RoundedButton("Create", buttonColor, buttonColorGlow, 10);
-        save.setForeground(Color.WHITE);
-        save.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        gbc.gridy++; gbc.insets = new Insets(25, 15, 15, 15);
-        d.add(save, gbc);
-
-        save.addActionListener(e -> {
-            try {
-                // Simply pass data to createCourseOffering or similar
-                AddCourse data = new AddCourse(
-                        codeF.getText(), nameF.getText(), Integer.parseInt(credF.getText()),
-                        (String)deptBox.getSelectedItem(), null, null, 0, 0 // Nulls for section data
-                );
-                if(adminService.createCourseOffering(data)) {
-                    JOptionPane.showMessageDialog(d, "Success!"); d.dispose(); loadData("");
-                } else {
-                    JOptionPane.showMessageDialog(d, "Failed.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch(Exception ex) { JOptionPane.showMessageDialog(d, "Invalid Input"); }
-        });
         d.setVisible(true);
     }
 
