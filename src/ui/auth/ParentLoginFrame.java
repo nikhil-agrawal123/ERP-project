@@ -209,29 +209,19 @@ public class ParentLoginFrame extends JFrame {
             return;
         }
 
-        // --- MODIFIED LINE: Hardcoded login check ---
+        // 1. Check Credentials
         boolean loginSuccess = username.equals("a") && password.equals("a");
-        // --- END OF MODIFICATION ---
 
-
-        // --- This block is the same as before ---
         if (loginSuccess) {
-            System.out.println("Password correct for " + username + ". Opening face verification...");
+            System.out.println("Password correct for " + username + ".");
 
-            // 1. Define what to do on *successful verification*
-            Runnable onVerificationSuccess = () -> {
-                ParentDashboard dashboard = new ParentDashboard(username);
-                dashboard.setVisible(true);
-            };
+            // 2. OPEN THE DASHBOARD DIRECTLY
+            // (Since FaceVerification code is commented out, we must open this manually)
+            ParentDashboard dashboard = new ParentDashboard(username);
+            dashboard.setVisible(true);
 
-//            // 2. Open the verification frame
-//            FaceVerificationFrame faceVerifier = new FaceVerificationFrame(
-//                    username,
-//                    username,
-//                    onVerificationSuccess
-//            );
-//            faceVerifier.setVisible(true);
-//            dispose(); // Close this login window
+            // 3. Close the Login Window
+            dispose();
 
         } else {
             JOptionPane.showMessageDialog(this,
@@ -239,6 +229,7 @@ public class ParentLoginFrame extends JFrame {
                     "Login Failed",
                     JOptionPane.ERROR_MESSAGE);
             numTry -= 1;
+            if(numTry <= 0) handleLock(); // Ensure lock is triggered if tries run out
         }
     }
 

@@ -340,3 +340,5 @@ CREATE TABLE `student_component_scores` (
 ) ENGINE = InnoDB;
 
 alter table courses add column department varchar(100) not null
+
+alter table users.courses add column currenCap int not null DEFAULT 0;

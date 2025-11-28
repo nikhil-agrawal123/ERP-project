@@ -113,20 +113,19 @@ public class FacultyLoginFrame extends JFrame {
 
         // --- Action Listeners ---
         loginButton.addActionListener(e -> {
-            if(maintenance.isMaintenanceActive()){
-                JOptionPane.showMessageDialog(this,
-                        "Maintenance in progress. Please try again later",
-                        "Maintenance",
-                        JOptionPane.ERROR_MESSAGE);
-                logger.log(usernameField.getText(), "Login Attemp" , "User tried logging during maintenance" ,"Faculty");
-            }else{
+//            if(maintenance.isMaintenanceActive()){
+//                JOptionPane.showMessageDialog(this,
+//                        "Maintenance in progress. Please try again later",
+//                        "Maintenance",
+//                        JOptionPane.ERROR_MESSAGE);
+//                logger.log(usernameField.getText(), "Login Attemp" , "User tried logging during maintenance" ,"Faculty");
+//            }else{
                 if(numTry > 0){
                     handleLoginAttempt();
                     logger.log(usernameField.getText(), "Login Attemp" , "User tried logging in" ,"Faculty");
                 }else{
                     handleLock();
                 }
-            }
 
         });
 
