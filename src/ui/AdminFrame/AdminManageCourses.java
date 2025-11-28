@@ -168,12 +168,12 @@ public class AdminManageCourses extends JFrame {
 
     private void createTable() {
         // Columns for CATALOG
-        String[] columns = {"Code", "Course Name", "Department", "Credits", "Action"};
+        String[] columns = {"Code", "Course Name", "Department", "Credits","Offered By", "Semester", "Current Cap", "Action"};
 
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 4; // Only Action column
+                return column == 7; // Only Action column
             }
         };
 
@@ -189,7 +189,7 @@ public class AdminManageCourses extends JFrame {
                 int modelCol = (col >= 0) ? courseTable.convertColumnIndexToModel(col) : -1;
 
                 int newHoveredRow = -1;
-                if (row >= 0 && modelCol == 4) {
+                if (row >= 0 && modelCol == 6) {
                     newHoveredRow = courseTable.convertRowIndexToModel(row);
                 }
 
@@ -209,13 +209,13 @@ public class AdminManageCourses extends JFrame {
         });
 
         // Button Renderer/Editor
-        courseTable.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer());
-        courseTable.getColumnModel().getColumn(4).setCellEditor(new ButtonEditor(new JCheckBox()));
+        courseTable.getColumnModel().getColumn(7).setCellRenderer(new ButtonRenderer());
+        courseTable.getColumnModel().getColumn(7).setCellEditor(new ButtonEditor(new JCheckBox()));
 
         // Widths
         courseTable.getColumnModel().getColumn(0).setPreferredWidth(100); // Code
         courseTable.getColumnModel().getColumn(1).setPreferredWidth(400); // Name
-        courseTable.getColumnModel().getColumn(4).setPreferredWidth(140); // Action
+        courseTable.getColumnModel().getColumn(7).setPreferredWidth(140); // Action
     }
 
     private void loadData(String query) {
@@ -233,6 +233,9 @@ public class AdminManageCourses extends JFrame {
                     c.getCourseName(),
                     c.getDepartment(),
                     c.getCredits(),
+                    c.getInstructorId(),
+                    c.getSemester(),
+                    c.getCapacity(),
                     "Manage"
             });
         }
@@ -241,7 +244,7 @@ public class AdminManageCourses extends JFrame {
     // --- MANAGE DIALOG ---
     private void showManageDialog(CourseDTO course) {
         JDialog d = new JDialog(this, "Manage: " + course.getCourseCode(), true);
-        d.setSize(400, 450);
+        d.setSize(500, 600);
         d.setLocationRelativeTo(this);
         d.getContentPane().setBackground(mainPanelColor);
         d.setLayout(new GridBagLayout());
@@ -271,6 +274,9 @@ public class AdminManageCourses extends JFrame {
 
         JTextField credField = addField(d, "Credits:", gbc);
         credField.setText(String.valueOf(course.getCredits()));
+
+        JTextField offeredBYField = addField(d, "Offered By:", gbc);
+        offeredBYField.setText(course.getInstructorId());
 
         // Update Button
         gbc.gridy++;
@@ -322,6 +328,7 @@ public class AdminManageCourses extends JFrame {
         JTextField codeF = addField(d, "Course Code:", gbc);
         JTextField nameF = addField(d, "Course Name:", gbc);
         JTextField credF = addField(d, "Credits:", gbc);
+        JTextField offeredBYF = addField(d, "Offered By:", gbc);
 
         gbc.gridy++;
         JLabel dl = new JLabel("Department:"); dl.setForeground(textSecondaryColor); d.add(dl, gbc);

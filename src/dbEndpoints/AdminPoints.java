@@ -274,26 +274,47 @@ public class AdminPoints {
 
     public List<CourseDTO> getCourseCatalog() {
         List<CourseDTO> list = new ArrayList<>();
-        String sql = "SELECT course_code, course_title, department, credits, offeredBy,currenCap FROM users.courses ORDER BY course_code";
+
+        // --- UPDATED QUERY ---
+        // 1. Get basic info from COURSES
+        // 2. Get scheduling info from SECTIONS
+        // 3. Get instructor names from INSTRUCTORS
+        String sql = """
+            SELECT 
+                s.section_id, 
+                c.course_code, 
+                c.course_title, 
+                c.department, 
+                c.credits,
+                c.offeredBy,
+                s.instructor_id, 
+                s.semester, 
+                s.year, 
+                s.capacity,
+                (SELECT COUNT(*) FROM users.enrollments e WHERE e.section_id = s.section_id) as enrolled
+            FROM users.courses c
+            JOIN users.sections s ON c.course_code = s.course_code
+            ORDER BY c.course_code, s.year DESC, s.semester
+        """;
 
         try (Connection conn = connector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
-                // We use the DTO, leaving Section-specific fields (Instructor, Year, etc.) as null/0
+                // We populate the DTO fully now
                 list.add(new CourseDTO(
-                        0, // No Section ID
+                        rs.getInt("section_id"),
                         rs.getString("course_code"),
                         rs.getString("course_title"),
                         rs.getString("department"),
                         rs.getInt("credits"),
+                        rs.getString("instructor_id"),
                         rs.getString("offeredBy"),
-                        "N/A",
-                        "N/A", // No Semester in Catalog
-                        0,
-                        0,
-                        rs.getInt("currenCap")
+                        rs.getString("semester"),
+                        rs.getInt("year"),
+                        rs.getInt("capacity"),
+                        rs.getInt("enrolled")
                 ));
             }
         } catch (SQLException e) {
